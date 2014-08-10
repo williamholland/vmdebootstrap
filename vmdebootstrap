@@ -26,7 +26,7 @@ import tempfile
 import time
 
 
-__version__ = '0.2'
+__version__ = '0.3'
 
 
 class VmDebootstrap(cliapp.Application):
@@ -100,6 +100,9 @@ class VmDebootstrap(cliapp.Application):
         self.settings.boolean(['sudo'], 
                               'install sudo, and if user is created, add them '
                                 'to sudo group')
+        self.settings.string(['owner'],
+                             'the user who will own the image when the build '
+                               'is complete.')
 
     def process_args(self, args):
         if not self.settings['image'] and not self.settings['tarball']:
@@ -156,8 +159,12 @@ class VmDebootstrap(cliapp.Application):
 
             if self.settings['tarball']:
                 self.create_tarball(rootdir)
+
+            if self.settings['owner']:
+                self.chown(rootdir)
         except BaseException, e:
             self.message('EEEK! Something bad happened...')
+            self.message(e)
             self.cleanup_system()
             raise
         else:
@@ -500,6 +507,13 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         # shell out to runcmd since it more easily handles rootdir
         self.message('Creating tarball of disk contents')
         self.runcmd(['tar', '-cf', self.settings['tarball'], '-C', rootdir, '.'])
+
+    def chown(self, rootdir):
+        # Change image owner after completed build
+        self.message("Changing owner to %s" % self.settings["owner"])
+        subprocess.call(["chown",
+                         self.settings["owner"],
+                         self.settings["image"]])
 
 
 if __name__ == '__main__':
