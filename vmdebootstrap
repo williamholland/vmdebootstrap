@@ -151,6 +151,7 @@ class VmDebootstrap(cliapp.Application):
             if self.settings['image']:
                 if self.settings['extlinux']:
                     self.install_extlinux(rootdev, rootdir)
+                self.append_serial_console(rootdir)
                 self.optimize_image(rootdir)
 
             if self.settings['foreign']:
@@ -414,6 +415,14 @@ class VmDebootstrap(cliapp.Application):
             
         f.close()
 
+    def append_serial_console(self, rootdir):
+        if self.settings['serial-console']:
+            serial_command = self.settings['serial-console-command']
+            logging.debug('adding getty to serial console')
+            inittab = os.path.join(rootdir, 'etc/inittab')
+            with open(inittab, 'a') as f:
+                f.write('\nS0:23:respawn:%s\n' % serial_command)
+
     def install_extlinux(self, rootdev, rootdir):
         self.message('Installing extlinux')
 
@@ -453,13 +462,6 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
     'extserial': 'serial 0 115200' if self.settings['serial-console'] else '',
 })
         f.close()
-        
-        if self.settings['serial-console']:
-            serial_command = self.settings['serial-console-command']
-            logging.debug('adding getty to serial console')
-            inittab = os.path.join(rootdir, 'etc/inittab')
-            with open(inittab, 'a') as f:
-                f.write('\nS0:23:respawn:%s\n' % serial_command)
 
         self.runcmd(['extlinux', '--install', rootdir])
         self.runcmd(['sync'])
