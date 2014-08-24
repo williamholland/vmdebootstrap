@@ -103,6 +103,8 @@ class VmDebootstrap(cliapp.Application):
         self.settings.string(['owner'],
                              'the user who will own the image when the build '
                                'is complete.')
+        self.settings.boolean(['squash'],
+                              'use squashfs on the final image.')
 
     def process_args(self, args):
         if not self.settings['image'] and not self.settings['tarball']:
@@ -153,6 +155,8 @@ class VmDebootstrap(cliapp.Application):
                     self.install_extlinux(rootdev, rootdir)
                 self.append_serial_console(rootdir)
                 self.optimize_image(rootdir)
+                if self.settings['squash']:
+                    self.squash()
 
             if self.settings['foreign']:
                 os.unlink('%s/usr/bin/%s' %
@@ -475,6 +479,20 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         self.runcmd_unchecked(['dd', 'if=/dev/zero', 'of=' + zeros, 'bs=1M'])
         self.runcmd(['rm', '-f', zeros])
 
+    def squash(self):
+        """
+        Run squashfs on the image.
+        """
+        if not os.path.exists('/usr/bin/mksquashfs'):
+            logging.warning("Squash selected but mksquashfs not found!")
+            return
+        self.message("Running mksquashfs")
+        suffixed = "%s.squashfs" % self.settings['image']
+        self.runcmd(['mksquashfs', self.settings['image'],
+            suffixed,
+            '-no-progress', '-comp', 'xz'], ignore_fail=False)
+        os.unlink(self.settings['image'])
+        self.settings['image'] = suffixed
 
     def cleanup_system(self):
         # Clean up after any errors.
@@ -515,7 +533,7 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         self.message("Changing owner to %s" % self.settings["owner"])
         subprocess.call(["chown",
                          self.settings["owner"],
-                         self.settings["image"]])
+                         self.settings["image"]])            
 
 
 if __name__ == '__main__':
