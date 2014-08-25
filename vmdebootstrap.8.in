@@ -46,7 +46,9 @@ is a wrapper around
 .PP
 You need to run
 .B vmdebootstrap
-as root.
+as root. If the \-\-verbose option is not used, no output will be
+sent to the command line. If the \-\-log option is not used, no
+output will be sent to any log files either.
 .PP
 To use the image,
 you probably want to create a virtual machine using your preferred
@@ -98,8 +100,13 @@ set name to HOSTNAME (debian)
 create USER with PASSWORD
 .IP \-\-owner=OWNER
 change the owner of the final image from root to the specified user.
-.IP \-\-serial-console
+.IP \-\-serial\-console
 configure image to use a serial console
+.IP \-\-serial-console-command
+set the command to manage the serial console which will be appended to
+/etc/inittab. Default is "/sbin/getty -L ttyS0 115200 vt100", resulting in a line
+.BR "S0:23:respawn:/sbin/getty -L ttyS0 115200 vt100"
+Requires the \-\-serial\-console option.
 .IP \-\-sudo
 install sudo, and if user is created, add them to sudo group
 .IP \-\-bootsize=BOOTSIZE
@@ -110,6 +117,12 @@ Filesystem to use for the /boot partition. (default ext2)
 Path to the binfmt_handler to enable foreign support in debootstrap. e.g. /usr/bin/qemu-arm-static - note foreign debootstraps may take a signficant amount of time to complete and that debootstrap will retry five times if packages fail to install by default.
 .IP \-\-no\-extlinux
 Skip installation of extlinux. needs a customize script to make the image bootable. Useful for architectures where extlinux is not supportable.
+.IP \-\-squash
+Run mksquashfs against the final image using xz compression - requires
+squashfs-tools to be installed. The final file will have the .squashfs suffix. 
+By default, mksquashfs is allowed to use all processors which may result
+in high load. Run mksquashfs separately if you need to control the number
+of processors used per run.
 .SH Configuration files and settings:
 .IP \-\-dump-config
 write out the entire current configuration
