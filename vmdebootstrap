@@ -242,8 +242,9 @@ class VmDebootstrap(cliapp.Application):
                      'set', '1', 'boot', 'on'])
 
     def install_mbr(self):
-        self.message('Installing MBR')
-        self.runcmd(['install-mbr', self.settings['image']])
+        if os.path.exists("/sbin/install-mbr"):
+            self.message('Installing MBR')
+            self.runcmd(['install-mbr', self.settings['image']])
 
     def setup_kpartx(self):
         out = self.runcmd(['kpartx', '-avs', self.settings['image']])
@@ -440,6 +441,9 @@ class VmDebootstrap(cliapp.Application):
                 f.write('\nS0:23:respawn:%s\n' % serial_command)
 
     def install_extlinux(self, rootdev, rootdir):
+        if not os.path.exists("/usr/bin/extlinux"):
+            self.message("extlinux not installed, skipping.")
+            return
         self.message('Installing extlinux')
 
         def find(pattern):
