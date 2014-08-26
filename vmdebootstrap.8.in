@@ -122,7 +122,7 @@ squashfs-tools to be installed. The final file will have the .squashfs suffix.
 By default, mksquashfs is allowed to use all processors which may result
 in high load. Run mksquashfs separately if you need to control the number
 of processors used per run.
-.IP\-\-configure\-apt
+.IP \-\-configure\-apt
 Use the specified mirror and distribution to create a suitable apt source inside
 the VM.
 .SH Configuration files and settings:
