@@ -1,6 +1,13 @@
 NEWS for vmdebootstrap
 ======================
 
+Version 0.3, unreleased
+-----------------------
+
+* Add example customisation scripts to complement the support
+  for other architectures which need work beyond the scope of
+  available packages.
+
 Version 0.2, released 2013-11-15
 --------------------------------
 
