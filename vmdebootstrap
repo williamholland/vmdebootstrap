@@ -106,6 +106,9 @@ class VmDebootstrap(cliapp.Application):
                              'is complete.')
         self.settings.boolean(['squash'],
                               'use squashfs on the final image.')
+        self.settings.boolean(['configure-apt'],
+                              'Create an apt source based on the distribution '
+                              'and mirror selected.')
 
     def process_args(self, args):
         if not self.settings['image'] and not self.settings['tarball']:
@@ -123,6 +126,7 @@ class VmDebootstrap(cliapp.Application):
             roottype = 'ext4'
             bootdev = None
             boottype = None
+            rootdir = None
             if self.settings['image']:
                 self.create_empty_image()
                 self.partition_image()
@@ -150,6 +154,7 @@ class VmDebootstrap(cliapp.Application):
             self.create_users(rootdir)
             self.remove_udev_persistent_rules(rootdir)
             self.setup_networking(rootdir)
+            self.configure_apt(rootdir)
             self.customize(rootdir)
             if self.settings['image']:
                 if self.settings['extlinux']:
@@ -170,6 +175,10 @@ class VmDebootstrap(cliapp.Application):
                 self.chown(rootdir)
         except BaseException, e:
             self.message('EEEK! Something bad happened...')
+            if rootdir:
+                db_log = os.path.join(rootdir, 'debootstrap', 'debootstrap.log')
+                if os.path.exists(db_log):
+                    shutil.copy(db_log, os.getcwd())
             self.message(e)
             self.cleanup_system()
             raise
@@ -291,11 +300,13 @@ class VmDebootstrap(cliapp.Application):
             args.append(self.settings['variant'])
         args += [self.settings['distribution'],
                  rootdir, self.settings['mirror']]
+        logging.debug(" ".join(args))
         self.runcmd(args)
         if self.settings['foreign']:
             # First copy the binfmt handler over
             shutil.copy(self.settings['foreign'], '%s/usr/bin/' % rootdir)
             # Next, run the package install scripts etc.
+            self.message('Running debootstrap second stage')
             self.runcmd(['chroot', rootdir,
                          '/debootstrap/debootstrap', '--second-stage'])
 
@@ -535,6 +546,21 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         subprocess.call(["chown",
                          self.settings["owner"],
                          self.settings["image"]])
+
+    def configure_apt(self, rootdir):
+        # use the distribution and mirror to create an apt source
+        self.message("Configuring apt to use distribution and mirror")
+        conf = os.path.join(rootdir, 'etc', 'apt', 'sources.list.d', 'base.list')
+        logging.debug('configure apt %s' % conf)
+        f = open(conf, 'w')
+        f.write('''
+        deb %(mirror)s %(distribution)s main
+        #deb-src %(mirror)s %(distribution)s main
+        ''' % {
+            'mirror': self.settings['mirror'],
+            'distribution': self.settings['distribution']
+        })
+        f.close()
 
 if __name__ == '__main__':
     VmDebootstrap(version=__version__).run()
