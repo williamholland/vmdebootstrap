@@ -124,7 +124,7 @@ in high load. Run mksquashfs separately if you need to control the number
 of processors used per run.
 .IP \-\-configure\-apt
 Use the specified mirror and distribution to create a suitable apt source inside
-the VM.
+the VM. Can be useful if debootstrap fails to create it automatically.
 .SH Configuration files and settings:
 .IP \-\-dump-config
 write out the entire current configuration

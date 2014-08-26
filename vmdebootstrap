@@ -156,7 +156,8 @@ class VmDebootstrap(cliapp.Application):
             self.create_users(rootdir)
             self.remove_udev_persistent_rules(rootdir)
             self.setup_networking(rootdir)
-            self.configure_apt(rootdir)
+            if self.settings['configure-apt']:
+                self.configure_apt(rootdir)
             self.customize(rootdir)
             if self.settings['image']:
                 if self.settings['extlinux']:
@@ -560,9 +561,9 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         logging.debug('configure apt %s' % conf)
         f = open(conf, 'w')
         f.write('''
-        deb %(mirror)s %(distribution)s main
-        #deb-src %(mirror)s %(distribution)s main
-        ''' % {
+deb %(mirror)s %(distribution)s main
+#deb-src %(mirror)s %(distribution)s main
+''' % {
             'mirror': self.settings['mirror'],
             'distribution': self.settings['distribution']
         })
