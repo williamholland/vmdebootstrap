@@ -106,7 +106,6 @@ configure image to use a serial console
 set the command to manage the serial console which will be appended to
 /etc/inittab. Default is "/sbin/getty -L ttyS0 115200 vt100", resulting in a line
 .BR "S0:23:respawn:/sbin/getty -L ttyS0 115200 vt100"
-Requires the \-\-serial\-console option.
 .IP \-\-sudo
 install sudo, and if user is created, add them to sudo group
 .IP \-\-bootsize=BOOTSIZE
@@ -123,6 +122,9 @@ squashfs-tools to be installed. The final file will have the .squashfs suffix.
 By default, mksquashfs is allowed to use all processors which may result
 in high load. Run mksquashfs separately if you need to control the number
 of processors used per run.
+.IP\-\-configure\-apt
+Use the specified mirror and distribution to create a suitable apt source inside
+the VM.
 .SH Configuration files and settings:
 .IP \-\-dump-config
 write out the entire current configuration
@@ -165,6 +167,16 @@ Execute using qemu, e.g. on amd64 using qemu-system-x86_64:
 qemu-system-x86_64 ./test.img
 .PP
 (This loads the image in a new window.)
+.SH NOTES
+If you get problems with the bootstrap process, run a similar bootstrap call directly and chroot into the directory to investigate the failure. The actual debootstrap call is part of the vmdebootstrap logfile. The debootstrap logfile, if any, will be copied into your current working directory on error.
+.PP
+.B debootstrap
+will download all the apt archive files into the apt cache and does not remove them before starting the configuration of the packages. This can mean that debootstrap can fail due to a lack of space on the device if the VM size is small. vmdebootstrap cleans up the apt cache once debootstrap has finished but this doesn't help if the package unpack or configuration steps use up all of the space in the meantime. Avoid this problem by specifying a larger size for the image.
+.PP
+Note that if you are also using a separate /boot partition in your options to vmdebootstrap, it may well be the boot partition which needs to be enlarged rather than the entire image.
+.PP
+It is advisable to change the mirror in the example scripts to a mirror closer to your location,
+particularly if you need to do repeated builds.
 .PP
 .SH "SEE ALSO"
 .BR debootstrap (8)
