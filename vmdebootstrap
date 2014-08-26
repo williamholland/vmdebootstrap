@@ -33,7 +33,9 @@ __version__ = '0.3'
 class VmDebootstrap(cliapp.Application):
 
     def add_settings(self):
-        default_arch = 'amd64'
+        default_arch = self.runcmd(
+            ["dpkg", "--print-architecture"],
+            ignore_fail=False).strip()
 
         self.settings.boolean(['verbose'], 'report what is going on')
         self.settings.string(['image'], 'put created disk image in FILE',
