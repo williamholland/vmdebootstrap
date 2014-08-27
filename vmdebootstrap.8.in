@@ -125,6 +125,15 @@ of processors used per run.
 .IP \-\-configure\-apt
 Use the specified mirror and distribution to create a suitable apt source inside
 the VM. Can be useful if debootstrap fails to create it automatically.
+.IP \-\-grub
+Disable extlinux installation and configure grub2 instead. grub2 will be added to
+the list of packages to install. update-grub will be called once the debootstrap is
+complete and grub-install will be called in the image. Versions of grub2 in wheezy
+can fail to install in the VM, at which point vmdebootstrap will fall back to
+extlinux. It may still be possible to complete the installation of grub2 after
+booting the VM as the problem may be related to the need to use loopback
+devices during the grub-install operation. Details of the error will appear in the
+vmdebootstrap log file, if enabled with the \-\-log option.
 .SH Configuration files and settings:
 .IP \-\-dump-config
 write out the entire current configuration
