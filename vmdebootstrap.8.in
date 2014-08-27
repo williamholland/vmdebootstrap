@@ -28,7 +28,7 @@ vmdebootstrap \- install basic Debian system into virtual disk image
 [--customize=SCRIPT] [--hostname=HOSTNAME] [--user=USER/PASSWORD]
 [--serial-console | --no-serial-console] [--sudo | --no-sudo] [--owner=OWNER]
 [--bootsize=BOOTSIZE] [--boottype=FSTYPE] [--foreign=PATH] [--variant=VARIANT]
-[--no-extlinux]
+[--no-extlinux] [--squash] [--configure-apt] [--grub]
 .SH DESCRIPTION
 .B vmdebootstrap
 installs a basic Debian system into a virtual disk image,
@@ -63,8 +63,9 @@ and log into it via its console to configure it.
 Unless the \-\-no\-extlinux option is specified, the image will use
 .BR extlinux (1)
 as a boot loader.
-The imagehas an empty root password and will not have networking configured.
-Set the root password before you configure networking.
+The image has an empty root password and will not have networking
+configured by default. Set the root password before you configure
+networking.
 .SH OPTIONS
 .IP \-\-output=FILE
 write output to FILE, instead of standard output
@@ -176,6 +177,8 @@ Execute using qemu, e.g. on amd64 using qemu-system-x86_64:
 qemu-system-x86_64 ./test.img
 .PP
 (This loads the image in a new window.)
+.PP
+For further examples, including u-boot support for beaglebone-black, see /usr/share/vmdebootstrap/examples
 .SH NOTES
 If you get problems with the bootstrap process, run a similar bootstrap call directly and chroot into the directory to investigate the failure. The actual debootstrap call is part of the vmdebootstrap logfile. The debootstrap logfile, if any, will be copied into your current working directory on error.
 .PP
@@ -190,7 +193,9 @@ particularly if you need to do repeated builds.
 .SH "SEE ALSO"
 .BR debootstrap (8)
 ,
-.BR qemu (1)
+.BR qemu-system-x86_64 (1)
+,
+.BR grub-install (8)
 .
 .SH BUGS
 Please provide the config section of the logfile when reporting bugs, as well as the complete command line.
