@@ -111,6 +111,11 @@ class VmDebootstrap(cliapp.Application):
         self.settings.boolean(['configure-apt'],
                               'Create an apt source based on the distribution '
                               'and mirror selected.')
+        self.settings.boolean(['mbr'],
+                              'Run install-mbr (no longer done by default)')
+        self.settings.boolean(['grub'],
+                              'Install and configure grub2 - disables '
+                              'extlinux.')
 
     def process_args(self, args):
         if not self.settings['image'] and not self.settings['tarball']:
@@ -132,7 +137,8 @@ class VmDebootstrap(cliapp.Application):
             if self.settings['image']:
                 self.create_empty_image()
                 self.partition_image()
-                self.install_mbr()
+                if self.settings['mbr']:
+                    self.install_mbr()
                 (rootdev, bootdev) = self.setup_kpartx()
                 self.mkfs(rootdev, type=roottype)
                 rootdir = self.mount(rootdev)
@@ -160,7 +166,9 @@ class VmDebootstrap(cliapp.Application):
                 self.configure_apt(rootdir)
             self.customize(rootdir)
             if self.settings['image']:
-                if self.settings['extlinux']:
+                if self.settings['grub']:
+                    self.install_grub2(rootdev, rootdir)
+                elif self.settings['extlinux']:
                     self.install_extlinux(rootdev, rootdir)
                 self.append_serial_console(rootdir)
                 self.optimize_image(rootdir)
@@ -280,6 +288,9 @@ class VmDebootstrap(cliapp.Application):
             necessary_packages = []
         else:
             necessary_packages = ['acpid']
+
+        if self.settings['grub']:
+            necessary_packages.append('grub2')
 
         include = self.settings['package']
 
@@ -442,6 +453,26 @@ class VmDebootstrap(cliapp.Application):
             inittab = os.path.join(rootdir, 'etc/inittab')
             with open(inittab, 'a') as f:
                 f.write('\nS0:23:respawn:%s\n' % serial_command)
+
+    def install_grub2(self, rootdev, rootdir):
+        self.message("Configuring grub2")
+        # rely on kpartx using consistent naming to map loop0p1 to loop0
+        install_dev = os.path.join('/dev', os.path.basename(rootdev)[:-2])
+        self.runcmd(['mount', '/dev', '-t', 'devfs', '-obind',
+                    '%s' % os.path.join(rootdir, 'dev')])
+        self.runcmd(['mount', '/proc', '-t', 'proc', '-obind',
+                    '%s' % os.path.join(rootdir, 'proc')])
+        self.runcmd(['mount', '/sys', '-t', 'sysfs', '-obind',
+                    '%s' % os.path.join(rootdir, 'sys')])
+        try:
+            self.runcmd(['chroot', rootdir, 'update-grub'])
+            self.runcmd(['chroot', rootdir, 'grub-install', install_dev])
+        except cliapp.AppException as e:
+            self.message("Failed to configure grub2. Using extlinux.")
+        self.runcmd(['umount', os.path.join(rootdir, 'sys')])
+        self.runcmd(['umount', os.path.join(rootdir, 'proc')])
+        self.runcmd(['umount', os.path.join(rootdir, 'dev')])
+        self.install_extlinux(rootdev, rootdir)
 
     def install_extlinux(self, rootdev, rootdir):
         if not os.path.exists("/usr/bin/extlinux"):
