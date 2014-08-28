@@ -94,7 +94,11 @@ enable DHCP on eth0
 .IP \-\-root-password=PASSWORD
 set root password
 .IP \-\-customize=SCRIPT
-run SCRIPT after setting up system
+run SCRIPT after setting up system. If the script does not exist in the current
+working directory, /usr/share/vmdebootstrap/examples/ will be checked as a
+fallback. The script needs to be executable and is passed the root directory of
+the debootstrap as the only argument. Use chroot if you need to execute binaries
+within the debootstrap.
 .IP \-\-hostname=HOSTNAME
 set name to HOSTNAME (debian)
 .IP \-\-user=USER/PASSWORD
