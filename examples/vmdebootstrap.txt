@@ -1,0 +1,47 @@
+
+# Run vmdebootstrap script to create image
+sudo \
+    vmdebootstrap \
+    --log ../log \
+    --log-level debug \
+    --size 3G \
+    --image $IMAGE.img \
+    --verbose \
+    --mirror $MIRROR \
+    --customize "$basedir/bin/freedombox-customize" \
+    --arch $ARCHITECTURE \
+    --distribution $SUITE \
+    $extra_opts \
+    $pkgopts
+
+Needs u-boot:armhf & linux-image-armmp:armhf in the image.
+
+sudo ./vmdebootstrap --image ../images/test.img \
+ --size 1g --owner $(whoami) --verbose \
+ --mirror http://mirror.bytemark.co.uk/debian \
+ --log ../images/test.log --log-level debug \
+ --arch armhf \
+ --foreign /usr/bin/qemu-arm-static \
+ --no-extlinux \
+ --no-kernel \
+ --package u-boot \
+ --package linux-image-armmp \
+ --distribution sid \
+ --bootsize 20m --boottype vfat
+
+# copy u-boot specific files
+
+# copy auto-serial-console to /bin/
+
+sudo vmdebootstrap \
+  --enable-dhcp \
+  --serial-console --serial-console-command='/bin/auto-serial-console' \
+  --root-password='root' \
+  --verbose \
+  "$@"
+
+sudo vmdebootstrap \
+  --enable-dhcp --no-kernel --package=linux-image-generic \
+  --serial-console --serial-console-command='/bin/auto-serial-console' \
+  --root-password='root' --hostname='ubuntu' --user=user/pass --sudo \
+  --verbose \
