@@ -16,7 +16,10 @@ The only required argument for each example is the image name.
 Beaglebone-black
 ----------------
 
-sudo ./beagleboneblack.sh --image bbb.img
+/usr/share/vmdebootstrap/examples/beagleboneblack.sh --image bbb.img
+
+Examples will run vmdebootstrap with sudo, you may be asked for
+authentication.
 
 Arguments other than those already included in the shortcut can also
 be supplied, where required. e.g. --size, --variant, --package (can be
@@ -25,3 +28,5 @@ specified multiple times), --hostname, --sudo, --root-password or
 
 CubieTruck
 ----------
+
+Currently untested and lacking u-boot support.
