@@ -20,7 +20,6 @@ import crypt
 import logging
 import os
 import re
-import time
 import shutil
 import subprocess
 import tempfile
@@ -33,9 +32,8 @@ __version__ = '0.3'
 class VmDebootstrap(cliapp.Application):
 
     def add_settings(self):
-        default_arch = self.runcmd(
-            ["dpkg", "--print-architecture"],
-            ignore_fail=False).strip()
+        default_arch = subprocess.check_output(
+                ["dpkg", "--print-architecture"]).strip()
 
         self.settings.boolean(['verbose'], 'report what is going on')
         self.settings.string(['image'], 'put created disk image in FILE',
@@ -319,6 +317,7 @@ class VmDebootstrap(cliapp.Application):
         self.runcmd(args)
         if self.settings['foreign']:
             # First copy the binfmt handler over
+            self.message('Setting up binfmt handler')
             shutil.copy(self.settings['foreign'], '%s/usr/bin/' % rootdir)
             # Next, run the package install scripts etc.
             self.message('Running debootstrap second stage')
