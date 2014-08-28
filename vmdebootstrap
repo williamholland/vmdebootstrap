@@ -567,10 +567,17 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
 
     def customize(self, rootdir):
         script = self.settings['customize']
-        if script:
-            self.message('Running customize script %s' % script)
-            with open('/dev/tty', 'w') as tty:
-                cliapp.runcmd([script, rootdir], stdout=tty, stderr=tty)
+        if not script:
+            return
+        if not os.path.exists(script):
+            example = os.path.join("/usr/share/vmdebootstrap/examples/", script)
+            if not os.path.exists(example):
+                self.message("Unable to find %s" % script)
+                return
+            script = example
+        self.message('Running customize script %s' % script)
+        with open('/dev/tty', 'w') as tty:
+            cliapp.runcmd([script, rootdir], stdout=tty, stderr=tty)
 
     def create_tarball(self, rootdir):
         # Create a tarball of the disk's contents
