@@ -199,11 +199,11 @@ class VmDebootstrap(cliapp.Application):
         if self.settings['verbose']:
             print msg
 
-    def runcmd(self, argv, stdin='', ignore_fail=False, **kwargs):
-        logging.debug('runcmd: %s %s' % (argv, kwargs))
+    def runcmd(self, argv, stdin='', ignore_fail=False, env=None, **kwargs):
+        logging.debug('runcmd: %s %s %s' % (argv, env, kwargs))
         p = subprocess.Popen(argv, stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                             **kwargs)
+                             env=env, **kwargs)
         out, err = p.communicate(stdin)
         if p.returncode != 0:
             msg = 'command failed: %s\n%s\n%s' % (argv, out, err)
@@ -304,8 +304,9 @@ class VmDebootstrap(cliapp.Application):
             include.append('sudo')
 
         args = ['debootstrap', '--arch=%s' % self.settings['arch']]
-        args.append(
-            '--include=%s' % ','.join(necessary_packages + include))
+        if self.settings['package'] and len(necessary_packages) > 0:
+            args.append(
+                '--include=%s' % ','.join(necessary_packages + include))
         if self.settings['foreign']:
             args.append('--foreign')
         if self.settings['variant']:
@@ -316,13 +317,22 @@ class VmDebootstrap(cliapp.Application):
         logging.debug(" ".join(args))
         self.runcmd(args)
         if self.settings['foreign']:
+            # set a noninteractive debconf environment for secondstage
+            env = {
+                "DEBIAN_FRONTEND": "noninteractive",
+                "DEBCONF_NONINTERACTIVE_SEEN": "true",
+                "LC_ALL": "C"
+            }
+            # add the mapping to the complete environment.
+            env.update(os.environ)
             # First copy the binfmt handler over
             self.message('Setting up binfmt handler')
             shutil.copy(self.settings['foreign'], '%s/usr/bin/' % rootdir)
             # Next, run the package install scripts etc.
             self.message('Running debootstrap second stage')
             self.runcmd(['chroot', rootdir,
-                         '/debootstrap/debootstrap', '--second-stage'])
+                         '/debootstrap/debootstrap', '--second-stage'],
+                         env=env)
 
     def set_hostname(self, rootdir):
         hostname = self.settings['hostname']
@@ -488,8 +498,13 @@ class VmDebootstrap(cliapp.Application):
                     return os.path.join('boot', basename)
             raise cliapp.AppException('Cannot find match: %s' % pattern)
 
-        kernel_image = find('vmlinuz-.*')
-        initrd_image = find('initrd.img-.*')
+        try:
+            kernel_image = find('vmlinuz-.*')
+            initrd_image = find('initrd.img-.*')
+        except cliapp.AppException as e:
+            self.message("Unable to find kernel. Not installing extlinux.")
+            logging.debug("No kernel found. %s. Skipping install of extlinux." % e)
+            return
 
         out = self.runcmd(['blkid', '-c', '/dev/null', '-o', 'value',
                            '-s', 'UUID', rootdev])
