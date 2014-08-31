@@ -33,7 +33,7 @@ class VmDebootstrap(cliapp.Application):
 
     def add_settings(self):
         default_arch = subprocess.check_output(
-                ["dpkg", "--print-architecture"]).strip()
+            ["dpkg", "--print-architecture"]).strip()
 
         self.settings.boolean(['verbose'], 'report what is going on')
         self.settings.string(['image'], 'put created disk image in FILE',
@@ -332,7 +332,7 @@ class VmDebootstrap(cliapp.Application):
             self.message('Running debootstrap second stage')
             self.runcmd(['chroot', rootdir,
                          '/debootstrap/debootstrap', '--second-stage'],
-                         env=env)
+                        env=env)
 
     def set_hostname(self, rootdir):
         hostname = self.settings['hostname']
