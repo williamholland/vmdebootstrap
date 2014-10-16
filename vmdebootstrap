@@ -60,7 +60,7 @@ class VmDebootstrap(cliapp.Application):
         self.settings.string(['mirror'],
                              'use MIRROR as package source (%default)',
                              metavar='URL',
-                             default='http://cdn.debian.net/debian/')
+                             default='http://http.debian.net/debian/')
         self.settings.string(['arch'], 'architecture to use (%default)',
                              metavar='ARCH',
                              default=default_arch)
