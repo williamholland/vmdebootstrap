@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # Copyright 2011-2013  Lars Wirzenius
 # Copyright 2012  Codethink Limited
+# Copyright 2014 Neil Williams <codehelp@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +27,7 @@ import tempfile
 import time
 
 
-__version__ = '0.3'
+__version__ = '0.4'
 
 
 class VmDebootstrap(cliapp.Application):
@@ -53,10 +54,7 @@ class VmDebootstrap(cliapp.Application):
                              'set up foreign debootstrap environment using provided program (ie binfmt handler)')
         self.settings.string(['variant'],
                              'select debootstrap variant it not using the default')
-        self.settings.boolean(
-            ['extlinux'],
-            'install extlinux?',
-            default=True)
+        self.settings.boolean(['extlinux'], 'install extlinux?', default=True)
         self.settings.string(['tarball'], "tar up the disk's contents in FILE",
                              metavar='FILE')
         self.settings.string(['mirror'],
@@ -163,6 +161,8 @@ class VmDebootstrap(cliapp.Application):
             if self.settings['configure-apt']:
                 self.configure_apt(rootdir)
             self.customize(rootdir)
+            self.update_initramfs(rootdir)
+
             if self.settings['image']:
                 if self.settings['grub']:
                     self.install_grub2(rootdev, rootdir)
@@ -249,6 +249,12 @@ class VmDebootstrap(cliapp.Application):
                      'mkpart', 'primary', bootsize, '100%'])
         self.runcmd(['parted', '-s', self.settings['image'],
                      'set', '1', 'boot', 'on'])
+
+    def update_initramfs(self, rootdir):
+        cmd = os.path.join('usr', 'sbin', 'update-initramfs')
+        if os.path.exists(os.path.join(rootdir, cmd)):
+            self.message("Updating the initramfs")
+            self.runcmd(['chroot', rootdir, cmd, '-u'])
 
     def install_mbr(self):
         if os.path.exists("/sbin/install-mbr"):
