@@ -112,6 +112,9 @@ class VmDebootstrap(cliapp.Application):
         self.settings.boolean(['grub'],
                               'Install and configure grub2 - disables '
                               'extlinux.')
+        self.settings.boolean(['sparse'],
+                'Dont fill the image with zeros to keep a sparse disk image',
+                default=False)
 
     def process_args(self, args):
         if not self.settings['image'] and not self.settings['tarball']:
@@ -545,9 +548,10 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         """
         Filing up the image with zeros will increase its compression rate
         """
-        zeros = os.path.join(rootdir, 'ZEROS')
-        self.runcmd_unchecked(['dd', 'if=/dev/zero', 'of=' + zeros, 'bs=1M'])
-        self.runcmd(['rm', '-f', zeros])
+        if not self.settings['sparse']:
+            zeros = os.path.join(rootdir, 'ZEROS')
+            self.runcmd_unchecked(['dd', 'if=/dev/zero', 'of=' + zeros, 'bs=1M'])
+            self.runcmd(['rm', '-f', zeros])
 
     def squash(self):
         """
