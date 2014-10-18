@@ -483,7 +483,7 @@ class VmDebootstrap(cliapp.Application):
             self.runcmd(['chroot', rootdir, 'update-grub'])
             self.runcmd(['chroot', rootdir, 'grub-install', install_dev])
         except cliapp.AppException as e:
-            self.message("Failed to configure grub2. Using extlinux.")
+            self.message("Failed. Is grub2-common installed? Using extlinux.")
         self.runcmd(['umount', os.path.join(rootdir, 'sys')])
         self.runcmd(['umount', os.path.join(rootdir, 'proc')])
         self.runcmd(['umount', os.path.join(rootdir, 'dev')])
