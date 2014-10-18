@@ -60,7 +60,8 @@ Configure the virtual machine to use the image you've created.
 Then start the virtual machine,
 and log into it via its console to configure it.
 .PP
-Unless the \-\-no\-extlinux option is specified, the image will use
+Unless the \-\-no\-extlinux or \-\-grub options are specified, the
+image will use
 .BR extlinux (1)
 as a boot loader.
 The image has an empty root password and will not have networking
@@ -121,6 +122,8 @@ Filesystem to use for the /boot partition. (default ext2)
 Path to the binfmt_handler to enable foreign support in debootstrap. e.g. /usr/bin/qemu-arm-static - note foreign debootstraps may take a signficant amount of time to complete and that debootstrap will retry five times if packages fail to install by default.
 .IP \-\-no\-extlinux
 Skip installation of extlinux. needs a customize script to make the image bootable. Useful for architectures where extlinux is not supportable.
+Depending on how the image is to be booted, the \-\-mbr option may also be
+necessary with extlinux.
 .IP \-\-squash
 Run mksquashfs against the final image using xz compression - requires
 squashfs-tools to be installed. The final file will have the .squashfs suffix. 
