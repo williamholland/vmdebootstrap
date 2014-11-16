@@ -57,16 +57,30 @@ virtualization technology, such as
 or
 .BR qemu (1).
 Configure the virtual machine to use the image you've created.
-Then start the virtual machine,
+Then start the virtual machine, (see
+.B EXAMPLES
+)
 and log into it via its console to configure it.
-.PP
+The image has an empty root password and will not have networking
+configured by default. Set the root password before you configure
+networking.
+.SH BOOTLOADERS
 Unless the \-\-no\-extlinux or \-\-grub options are specified, the
 image will use
 .BR extlinux (1)
 as a boot loader.
-The image has an empty root password and will not have networking
-configured by default. Set the root password before you configure
-networking.
+.B bootsize
+is not recommended when using
+.B extlinux
+- use grub instead.
+Versions of grub2 in wheezy
+can fail to install in the VM, at which point vmdebootstrap will fall back to
+extlinux. It may still be possible to complete the installation of grub2 after
+booting the VM as the problem may be related to the need to use loopback
+devices during the grub-install operation. Details of the error will appear in the
+vmdebootstrap log file, if enabled with the \-\-log option. Note that
+.B grub-legacy
+is not supported.
 .SH OPTIONS
 .IP \-\-output=FILE
 write output to FILE, instead of standard output
@@ -136,12 +150,7 @@ the VM. Can be useful if debootstrap fails to create it automatically.
 .IP \-\-grub
 Disable extlinux installation and configure grub2 instead. grub2 will be added to
 the list of packages to install. update-grub will be called once the debootstrap is
-complete and grub-install will be called in the image. Versions of grub2 in wheezy
-can fail to install in the VM, at which point vmdebootstrap will fall back to
-extlinux. It may still be possible to complete the installation of grub2 after
-booting the VM as the problem may be related to the need to use loopback
-devices during the grub-install operation. Details of the error will appear in the
-vmdebootstrap log file, if enabled with the \-\-log option.
+complete and grub-install will be called in the image.
 .SH Configuration files and settings:
 .IP \-\-dump-config
 write out the entire current configuration
