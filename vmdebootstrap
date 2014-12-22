@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/python
 # Copyright 2011-2013  Lars Wirzenius
 # Copyright 2012  Codethink Limited
 # Copyright 2014 Neil Williams <codehelp@debian.org>
@@ -27,7 +27,7 @@ import tempfile
 import time
 
 
-__version__ = '0.5'
+__version__ = '0.6'
 
 
 class VmDebootstrap(cliapp.Application):
@@ -57,6 +57,9 @@ class VmDebootstrap(cliapp.Application):
         self.settings.boolean(['extlinux'], 'install extlinux?', default=True)
         self.settings.string(['tarball'], "tar up the disk's contents in FILE",
                              metavar='FILE')
+        self.settings.string(['apt-mirror'],
+                             'configure apt to use MIRROR',
+                             metavar='URL')
         self.settings.string(['mirror'],
                              'use MIRROR as package source (%default)',
                              metavar='URL',
@@ -113,8 +116,13 @@ class VmDebootstrap(cliapp.Application):
                               'Install and configure grub2 - disables '
                               'extlinux.')
         self.settings.boolean(['sparse'],
-                'Dont fill the image with zeros to keep a sparse disk image',
-                default=False)
+                              'Dont fill the image with zeros to keep a sparse disk image',
+                              default=False)
+        self.settings.boolean(['pkglist'],
+                              'Create a list of package names included in '
+                              'the image.')
+        self.remove_dirs = []
+        self.mount_points = []
 
     def process_args(self, args):
         if not self.settings['image'] and not self.settings['tarball']:
@@ -139,14 +147,14 @@ class VmDebootstrap(cliapp.Application):
                 if self.settings['mbr']:
                     self.install_mbr()
                 (rootdev, bootdev) = self.setup_kpartx()
-                self.mkfs(rootdev, type=roottype)
+                self.mkfs(rootdev, fstype=roottype)
                 rootdir = self.mount(rootdev)
                 if bootdev:
                     if self.settings['boottype']:
                         boottype = self.settings['boottype']
                     else:
                         boottype = 'ext2'
-                    self.mkfs(bootdev, type=boottype)
+                    self.mkfs(bootdev, fstype=boottype)
                     bootdir = '%s/%s' % (rootdir, 'boot/')
                     os.mkdir(bootdir)
                     bootdir = self.mount(bootdev, bootdir)
@@ -161,7 +169,7 @@ class VmDebootstrap(cliapp.Application):
             self.create_users(rootdir)
             self.remove_udev_persistent_rules(rootdir)
             self.setup_networking(rootdir)
-            if self.settings['configure-apt']:
+            if self.settings['configure-apt'] or self.settings['apt-mirror']:
                 self.configure_apt(rootdir)
             self.customize(rootdir)
             self.update_initramfs(rootdir)
@@ -175,6 +183,8 @@ class VmDebootstrap(cliapp.Application):
                 self.optimize_image(rootdir)
                 if self.settings['squash']:
                     self.squash()
+            if self.settings['pkglist']:
+                self.list_installed_pkgs(rootdir)
 
             if self.settings['foreign']:
                 os.unlink('%s/usr/bin/%s' %
@@ -203,7 +213,7 @@ class VmDebootstrap(cliapp.Application):
             print msg
 
     def runcmd(self, argv, stdin='', ignore_fail=False, env=None, **kwargs):
-        logging.debug('runcmd: %s %s %s' % (argv, env, kwargs))
+        logging.debug('runcmd: %s %s %s', argv, env, kwargs)
         p = subprocess.Popen(argv, stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                              env=env, **kwargs)
@@ -218,7 +228,7 @@ class VmDebootstrap(cliapp.Application):
     def mkdtemp(self):
         dirname = tempfile.mkdtemp()
         self.remove_dirs.append(dirname)
-        logging.debug('mkdir %s' % dirname)
+        logging.debug('mkdir %s', dirname)
         return dirname
 
     def mount(self, device, path=None):
@@ -229,7 +239,7 @@ class VmDebootstrap(cliapp.Application):
         self.message('Mounting %s on %s' % (device, mount_point))
         self.runcmd(['mount', device, mount_point])
         self.mount_points.append(mount_point)
-        logging.debug('mounted %s on %s' % (device, mount_point))
+        logging.debug('mounted %s on %s', device, mount_point)
         return mount_point
 
     def create_empty_image(self):
@@ -284,9 +294,9 @@ class VmDebootstrap(cliapp.Application):
             boot = '/dev/mapper/%s' % devices[bootindex]
         return (root, boot)
 
-    def mkfs(self, device, type):
-        self.message('Creating filesystem %s' % type)
-        self.runcmd(['mkfs', '-t', type, device])
+    def mkfs(self, device, fstype):
+        self.message('Creating filesystem %s' % fstype)
+        self.runcmd(['mkfs', '-t', fstype, device])
 
     def debootstrap(self, rootdir):
         self.message('Debootstrapping')
@@ -357,7 +367,7 @@ class VmDebootstrap(cliapp.Application):
                     if line.startswith('127.0.0.1'):
                         line += ' %s' % hostname
                     f.write('%s\n' % line)
-        except IOError, e:
+        except IOError:
             pass
 
     def create_fstab(self, rootdir, rootdev, roottype, bootdev, boottype):
@@ -393,18 +403,18 @@ class VmDebootstrap(cliapp.Application):
             shutil.copy(deb, tmp)
         filenames = [os.path.join('/tmp/install_debs', os.path.basename(deb))
                      for deb in self.settings['custom-package']]
-        out, err, exit = \
+        out, err, exitcode = \
             self.runcmd_unchecked(['chroot', rootdir, 'dpkg', '-i'] + filenames)
-        logging.debug('stdout:\n%s' % out)
-        logging.debug('stderr:\n%s' % err)
+        logging.debug('stdout:\n%s', out)
+        logging.debug('stderr:\n%s', err)
         out = self.runcmd(['chroot', rootdir,
-                          'apt-get', '-f', '--no-remove', 'install'])
-        logging.debug('stdout:\n%s' % out)
+                           'apt-get', '-f', '--no-remove', 'install'])
+        logging.debug('stdout:\n%s', out)
         shutil.rmtree(tmp)
 
     def cleanup_apt_cache(self, rootdir):
         out = self.runcmd(['chroot', rootdir, 'apt-get', 'clean'])
-        logging.debug('stdout:\n%s' % out)
+        logging.debug('stdout:\n%s', out)
 
     def set_root_password(self, rootdir):
         if self.settings['root-password']:
@@ -445,10 +455,10 @@ class VmDebootstrap(cliapp.Application):
         for x in ['70-persistent-cd.rules', '70-persistent-net.rules']:
             pathname = os.path.join(rootdir, 'etc', 'udev', 'rules.d', x)
             if os.path.exists(pathname):
-                logging.debug('rm %s' % pathname)
+                logging.debug('rm %s', pathname)
                 os.remove(pathname)
             else:
-                logging.debug('not removing non-existent %s' % pathname)
+                logging.debug('not removing non-existent %s', pathname)
 
     def setup_networking(self, rootdir):
         self.message('Setting up networking')
@@ -469,6 +479,7 @@ class VmDebootstrap(cliapp.Application):
             serial_command = self.settings['serial-console-command']
             logging.debug('adding getty to serial console')
             inittab = os.path.join(rootdir, 'etc/inittab')
+            # to autologin, serial_command can contain '-a root'
             with open(inittab, 'a') as f:
                 f.write('\nS0:23:respawn:%s\n' % serial_command)
 
@@ -477,11 +488,11 @@ class VmDebootstrap(cliapp.Application):
         # rely on kpartx using consistent naming to map loop0p1 to loop0
         install_dev = os.path.join('/dev', os.path.basename(rootdev)[:-2])
         self.runcmd(['mount', '/dev', '-t', 'devfs', '-obind',
-                    '%s' % os.path.join(rootdir, 'dev')])
+                     '%s' % os.path.join(rootdir, 'dev')])
         self.runcmd(['mount', '/proc', '-t', 'proc', '-obind',
-                    '%s' % os.path.join(rootdir, 'proc')])
+                     '%s' % os.path.join(rootdir, 'proc')])
         self.runcmd(['mount', '/sys', '-t', 'sysfs', '-obind',
-                    '%s' % os.path.join(rootdir, 'sys')])
+                     '%s' % os.path.join(rootdir, 'sys')])
         try:
             self.runcmd(['chroot', rootdir, 'update-grub'])
             self.runcmd(['chroot', rootdir, 'grub-install', install_dev])
@@ -501,7 +512,7 @@ class VmDebootstrap(cliapp.Application):
         def find(pattern):
             dirname = os.path.join(rootdir, 'boot')
             basenames = os.listdir(dirname)
-            logging.debug('find: %s' % basenames)
+            logging.debug('find: %s', basenames)
             for basename in basenames:
                 if re.search(pattern, basename):
                     return os.path.join('boot', basename)
@@ -512,7 +523,7 @@ class VmDebootstrap(cliapp.Application):
             initrd_image = find('initrd.img-.*')
         except cliapp.AppException as e:
             self.message("Unable to find kernel. Not installing extlinux.")
-            logging.debug("No kernel found. %s. Skipping install of extlinux." % e)
+            logging.debug("No kernel found. %s. Skipping install of extlinux.", e)
             return
 
         out = self.runcmd(['blkid', '-c', '/dev/null', '-o', 'value',
@@ -520,7 +531,7 @@ class VmDebootstrap(cliapp.Application):
         uuid = out.splitlines()[0].strip()
 
         conf = os.path.join(rootdir, 'extlinux.conf')
-        logging.debug('configure extlinux %s' % conf)
+        logging.debug('configure extlinux %s', conf)
         f = open(conf, 'w')
         f.write('''
 default linux
@@ -616,17 +627,30 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
                          self.settings["owner"],
                          self.settings["image"]])
 
+    def list_installed_pkgs(self, rootdir):
+        # output the list of installed packages for sources identification
+        self.message("Creating a list of installed binary package names")
+        out = self.runcmd(['chroot', rootdir,
+                           'dpkg-query', '-W' "-f='${Package}.deb\n'"])
+        with open('dpkg.list', 'w') as dpkg:
+            dpkg.write(out)
+
     def configure_apt(self, rootdir):
         # use the distribution and mirror to create an apt source
         self.message("Configuring apt to use distribution and mirror")
         conf = os.path.join(rootdir, 'etc', 'apt', 'sources.list.d', 'base.list')
-        logging.debug('configure apt %s' % conf)
+        logging.debug('configure apt %s', conf)
+        mirror = self.settings['mirror']
+        if self.settings['apt-mirror']:
+            mirror = self.settings['apt-mirror']
+            self.message("Setting apt mirror to %s" % mirror)
+        os.unlink(os.path.join(rootdir, 'etc', 'apt', 'sources.list'))
         f = open(conf, 'w')
         f.write('''
 deb %(mirror)s %(distribution)s main
 #deb-src %(mirror)s %(distribution)s main
 ''' % {
-            'mirror': self.settings['mirror'],
+            'mirror': mirror,
             'distribution': self.settings['distribution']
         })
         f.close()
