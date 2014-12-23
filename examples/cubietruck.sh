@@ -18,6 +18,6 @@ sudo vmdebootstrap \
  --distribution sid \
  --serial-console-command "/sbin/getty -L ttyS0 115200 vt100" \
  --customize "cubietruck-customise.sh" \
- --serial-console-command \
- --bootsize 50m --boottype vfat \
+ --bootoffset=2mib \
+ --bootsize 100mib --boottype vfat \
  "$@"

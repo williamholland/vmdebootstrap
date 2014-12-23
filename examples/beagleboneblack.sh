@@ -17,5 +17,5 @@ sudo vmdebootstrap \
  --distribution sid \
  --serial-console-command "'/sbin/getty -L ttyO0 115200 vt100'" \
  --customize "beagleboneblack-customise.sh" \
- --bootsize 50m --boottype vfat \
+ --bootsize 100mib --boottype vfat \
  "$@"

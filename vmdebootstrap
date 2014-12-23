@@ -292,17 +292,41 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                      str(self.settings['size'])])
 
     def partition_image(self):
+        """
+        Uses fat16 (msdos) partitioning by default, use part-type to change.
+        If bootoffset is specified, the first actual partition
+        starts at that offset to allow customisation scripts to
+        put bootloader images into the space, e.g. u-boot.
+        """
         self.message('Creating partitions')
         self.runcmd(['parted', '-s', self.settings['image'],
-                     'mklabel', 'msdos'])
+                     'mklabel', self.settings['part-type']])
+        partoffset = 0
+        bootsize = 0
+        if self.settings['bootoffset'] and self.settings['bootoffset'] is not '0':
+            # turn v.small offsets into something at least possible to create.
+            if self.settings['bootoffset'] < 1048576:
+                partoffset = 1
+                logging.info(
+                    "Setting bootoffset %smib to allow for %s bytes",
+                    partoffset, self.settings['bootoffset'])
+            else:
+                partoffset = self.settings['bootoffset'] / (1024 * 1024)
+                self.message("Using bootoffset: %smib %s bytes" % (partoffset, self.settings['bootoffset']))
         if self.settings['bootsize'] and self.settings['bootsize'] is not '0%':
-            bootsize = str(self.settings['bootsize'] / (1024 * 1024))
+            bootsize = self.settings['bootsize'] / (1024 * 1024)
+            bootsize += partoffset
+            self.message("Using bootsize %smib: %s bytes" % (bootsize, self.settings['bootsize']))
+            logging.debug("Starting boot partition at %sMb", bootsize)
             self.runcmd(['parted', '-s', self.settings['image'],
-                         'mkpart', 'primary', 'fat16', '0%', bootsize])
+                         'mkpart', 'primary', 'fat16', str(partoffset), str(bootsize)])
+        if partoffset == 0:
+            self.runcmd(['parted', '-s', self.settings['image'],
+                         'mkpart', 'primary', '0%', '100%'])
         else:
-            bootsize = '0%'
-        self.runcmd(['parted', '-s', self.settings['image'],
-                     'mkpart', 'primary', bootsize, '100%'])
+            logging.debug("Starting root partition at %sMb", partoffset)
+            self.runcmd(['parted', '-s', self.settings['image'],
+                         'mkpart', 'primary', str(bootsize), '100%'])
         self.runcmd(['parted', '-s', self.settings['image'],
                      'set', '1', 'boot', 'on'])
 
@@ -662,8 +686,9 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
                 return
             script = example
         self.message('Running customize script %s' % script)
+        logging.info("rootdir=%s image=%s", rootdir, self.settings['image'])
         with open('/dev/tty', 'w') as tty:
-            cliapp.runcmd([script, rootdir], stdout=tty, stderr=tty)
+            cliapp.runcmd([script, rootdir, self.settings['image']], stdout=tty, stderr=tty)
 
     def create_tarball(self, rootdir):
         # Create a tarball of the disk's contents
