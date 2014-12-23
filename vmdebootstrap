@@ -299,7 +299,8 @@ class VmDebootstrap(cliapp.Application):
         self.runcmd(['mkfs', '-t', fstype, device])
 
     def debootstrap(self, rootdir):
-        self.message('Debootstrapping')
+        msg = "(%s)" % self.settings['variant'] if self.settings['variant'] else ''
+        self.message('Debootstrapping %s %s' % (self.settings['distribution'], msg))
 
         if self.settings['foreign']:
             necessary_packages = []
