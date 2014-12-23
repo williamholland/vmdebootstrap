@@ -29,118 +29,161 @@ import time
 
 __version__ = '0.6'
 
+# pylint: disable=invalid-name
 
-class VmDebootstrap(cliapp.Application):
+
+class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-methods
+
+    def __init__(self, progname=None, version=__version__, description=None, epilog=None):
+        super(VmDebootstrap, self).__init__(progname, version, description, epilog)
+        self.remove_dirs = []
+        self.mount_points = []
 
     def add_settings(self):
         default_arch = subprocess.check_output(
             ["dpkg", "--print-architecture"]).strip()
 
-        self.settings.boolean(['verbose'], 'report what is going on')
-        self.settings.string(['image'], 'put created disk image in FILE',
-                             metavar='FILE')
-        self.settings.bytesize(['size'],
-                               'create a disk image of size SIZE (%default)',
-                               metavar='SIZE',
-                               default='1G')
-        self.settings.bytesize(['bootsize'],
-                               'create boot partition of size SIZE (%default)',
-                               metavar='BOOTSIZE',
-                               default='0%')
-        self.settings.string(['boottype'],
-                             'specify file system type for /boot/',
-                             default='ext2')
-        self.settings.string(['foreign'],
-                             'set up foreign debootstrap environment using provided program (ie binfmt handler)')
-        self.settings.string(['variant'],
-                             'select debootstrap variant it not using the default')
-        self.settings.boolean(['extlinux'], 'install extlinux?', default=True)
-        self.settings.string(['tarball'], "tar up the disk's contents in FILE",
-                             metavar='FILE')
-        self.settings.string(['apt-mirror'],
-                             'configure apt to use MIRROR',
-                             metavar='URL')
-        self.settings.string(['mirror'],
-                             'use MIRROR as package source (%default)',
-                             metavar='URL',
-                             default='http://http.debian.net/debian/')
-        self.settings.string(['arch'], 'architecture to use (%default)',
-                             metavar='ARCH',
-                             default=default_arch)
-        self.settings.string(['distribution'],
-                             'release to use (%default)',
-                             metavar='NAME',
-                             default='stable')
-        self.settings.string_list(['package'], 'install PACKAGE onto system')
-        self.settings.string_list(['custom-package'],
-                                  'install package in DEB file onto system '
-                                  '(not from mirror)',
-                                  metavar='DEB')
-        self.settings.boolean(['no-kernel'], 'do not install a linux package')
-        self.settings.boolean(['enable-dhcp'], 'enable DHCP on eth0')
-        self.settings.string(['root-password'], 'set root password',
-                             metavar='PASSWORD')
-        self.settings.boolean(['lock-root-password'],
-                              'lock root account so they cannot login?')
-        self.settings.string(['customize'],
-                             'run SCRIPT after setting up system',
-                             metavar='SCRIPT')
-        self.settings.string(['hostname'],
-                             'set name to HOSTNAME (%default)',
-                             metavar='HOSTNAME',
-                             default='debian')
-        self.settings.string_list(['user'],
-                                  'create USER with PASSWORD',
-                                  metavar='USER/PASSWORD')
-        self.settings.boolean(['serial-console'],
-                              'configure image to use a serial console')
-        self.settings.string(['serial-console-command'],
-                             'command to manage the serial console, appended '
-                             'to /etc/inittab (%default)',
-                             metavar='COMMAND',
-                             default='/sbin/getty -L ttyS0 115200 vt100')
-        self.settings.boolean(['sudo'],
-                              'install sudo, and if user is created, add them '
-                              'to sudo group')
-        self.settings.string(['owner'],
-                             'the user who will own the image when the build '
-                             'is complete.')
-        self.settings.boolean(['squash'],
-                              'use squashfs on the final image.')
-        self.settings.boolean(['configure-apt'],
-                              'Create an apt source based on the distribution '
-                              'and mirror selected.')
-        self.settings.boolean(['mbr'],
-                              'Run install-mbr (no longer done by default)')
-        self.settings.boolean(['grub'],
-                              'Install and configure grub2 - disables '
-                              'extlinux.')
-        self.settings.boolean(['sparse'],
-                              'Dont fill the image with zeros to keep a sparse disk image',
-                              default=False)
-        self.settings.boolean(['pkglist'],
-                              'Create a list of package names included in '
-                              'the image.')
-        self.remove_dirs = []
-        self.mount_points = []
+        self.settings.boolean(
+            ['verbose'], 'report what is going on')
+        self.settings.string(
+            ['image'], 'put created disk image in FILE',
+            metavar='FILE')
+        self.settings.bytesize(
+            ['size'],
+            'create a disk image of size SIZE (%default)',
+            metavar='SIZE',
+            default='1G')
+        self.settings.bytesize(
+            ['bootsize'],
+            'create boot partition of size SIZE (%default)',
+            metavar='BOOTSIZE',
+            default='0%')
+        self.settings.string(
+            ['boottype'],
+            'specify file system type for /boot/',
+            default='ext2')
+        self.settings.bytesize(
+            ['bootoffset'],
+            'Space to leave at start of the image for bootloader',
+            default='0')
+        self.settings.string(
+            ['part-type'],
+            'Partition type to use for this image',
+            default='msdos')
+        self.settings.string(
+            ['foreign'],
+            'set up foreign debootstrap environment using provided program (ie binfmt handler)')
+        self.settings.string(
+            ['variant'],
+            'select debootstrap variant it not using the default')
+        self.settings.boolean(
+            ['extlinux'],
+            'install extlinux?',
+            default=True)
+        self.settings.string(
+            ['tarball'],
+            "tar up the disk's contents in FILE",
+            metavar='FILE')
+        self.settings.string(
+            ['apt-mirror'],
+            'configure apt to use MIRROR',
+            metavar='URL')
+        self.settings.string(
+            ['mirror'],
+            'use MIRROR as package source (%default)',
+            metavar='URL',
+            default='http://http.debian.net/debian/')
+        self.settings.string(
+            ['arch'],
+            'architecture to use (%default)',
+            metavar='ARCH',
+            default=default_arch)
+        self.settings.string(
+            ['distribution'],
+            'release to use (%default)',
+            metavar='NAME',
+            default='stable')
+        self.settings.string_list(
+            ['package'],
+            'install PACKAGE onto system')
+        self.settings.string_list(
+            ['custom-package'],
+            'install package in DEB file onto system (not from mirror)',
+            metavar='DEB')
+        self.settings.boolean(
+            ['no-kernel'],
+            'do not install a linux package')
+        self.settings.boolean(
+            ['enable-dhcp'],
+            'enable DHCP on eth0')
+        self.settings.string(
+            ['root-password'],
+            'set root password',
+            metavar='PASSWORD')
+        self.settings.boolean(
+            ['lock-root-password'],
+            'lock root account so they cannot login?')
+        self.settings.string(
+            ['customize'],
+            'run SCRIPT after setting up system',
+            metavar='SCRIPT')
+        self.settings.string(
+            ['hostname'],
+            'set name to HOSTNAME (%default)',
+            metavar='HOSTNAME',
+            default='debian')
+        self.settings.string_list(
+            ['user'],
+            'create USER with PASSWORD',
+            metavar='USER/PASSWORD')
+        self.settings.boolean(
+            ['serial-console'],
+            'configure image to use a serial console')
+        self.settings.string(
+            ['serial-console-command'],
+            'command to manage the serial console, appended to /etc/inittab (%default)',
+            metavar='COMMAND',
+            default='/sbin/getty -L ttyS0 115200 vt100')
+        self.settings.boolean(
+            ['sudo'],
+            'install sudo, and if user is created, add them to sudo group')
+        self.settings.string(
+            ['owner'],
+            'the user who will own the image when the build is complete.')
+        self.settings.boolean(
+            ['squash'],
+            'use squashfs on the final image.')
+        self.settings.boolean(
+            ['configure-apt'],
+            'Create an apt source based on the distribution and mirror selected.')
+        self.settings.boolean(
+            ['mbr'],
+            'Run install-mbr (no longer done by default)')
+        self.settings.boolean(
+            ['grub'],
+            'Install and configure grub2 - disables extlinux.')
+        self.settings.boolean(
+            ['sparse'],
+            'Dont fill the image with zeros to keep a sparse disk image',
+            default=False)
+        self.settings.boolean(
+            ['pkglist'],
+            'Create a list of package names included in the image.')
 
-    def process_args(self, args):
+    def process_args(self, args):  # pylint: disable=too-many-branches,too-many-statements
         if not self.settings['image'] and not self.settings['tarball']:
-            raise cliapp.AppException('You must give disk image filename, '
-                                      'or tarball filename')
+            raise cliapp.AppException(
+                'You must give disk image filename, or tarball filename')
         if self.settings['image'] and not self.settings['size']:
-            raise cliapp.AppException('If disk image is specified, '
-                                      'You must give image size.')
+            raise cliapp.AppException(
+                'If disk image is specified, you must give image size.')
 
-        self.remove_dirs = []
-        self.mount_points = []
-
+        rootdir = None
         try:
             rootdev = None
             roottype = 'ext4'
             bootdev = None
             boottype = None
-            rootdir = None
             if self.settings['image']:
                 self.create_empty_image()
                 self.partition_image()
@@ -157,7 +200,7 @@ class VmDebootstrap(cliapp.Application):
                     self.mkfs(bootdev, fstype=boottype)
                     bootdir = '%s/%s' % (rootdir, 'boot/')
                     os.mkdir(bootdir)
-                    bootdir = self.mount(bootdev, bootdir)
+                    self.mount(bootdev, bootdir)
             else:
                 rootdir = self.mkdtemp()
             self.debootstrap(rootdir)
@@ -194,7 +237,7 @@ class VmDebootstrap(cliapp.Application):
                 self.create_tarball(rootdir)
 
             if self.settings['owner']:
-                self.chown(rootdir)
+                self.chown()
         except BaseException, e:
             self.message('EEEK! Something bad happened...')
             if rootdir:
@@ -292,7 +335,7 @@ class VmDebootstrap(cliapp.Application):
         root = '/dev/mapper/%s' % devices[rootindex]
         if self.settings['bootsize']:
             boot = '/dev/mapper/%s' % devices[bootindex]
-        return (root, boot)
+        return root, boot
 
     def mkfs(self, device, fstype):
         self.message('Creating filesystem %s' % fstype)
@@ -371,7 +414,7 @@ class VmDebootstrap(cliapp.Application):
         except IOError:
             pass
 
-    def create_fstab(self, rootdir, rootdev, roottype, bootdev, boottype):
+    def create_fstab(self, rootdir, rootdev, roottype, bootdev, boottype):  # pylint: disable=too-many-arguments
         def fsuuid(device):
             out = self.runcmd(['blkid', '-c', '/dev/null', '-o', 'value',
                                '-s', 'UUID', device])
@@ -404,7 +447,7 @@ class VmDebootstrap(cliapp.Application):
             shutil.copy(deb, tmp)
         filenames = [os.path.join('/tmp/install_debs', os.path.basename(deb))
                      for deb in self.settings['custom-package']]
-        out, err, exitcode = \
+        out, err, _ = \
             self.runcmd_unchecked(['chroot', rootdir, 'dpkg', '-i'] + filenames)
         logging.debug('stdout:\n%s', out)
         logging.debug('stderr:\n%s', err)
@@ -497,7 +540,7 @@ class VmDebootstrap(cliapp.Application):
         try:
             self.runcmd(['chroot', rootdir, 'update-grub'])
             self.runcmd(['chroot', rootdir, 'grub-install', install_dev])
-        except cliapp.AppException as e:
+        except cliapp.AppException:
             self.message("Failed. Is grub2-common installed? Using extlinux.")
         self.runcmd(['umount', os.path.join(rootdir, 'sys')])
         self.runcmd(['umount', os.path.join(rootdir, 'proc')])
@@ -533,6 +576,9 @@ class VmDebootstrap(cliapp.Application):
 
         conf = os.path.join(rootdir, 'extlinux.conf')
         logging.debug('configure extlinux %s', conf)
+        # python multiline string substitution is just ugly.
+        # use an external file or live with the mangling, no point in
+        # mangling the string to remove spaces just to keep it pretty in source.
         f = open(conf, 'w')
         f.write('''
 default linux
@@ -543,14 +589,14 @@ kernel %(kernel)s
 append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
 %(extserial)s
 ''' % {
-            'kernel': kernel_image,
-            'initrd': initrd_image,
-            'uuid': uuid,
-            'kserial':
-            'console=ttyS0,115200' if self.settings['serial-console'] else '',
-            'extserial': 'serial 0 115200' if self.settings['serial-console'] else '',
-        })
-        f.close()
+            'kernel': kernel_image,  # pylint: disable=bad-continuation
+            'initrd': initrd_image,  # pylint: disable=bad-continuation
+            'uuid': uuid,  # pylint: disable=bad-continuation
+            'kserial':  # pylint: disable=bad-continuation
+            'console=ttyS0,115200' if self.settings['serial-console'] else '',  # pylint: disable=bad-continuation
+            'extserial': 'serial 0 115200' if self.settings['serial-console'] else '',  # pylint: disable=bad-continuation
+        })  # pylint: disable=bad-continuation
+        f.close()  # pylint: disable=bad-continuation
 
         self.runcmd(['extlinux', '--install', rootdir])
         self.runcmd(['sync'])
@@ -587,7 +633,7 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
 
         # Umount in the reverse mount order
         if self.settings['image']:
-            for i in xrange(len(self.mount_points) - 1, -1, -1):
+            for i in range(len(self.mount_points) - 1, -1, -1):
                 mount_point = self.mount_points[i]
                 try:
                     self.runcmd(['umount', mount_point], ignore_fail=False)
@@ -621,7 +667,7 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         self.message('Creating tarball of disk contents')
         self.runcmd(['tar', '-cf', self.settings['tarball'], '-C', rootdir, '.'])
 
-    def chown(self, rootdir):
+    def chown(self):
         # Change image owner after completed build
         self.message("Changing owner to %s" % self.settings["owner"])
         subprocess.call(["chown",
@@ -647,13 +693,10 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
             self.message("Setting apt mirror to %s" % mirror)
         os.unlink(os.path.join(rootdir, 'etc', 'apt', 'sources.list'))
         f = open(conf, 'w')
-        f.write('''
-deb %(mirror)s %(distribution)s main
-#deb-src %(mirror)s %(distribution)s main
-''' % {
-            'mirror': mirror,
-            'distribution': self.settings['distribution']
-        })
+        line = 'deb %s %s main\n' % (mirror, self.settings['distribution'])
+        f.write(line)
+        line = '#deb-src %s %s main\n' % (mirror, self.settings['distribution'])
+        f.write(line)
         f.close()
 
 if __name__ == '__main__':
