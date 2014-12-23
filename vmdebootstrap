@@ -318,6 +318,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             self.runcmd(['install-mbr', self.settings['image']])
 
     def setup_kpartx(self):
+        bootindex = None
         out = self.runcmd(['kpartx', '-avs', self.settings['image']])
         if self.settings['bootsize']:
             bootindex = 0
@@ -326,7 +327,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         else:
             rootindex = 0
             parts = 1
-            boot = None
+        boot = None
         devices = [line.split()[2]
                    for line in out.splitlines()
                    if line.startswith('add map ')]
@@ -367,9 +368,12 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             include.append('sudo')
 
         args = ['debootstrap', '--arch=%s' % self.settings['arch']]
-        if self.settings['package'] and len(necessary_packages) > 0:
+        if self.settings['package']:
             args.append(
-                '--include=%s' % ','.join(necessary_packages + include))
+                '--include=%s' % ','.join(include))
+            if len(necessary_packages) > 0:
+                args.append(
+                    '--include=%s' % ','.join(necessary_packages))
         if self.settings['foreign']:
             args.append('--foreign')
         if self.settings['variant']:
