@@ -600,11 +600,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
         conf = os.path.join(rootdir, 'extlinux.conf')
         logging.debug('configure extlinux %s', conf)
-        # python multiline string substitution is just ugly.
-        # use an external file or live with the mangling, no point in
-        # mangling the string to remove spaces just to keep it pretty in source.
-        f = open(conf, 'w')
-        f.write('''
+        kserial = 'console=ttyS0,115200' if self.settings['serial-console'] else ''
+        extserial = 'serial 0 115200' if self.settings['serial-console'] else ''
+        msg = '''
 default linux
 timeout 1
 
@@ -616,11 +614,16 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
             'kernel': kernel_image,  # pylint: disable=bad-continuation
             'initrd': initrd_image,  # pylint: disable=bad-continuation
             'uuid': uuid,  # pylint: disable=bad-continuation
-            'kserial':  # pylint: disable=bad-continuation
-            'console=ttyS0,115200' if self.settings['serial-console'] else '',  # pylint: disable=bad-continuation
-            'extserial': 'serial 0 115200' if self.settings['serial-console'] else '',  # pylint: disable=bad-continuation
-        })  # pylint: disable=bad-continuation
-        f.close()  # pylint: disable=bad-continuation
+            'kserial': kserial,  # pylint: disable=bad-continuation
+            'extserial': extserial,  # pylint: disable=bad-continuation
+        }  # pylint: disable=bad-continuation
+        logging.debug("extlinux config:\n%s", msg)
+
+        # python multiline string substitution is just ugly.
+        # use an external file or live with the mangling, no point in
+        # mangling the string to remove spaces just to keep it pretty in source.
+        f = open(conf, 'w')
+        f.write(msg)
 
         self.runcmd(['extlinux', '--install', rootdir])
         self.runcmd(['sync'])
