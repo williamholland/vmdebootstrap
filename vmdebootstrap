@@ -158,7 +158,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             'Create an apt source based on the distribution and mirror selected.')
         self.settings.boolean(
             ['mbr'],
-            'Run install-mbr (no longer done by default)')
+            'Run install-mbr (default if extlinux used)')
         self.settings.boolean(
             ['grub'],
             'Install and configure grub2 - disables extlinux.')
@@ -187,7 +187,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             if self.settings['image']:
                 self.create_empty_image()
                 self.partition_image()
-                if self.settings['mbr']:
+                if self.settings['mbr'] or self.settings['extlinux']:
                     self.install_mbr()
                 (rootdev, bootdev) = self.setup_kpartx()
                 self.mkfs(rootdev, fstype=roottype)
@@ -340,6 +340,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         if os.path.exists("/sbin/install-mbr"):
             self.message('Installing MBR')
             self.runcmd(['install-mbr', self.settings['image']])
+        else:
+            msg = "mbr enabled but /sbin/install-mbr not found" 
+            " - please install the mbr package."
+            raise cliapp.AppException(msg)
 
     def setup_kpartx(self):
         bootindex = None
