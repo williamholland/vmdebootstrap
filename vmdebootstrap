@@ -164,7 +164,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             'Install and configure grub2 - disables extlinux.')
         self.settings.boolean(
             ['sparse'],
-            'Dont fill the image with zeros to keep a sparse disk image',
+            'Do not fill the image with zeros to keep a sparse disk image',
             default=False)
         self.settings.boolean(
             ['pkglist'],
@@ -341,8 +341,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             self.message('Installing MBR')
             self.runcmd(['install-mbr', self.settings['image']])
         else:
-            msg = "mbr enabled but /sbin/install-mbr not found" 
-            " - please install the mbr package."
+            msg = "mbr enabled but /sbin/install-mbr not found" \
+                  " - please install the mbr package."
             raise cliapp.AppException(msg)
 
     def setup_kpartx(self):
@@ -360,7 +360,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                    for line in out.splitlines()
                    if line.startswith('add map ')]
         if len(devices) != parts:
-            raise cliapp.AppException('Surprising number of partitions')
+            msg = 'Surprising number of partitions'
+            logging.debug("%s: devices=%s parts=%s", msg, devices, parts)
+            raise cliapp.AppException(msg)
         root = '/dev/mapper/%s' % devices[rootindex]
         if self.settings['bootsize']:
             boot = '/dev/mapper/%s' % devices[bootindex]
@@ -701,16 +703,20 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
 
     def chown(self):
         # Change image owner after completed build
+        if self.settings['image']:
+            filename = self.settings['image']
+        elif self.settings['tarball']:
+            filename = self.settings['tarball']
+        else:
+            return
         self.message("Changing owner to %s" % self.settings["owner"])
-        subprocess.call(["chown",
-                         self.settings["owner"],
-                         self.settings["image"]])
+        subprocess.call(["chown", self.settings["owner"], filename])
 
     def list_installed_pkgs(self, rootdir):
         # output the list of installed packages for sources identification
         self.message("Creating a list of installed binary package names")
         out = self.runcmd(['chroot', rootdir,
-                           'dpkg-query', '-W' "-f='${Package}.deb\n'"])
+                           'dpkg-query', '-W', "-f='${Package}.deb\n'"])
         with open('dpkg.list', 'w') as dpkg:
             dpkg.write(out)
 
@@ -730,6 +736,8 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         line = '#deb-src %s %s main\n' % (mirror, self.settings['distribution'])
         f.write(line)
         f.close()
+        # ensure the apt sources have valid lists
+        self.runcmd(['chroot', rootdir, 'apt-get', 'update'])
 
 if __name__ == '__main__':
     VmDebootstrap(version=__version__).run()
