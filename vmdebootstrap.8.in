@@ -191,6 +191,12 @@ Debootstrapping will fail if this is too small for the selected kernel package.
 Filesystem to use for the /boot partition. (default ext2)
 .IP \-\-roottype=FSTYPE
 Filesystem to use for the / (root) partition. (default ext4)
+.IP \-\-swap=SWAPSIZE
+If specified, create a swap partition of the given size within the image.
+Debootstrapping will fail if this results in a root partition which is
+too small for the selected packages. The minimum swap space is 256Mb as
+the default memory allocation of QEMU is 128Mb. A default 1Gb image is
+not likely to have enough space for a swap partition as well.
 .IP \-\-foreign=PATH
 Path to the binfmt_handler to enable foreign support in debootstrap.
 e.g. /usr/bin/qemu-arm-static - note foreign debootstraps may take a signficant

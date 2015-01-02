@@ -74,6 +74,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             ['roottype'],
             'specify file system type for /',
             default='ext4')
+        self.settings.bytesize(
+            ['swap'],
+            'create swap space of size SIZE (min 256Mb)')
         self.settings.string(
             ['foreign'],
             'set up foreign debootstrap environment using provided program (ie binfmt handler)')
@@ -193,7 +196,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 self.partition_image()
                 if self.settings['mbr'] or self.settings['extlinux']:
                     self.install_mbr()
-                (rootdev, bootdev) = self.setup_kpartx()
+                (rootdev, bootdev, swapdev) = self.setup_kpartx()
+                if self.settings['swap']:
+                    self.message("Creating swap space")
+                    self.runcmd(['mkswap', swapdev])
                 self.mkfs(rootdev, fstype=roottype)
                 rootdir = self.mount(rootdev)
                 if bootdev:
@@ -307,6 +313,15 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                      'mklabel', self.settings['part-type']])
         partoffset = 0
         bootsize = 0
+        extent = '100%'
+        swap = 256 * 1024 * 1024
+        if self.settings['swap']:
+            if self.settings['swap'] > swap:
+                swap = self.settings['swap']
+            else:
+                # minimum 256Mb as default qemu ram is 128Mb
+                logging.debug("Setting minimum 256Mb swap space")
+            extent = "%s%%" % int(100 * (self.settings['size'] - swap) / self.settings['size'])
         if self.settings['bootoffset'] and self.settings['bootoffset'] is not '0':
             # turn v.small offsets into something at least possible to create.
             if self.settings['bootoffset'] < 1048576:
@@ -324,15 +339,18 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             logging.debug("Starting boot partition at %sMb", bootsize)
             self.runcmd(['parted', '-s', self.settings['image'],
                          'mkpart', 'primary', 'fat16', str(partoffset), str(bootsize)])
-        if partoffset == 0:
-            self.runcmd(['parted', '-s', self.settings['image'],
-                         'mkpart', 'primary', '0%', '100%'])
-        else:
             logging.debug("Starting root partition at %sMb", partoffset)
             self.runcmd(['parted', '-s', self.settings['image'],
-                         'mkpart', 'primary', str(bootsize), '100%'])
+                         'mkpart', 'primary', str(bootsize), extent])
+        else:
+            self.runcmd(['parted', '-s', self.settings['image'],
+                         'mkpart', 'primary', '0%', extent])
         self.runcmd(['parted', '-s', self.settings['image'],
                      'set', '1', 'boot', 'on'])
+        if self.settings['swap']:
+            logging.debug("Creating swap partition")
+            self.runcmd(['parted', '-s', self.settings['image'],
+                         'mkpart', 'primary', 'linux-swap', extent, '100%'])
 
     def update_initramfs(self, rootdir):
         cmd = os.path.join('usr', 'sbin', 'update-initramfs')
@@ -351,15 +369,26 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
     def setup_kpartx(self):
         bootindex = None
+        swapindex = None
         out = self.runcmd(['kpartx', '-avs', self.settings['image']])
-        if self.settings['bootsize']:
+        if self.settings['bootsize'] and self.settings['swap']:
             bootindex = 0
             rootindex = 1
+            swapindex = 2
+            parts = 3
+        elif self.settings['bootsize']:
+            bootindex = 0
+            rootindex = 1
+            parts = 2
+        elif self.settings['swap']:
+            rootindex = 0
+            swapindex = 1
             parts = 2
         else:
             rootindex = 0
             parts = 1
         boot = None
+        swap = None
         devices = [line.split()[2]
                    for line in out.splitlines()
                    if line.startswith('add map ')]
@@ -370,7 +399,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         root = '/dev/mapper/%s' % devices[rootindex]
         if self.settings['bootsize']:
             boot = '/dev/mapper/%s' % devices[bootindex]
-        return root, boot
+        if self.settings['swap']:
+            swap = '/dev/mapper/%s' % devices[swapindex]
+        return root, boot, swap
 
     def mkfs(self, device, fstype):
         self.message('Creating filesystem %s' % fstype)
@@ -470,6 +501,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             f.write('%s / %s errors=remount-ro 0 1\n' % (rootdevstr, roottype))
             if bootdevstr:
                 f.write('%s /boot %s errors=remount-ro 0 2\n' % (bootdevstr, boottype))
+                if self.settings['swap']:
+                    f.write("/dev/sda3 swap swap defaults 0 0\n")
+            elif self.settings['swap']:
+                f.write("/dev/sda2 swap swap defaults 0 0\n")
 
     def install_debs(self, rootdir):
         if not self.settings['custom-package']:
