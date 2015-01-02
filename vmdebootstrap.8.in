@@ -1,15 +1,15 @@
 .\" Copyright 2011 Lars Wirzenius <liw@liw.fi>
-.\" 
+.\"
 .\" This program is free software: you can redistribute it and/or modify
 .\" it under the terms of the GNU General Public License as published by
 .\" the Free Software Foundation, either version 3 of the License, or
 .\" (at your option) any later version.
-.\" 
+.\"
 .\" This program is distributed in the hope that it will be useful,
 .\" but WITHOUT ANY WARRANTY; without even the implied warranty of
 .\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 .\" GNU General Public License for more details.
-.\" 
+.\"
 .\" You should have received a copy of the GNU General Public License
 .\" along with this program.  If not, see <http://www.gnu.org/licenses/>.
 .\"
@@ -28,7 +28,8 @@ vmdebootstrap \- install basic Debian system into virtual disk image
 [--customize=SCRIPT] [--hostname=HOSTNAME] [--user=USER/PASSWORD]
 [--serial-console | --no-serial-console] [--sudo | --no-sudo] [--owner=OWNER]
 [--bootsize=BOOTSIZE] [--boottype=FSTYPE] [--foreign=PATH] [--variant=VARIANT]
-[--no-extlinux] [--squash] [--configure-apt] [--grub]
+[--no-extlinux] [--squash] [--configure-apt] [--grub] [--apt-mirror]
+[--pkglist]
 .SH DESCRIPTION
 .B vmdebootstrap
 installs a basic Debian system into a virtual disk image,
@@ -52,7 +53,7 @@ output will be sent to any log files either.
 .PP
 To use the image,
 you probably want to create a virtual machine using your preferred
-virtualization technology, such as 
+virtualization technology, such as
 .BR kvm (1),
 or
 .BR qemu (1).
@@ -81,6 +82,61 @@ devices during the grub-install operation. Details of the error will appear in t
 vmdebootstrap log file, if enabled with the \-\-log option. Note that
 .B grub-legacy
 is not supported.
+.SH INSTALLATION IMAGES AND VIRTUAL MACHINES
+.B vmdebootstrap
+is aimed principally at creating virtual machines, not installers or prebuilt
+installation images. It is possible to create prebuilt installation images
+for some devices but this depends on the specific device. (A 'prebuilt
+installation image' is a single image file which can be written to physical
+media in a single operation and which allows the device to boot directly
+into a fully installed system - in a similar way to how a virtual machine
+would behave.)
+.PP
+.B vmdebootstrap
+assumes that all operations take place on a local image file, not a
+physical block device / removable media.
+.PP
+.B vmdebootstrap
+is intended to be used with tools like qemu on the command line to launch
+a new virtual machine. Not all devices have virtualisation support in hardware.
+.PP
+This has implications for
+.B u-boot
+support in some cases. If the device can support reading the bootloader
+from a known partition, like the beaglebone-black, then
+.B vmdebootstrap
+can provide space for the bootloader and the image will work as a prebuilt
+installation image. If the device expects that the bootloader exists at a
+specific offset and therefore requires that the bootloader is written as
+an image not as a binary which can be copied into an existing partition,
+.B vmdebootstrap
+is unable to include that bootloader image into the virtual machine image.
+.PP
+The beagleboneblack.sh script in the examples/ directory provides a worked
+example to create a prebuilt installation image. However, the beagleboneblack
+itself does not support virtualisation in hardware, so is unable to launch
+a virtual machine. Other devices, like the Cubietruck or Wandboard need
+.B u-boot
+at a predefined offset but can launch a virtual machine using qemu, so
+the cubietruck and wandboard6q scripts in the examples/ directory relate
+to building images for virtual machines once the device is already
+installed and booted into a suitable kernel.
+.PP
+It is possible to wrap
+.B vmdebootstrap
+in such a way as to prepare a
+.B physical block device
+with a bootloader image and then deploy the bootstrap on top. However,
+this does require physical media to be inserted and removed each time
+the wrapper is executed. To do this, use the \-\-tarball option instead
+of the \-\-image option. Then setup the physical media and bootloader
+image manually, as required for the device, redefine the partitions to
+make space for the rootfs, create a filesystem on the physical media and
+unpack the
+.B vmdebootstrap
+tarball onto that filesystem. Once you have working media, an image can be
+created using dd to read back from the media to an image file, allowing
+other media to be written with a single image file.
 .SH OPTIONS
 .IP \-\-output=FILE
 write output to FILE, instead of standard output
@@ -129,28 +185,42 @@ set the command to manage the serial console which will be appended to
 .IP \-\-sudo
 install sudo, and if user is created, add them to sudo group
 .IP \-\-bootsize=BOOTSIZE
-If specified, create a /boot partition of the given size within the image. Debootstrapping will fail if this is too small for the selected kernel package.
+If specified, create a /boot partition of the given size within the image.
+Debootstrapping will fail if this is too small for the selected kernel package.
 .IP \-\-boottype=FSTYPE
 Filesystem to use for the /boot partition. (default ext2)
 .IP \-\-foreign=PATH
-Path to the binfmt_handler to enable foreign support in debootstrap. e.g. /usr/bin/qemu-arm-static - note foreign debootstraps may take a signficant amount of time to complete and that debootstrap will retry five times if packages fail to install by default.
+Path to the binfmt_handler to enable foreign support in debootstrap.
+e.g. /usr/bin/qemu-arm-static - note foreign debootstraps may take a signficant
+amount of time to complete and that debootstrap will retry five times if
+packages fail to install by default.
 .IP \-\-no\-extlinux
-Skip installation of extlinux. needs a customize script to make the image bootable. Useful for architectures where extlinux is not supportable.
+Skip installation of extlinux. needs a customize script to make the image
+bootable. Useful for architectures where extlinux is not supportable.
 Depending on how the image is to be booted, the \-\-mbr option may also be
 necessary with extlinux.
 .IP \-\-squash
 Run mksquashfs against the final image using xz compression - requires
-squashfs-tools to be installed. The final file will have the .squashfs suffix. 
+squashfs-tools to be installed. The final file will have the .squashfs suffix.
 By default, mksquashfs is allowed to use all processors which may result
 in high load. Run mksquashfs separately if you need to control the number
 of processors used per run.
 .IP \-\-configure\-apt
 Use the specified mirror and distribution to create a suitable apt source inside
 the VM. Can be useful if debootstrap fails to create it automatically.
+.IP \-\-apt\-mirror
+Use the specified mirror inside the image instead of the mirror used to
+build the image. This is useful if you have a local mirror to make building
+the image quicker but the image needs to run even if that mirror is not
+available.
 .IP \-\-grub
 Disable extlinux installation and configure grub2 instead. grub2 will be added to
 the list of packages to install. update-grub will be called once the debootstrap is
 complete and grub-install will be called in the image.
+.IP \-\-pkglist
+Output a list of package names installed inside the image. Useful if you
+need to track the relevant source packages used inside the image for
+licence compliance.
 .SH Configuration files and settings:
 .IP \-\-dump-config
 write out the entire current configuration
@@ -184,7 +254,8 @@ sudo vmdebootstrap --image test.img --size 1g \\
     --log test.log --log-level debug --verbose \\
     --mirror http://mirror.lan/debian/
 .PP
-To run the test image, make sure it is writeable. Use the \-\-owner option to set mode 0644 for the specified user or use chmod manually:
+To run the test image, make sure it is writeable. Use the \-\-owner
+option to set mode 0644 for the specified user or use chmod manually:
 .IP
 sudo chmod a+w ./test.img
 .PP
@@ -194,17 +265,44 @@ qemu-system-x86_64 ./test.img
 .PP
 (This loads the image in a new window.)
 .PP
-For further examples, including u-boot support for beaglebone-black, see /usr/share/vmdebootstrap/examples
+For further examples, including u-boot support for beaglebone-black,
+see /usr/share/vmdebootstrap/examples
 .SH NOTES
-If you get problems with the bootstrap process, run a similar bootstrap call directly and chroot into the directory to investigate the failure. The actual debootstrap call is part of the vmdebootstrap logfile. The debootstrap logfile, if any, will be copied into your current working directory on error.
+If you get problems with the bootstrap process, run a similar bootstrap
+call directly and chroot into the directory to investigate the failure.
+The actual debootstrap call is part of the vmdebootstrap logfile. The
+debootstrap logfile, if any, will be copied into your current working
+directory on error.
 .PP
 .B debootstrap
-will download all the apt archive files into the apt cache and does not remove them before starting the configuration of the packages. This can mean that debootstrap can fail due to a lack of space on the device if the VM size is small. vmdebootstrap cleans up the apt cache once debootstrap has finished but this doesn't help if the package unpack or configuration steps use up all of the space in the meantime. Avoid this problem by specifying a larger size for the image.
+will download all the apt archive files into the apt cache and does not
+remove them before starting the configuration of the packages. This can
+mean that debootstrap can fail due to a lack of space on the device if
+the VM size is small. vmdebootstrap cleans up the apt cache once debootstrap
+has finished but this doesn't help if the package unpack or configuration
+steps use up all of the space in the meantime. Avoid this problem by
+specifying a larger size for the image.
 .PP
-Note that if you are also using a separate /boot partition in your options to vmdebootstrap, it may well be the boot partition which needs to be enlarged rather than the entire image.
+Note that if you are also using a separate /boot partition in your options to 
+.B vmdebootstrap
+it may well be the boot partition which needs to be enlarged rather than
+the entire image.
 .PP
-It is advisable to change the mirror in the example scripts to a mirror closer to your location,
-particularly if you need to do repeated builds.
+It is advisable to change the mirror in the example scripts to a mirror
+closer to your location, particularly if you need to do repeated builds.
+Use the \-\-apt\-mirror option to specify the apt mirror to be used inside
+the image, after boot.
+.PP
+There are two types of examples for ARM devices available with
+.B vmdebootstrap:
+prebuilt installation images (like the beaglebone-black) and virtual
+machine images (cubietruck and wandboard). ARM devices which do not
+support hypervisor mode and which also rely on the bootloader being at
+a specific offset instead of using a normal partition will
+.B not
+be supportable by vmdebootstrap. Similarly, devices which support
+hypervisor will only be supported using virtual machine images, unless
+the bootloader can be executed from a normal partition.
 .PP
 .SH "SEE ALSO"
 .BR debootstrap (8)

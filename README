@@ -8,6 +8,43 @@ a disk image, which can be used with a virtual machine (such as KVM).
 See the manual page and `vmdebootstrap --help` for details on how to
 use the program. The manual page has an example.
 
+Limitations
+-----------
+
+`vmdebootstrap` is aimed principally at creating virtual machines, not
+installers or prebuilt installation images. It is possible to create
+prebuilt installation images for some devices but this depends on the
+specific device. (A 'prebuilt installation image' is a single image file
+which can be written to physical media in a single operation and which
+allows the device to boot directly into a fully installed system - in a
+similar way to how a virtual machine would behave.)
+
+* `vmdebootstrap` assumes that all operations take place on a local image
+   file, not a physical block device / removable media.
+* `vmdebootstrap` is intended to be used with tools like `qemu` on the
+   command line to launch a new virtual machine. Not all devices have
+   virtualisation support in hardware.
+
+This has implications for `u-boot` support in some cases. If the device
+can support reading the bootloader from a known partition, like the
+Beaglebone-black, then `vmdebootstrap` can provide space for the bootloader
+and the image will work as a prebuilt installation image. If the device
+expects that the bootloader exists at a specific offset and therefore
+requires that the bootloader is written as an image not as a binary which
+can be copied into an existing partition, `vmdebootstrap` is unable to
+include that bootloader image into the virtual machine image.
+
+It is possible to wrap `vmdebootstrap` in such a way as to prepare a
+*physical block device* with a bootloader image and then deploy the
+bootstrap on top. However, this does require physical media to be
+inserted and removed each time the wrapper is executed. Once you have
+working media, an image can be created using ``dd`` to read back from
+the media to an image file, allowing other media to be written with a
+single image file. To do this, use the `--tarball` option to `vmdebootstrap`
+instead of the `--image`` option. Then setup the physical media and
+bootloader image as required for the device, redefine the partitions to
+make space for the rootfs, create a filesystem on the physical media and
+unpack the `vmdebootstrap` tarball onto that filesystem.
 
 What you need
 -------------
