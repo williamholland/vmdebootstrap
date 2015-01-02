@@ -737,7 +737,7 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         f.write(line)
         f.close()
         # ensure the apt sources have valid lists
-        self.runcmd(['chroot', rootdir, 'apt-get', 'update'])
+        self.runcmd(['chroot', rootdir, 'apt-get', '-qq', 'update'])
 
 if __name__ == '__main__':
     VmDebootstrap(version=__version__).run()
