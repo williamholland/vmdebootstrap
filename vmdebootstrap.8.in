@@ -27,9 +27,9 @@ vmdebootstrap \- install basic Debian system into virtual disk image
 [--enable-dhcp | --no-enable-dhcp] [--root-password=PASSWORD]
 [--customize=SCRIPT] [--hostname=HOSTNAME] [--user=USER/PASSWORD]
 [--serial-console | --no-serial-console] [--sudo | --no-sudo] [--owner=OWNER]
-[--bootsize=BOOTSIZE] [--boottype=FSTYPE] [--foreign=PATH] [--variant=VARIANT]
-[--no-extlinux] [--squash] [--configure-apt] [--grub] [--apt-mirror]
-[--pkglist]
+[--bootsize=BOOTSIZE] [--boottype=FSTYPE] [--roottype=FSTYPE] [--foreign=PATH]
+[--variant=VARIANT] [--no-extlinux] [--squash] [--configure-apt]
+[--grub] [--apt-mirror] [--pkglist]
 .SH DESCRIPTION
 .B vmdebootstrap
 installs a basic Debian system into a virtual disk image,
@@ -189,6 +189,8 @@ If specified, create a /boot partition of the given size within the image.
 Debootstrapping will fail if this is too small for the selected kernel package.
 .IP \-\-boottype=FSTYPE
 Filesystem to use for the /boot partition. (default ext2)
+.IP \-\-roottype=FSTYPE
+Filesystem to use for the / (root) partition. (default ext4)
 .IP \-\-foreign=PATH
 Path to the binfmt_handler to enable foreign support in debootstrap.
 e.g. /usr/bin/qemu-arm-static - note foreign debootstraps may take a signficant

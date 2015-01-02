@@ -71,6 +71,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             'Partition type to use for this image',
             default='msdos')
         self.settings.string(
+            ['roottype'],
+            'specify file system type for /',
+            default='ext4')
+        self.settings.string(
             ['foreign'],
             'set up foreign debootstrap environment using provided program (ie binfmt handler)')
         self.settings.string(
@@ -181,7 +185,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         rootdir = None
         try:
             rootdev = None
-            roottype = 'ext4'
+            roottype = self.settings['roottype']
             bootdev = None
             boottype = None
             if self.settings['image']:
