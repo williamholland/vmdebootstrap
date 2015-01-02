@@ -2,8 +2,10 @@
 
 set -e
 
+user=`whoami`
+
 sudo vmdebootstrap \
- --owner $(whoami) --verbose \
+ --owner ${user} --verbose \
  --size 3G \
  --mirror http://http.debian.net/debian \
  --log cubietruck.log --log-level debug \

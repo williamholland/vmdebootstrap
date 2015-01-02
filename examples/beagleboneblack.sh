@@ -2,8 +2,10 @@
 
 set -e
 
+user=`whoami`
+
 sudo vmdebootstrap \
- --owner $(whoami) --verbose \
+ --owner ${user} --verbose \
  --mirror http://http.debian.net/debian \
  --log beaglebone-black.log --log-level debug \
  --arch armhf \
