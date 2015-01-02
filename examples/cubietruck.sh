@@ -13,13 +13,9 @@ sudo vmdebootstrap \
  --foreign /usr/bin/qemu-arm-static \
  --enable-dhcp \
  --configure-apt \
- --no-extlinux \
  --no-kernel \
- --package u-boot \
  --package linux-image-armmp \
  --distribution sid \
  --serial-console-command "/sbin/getty -L ttyS0 115200 vt100" \
  --customize "cubietruck-customise.sh" \
- --bootoffset=2mib \
- --bootsize 100mib --boottype vfat \
  "$@"
