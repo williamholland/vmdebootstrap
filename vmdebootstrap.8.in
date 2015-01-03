@@ -149,7 +149,7 @@ create a disk image of size SIZE (1000000000)
 .IP \-\-tarball=FILE
 tar up the disk's contents in FILE
 .IP \-\-mirror=URL
-use MIRROR as package source (http://cdn.debian.net/debian/)
+use MIRROR as package source (http://http.debian.net/debian/)
 .IP \-\-arch=ARCH
 architecture to use (amd64)
 .IP \-\-distribution=NAME
