@@ -743,7 +743,10 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         self.message('Running customize script %s' % script)
         logging.info("rootdir=%s image=%s", rootdir, self.settings['image'])
         with open('/dev/tty', 'w') as tty:
-            cliapp.runcmd([script, rootdir, self.settings['image']], stdout=tty, stderr=tty)
+            try:
+                cliapp.runcmd([script, rootdir, self.settings['image']], stdout=tty, stderr=tty)
+            except IOError as e:
+                subprocess.call([script, rootdir, self.settings['image']])
 
     def create_tarball(self, rootdir):
         # Create a tarball of the disk's contents
