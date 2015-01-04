@@ -197,7 +197,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 if self.settings['mbr'] or self.settings['extlinux']:
                     self.install_mbr()
                 (rootdev, bootdev, swapdev) = self.setup_kpartx()
-                if self.settings['swap']:
+                if self.settings['swap'] > 0:
                     self.message("Creating swap space")
                     self.runcmd(['mkswap', swapdev])
                 self.mkfs(rootdev, fstype=roottype)
@@ -315,7 +315,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         bootsize = 0
         extent = '100%'
         swap = 256 * 1024 * 1024
-        if self.settings['swap']:
+        if self.settings['swap'] > 0:
             if self.settings['swap'] > swap:
                 swap = self.settings['swap']
             else:
@@ -347,7 +347,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                          'mkpart', 'primary', '0%', extent])
         self.runcmd(['parted', '-s', self.settings['image'],
                      'set', '1', 'boot', 'on'])
-        if self.settings['swap']:
+        if self.settings['swap'] > 0:
             logging.debug("Creating swap partition")
             self.runcmd(['parted', '-s', self.settings['image'],
                          'mkpart', 'primary', 'linux-swap', extent, '100%'])
@@ -371,7 +371,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         bootindex = None
         swapindex = None
         out = self.runcmd(['kpartx', '-avs', self.settings['image']])
-        if self.settings['bootsize'] and self.settings['swap']:
+        if self.settings['bootsize'] and self.settings['swap'] > 0:
             bootindex = 0
             rootindex = 1
             swapindex = 2
@@ -380,7 +380,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             bootindex = 0
             rootindex = 1
             parts = 2
-        elif self.settings['swap']:
+        elif self.settings['swap'] > 0:
             rootindex = 0
             swapindex = 1
             parts = 2
@@ -393,13 +393,14 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                    for line in out.splitlines()
                    if line.startswith('add map ')]
         if len(devices) != parts:
-            msg = 'Surprising number of partitions'
+            msg = 'Surprising number of partitions - check output of losetup -a'
+            logging.debug("%s" % self.runcmd(['losetup', '-a']))
             logging.debug("%s: devices=%s parts=%s", msg, devices, parts)
             raise cliapp.AppException(msg)
         root = '/dev/mapper/%s' % devices[rootindex]
         if self.settings['bootsize']:
             boot = '/dev/mapper/%s' % devices[bootindex]
-        if self.settings['swap']:
+        if self.settings['swap'] > 0:
             swap = '/dev/mapper/%s' % devices[swapindex]
         return root, boot, swap
 
@@ -501,9 +502,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             f.write('%s / %s errors=remount-ro 0 1\n' % (rootdevstr, roottype))
             if bootdevstr:
                 f.write('%s /boot %s errors=remount-ro 0 2\n' % (bootdevstr, boottype))
-                if self.settings['swap']:
+                if self.settings['swap'] > 0:
                     f.write("/dev/sda3 swap swap defaults 0 0\n")
-            elif self.settings['swap']:
+            elif self.settings['swap'] > 0:
                 f.write("/dev/sda2 swap swap defaults 0 0\n")
 
     def install_debs(self, rootdir):
