@@ -18,18 +18,18 @@
 vmdebootstrap \- install basic Debian system into virtual disk image
 .SH SYNOPSIS
 .B vmdebootstrap
---image=FILE --size=SIZE [--mirror=URL] [--distribution=NAME]
+\-\-image=FILE \-\-size=SIZE [\-\-mirror=URL] [\-\-distribution=NAME]
 .PP
 .B vmdebootstrap
-[--output=FILE] [--verbose | --no-verbose] --image=FILE --size=SIZE
-[--tarball=FILE] [--mirror=URL] [--arch=ARCH] [--distribution=NAME]
-[--package=PACKAGE] [--custom-package=DEB] [--no-kernel]
-[--enable-dhcp | --no-enable-dhcp] [--root-password=PASSWORD]
-[--customize=SCRIPT] [--hostname=HOSTNAME] [--user=USER/PASSWORD]
-[--serial-console | --no-serial-console] [--sudo | --no-sudo] [--owner=OWNER]
-[--bootsize=BOOTSIZE] [--boottype=FSTYPE] [--roottype=FSTYPE] [--foreign=PATH]
-[--variant=VARIANT] [--no-extlinux] [--squash] [--configure-apt]
-[--grub] [--apt-mirror] [--pkglist]
+[\-\-output=FILE] [\-\-verbose |\-\-no-verbose] \-\-image=FILE \-\-size=SIZE
+[\-\-tarball=FILE] [\-\-mirror=URL] [\-\-arch=ARCH] [\-\-distribution=NAME]
+[\-\-package=PACKAGE] [\-\-custom-package=DEB] [\-\-no-kernel]
+[\-\-enable-dhcp | \-\-no-enable-dhcp] [\-\-root-password=PASSWORD]
+[\-\-customize=SCRIPT] [\-\-hostname=HOSTNAME] [\-\-user=USER/PASSWORD]
+[\-\-serial-console | \-\-no-serial-console] [\-\-sudo |\-\-no-sudo] [\-\-owner=OWNER]
+[\-\-bootsize=BOOTSIZE] [\-\-boottype=FSTYPE] [\-\-roottype=FSTYPE] [\-\-foreign=PATH]
+[\-\-variant=VARIANT] [\-\-no-extlinux] [\-\-squash] [\-\-configure-apt]
+[\-\-grub] [\-\-apt-mirror] [\-\-pkglist]
 .SH DESCRIPTION
 .B vmdebootstrap
 installs a basic Debian system into a virtual disk image,
@@ -73,7 +73,7 @@ as a boot loader.
 .B bootsize
 is not recommended when using
 .B extlinux
-- use grub instead.
+\- use grub instead.
 Versions of grub2 in wheezy
 can fail to install in the VM, at which point vmdebootstrap will fall back to
 extlinux. It may still be possible to complete the installation of grub2 after
@@ -89,7 +89,7 @@ installation images. It is possible to create prebuilt installation images
 for some devices but this depends on the specific device. (A 'prebuilt
 installation image' is a single image file which can be written to physical
 media in a single operation and which allows the device to boot directly
-into a fully installed system - in a similar way to how a virtual machine
+into a fully installed system \- in a similar way to how a virtual machine
 would behave.)
 .PP
 .B vmdebootstrap
@@ -180,8 +180,8 @@ change the owner of the final image from root to the specified user.
 configure image to use a serial console
 .IP \-\-serial-console-command
 set the command to manage the serial console which will be appended to
-/etc/inittab. Default is "/sbin/getty -L ttyS0 115200 vt100", resulting in a line
-.BR "S0:23:respawn:/sbin/getty -L ttyS0 115200 vt100"
+/etc/inittab. Default is "/sbin/getty \-L ttyS0 115200 vt100", resulting in a line
+.BR "S0:23:respawn:/sbin/getty \-L ttyS0 115200 vt100"
 .IP \-\-sudo
 install sudo, and if user is created, add them to sudo group
 .IP \-\-bootsize=BOOTSIZE
@@ -199,7 +199,7 @@ the default memory allocation of QEMU is 128Mb. A default 1Gb image is
 not likely to have enough space for a swap partition as well.
 .IP \-\-foreign=PATH
 Path to the binfmt_handler to enable foreign support in debootstrap.
-e.g. /usr/bin/qemu-arm-static - note foreign debootstraps may take a signficant
+e.g. /usr/bin/qemu-arm-static \- note foreign debootstraps may take a signficant
 amount of time to complete and that debootstrap will retry five times if
 packages fail to install by default.
 .IP \-\-no\-extlinux
@@ -208,7 +208,7 @@ bootable. Useful for architectures where extlinux is not supportable.
 Depending on how the image is to be booted, the \-\-mbr option may also be
 necessary with extlinux.
 .IP \-\-squash
-Run mksquashfs against the final image using xz compression - requires
+Run mksquashfs against the final image using xz compression \- requires
 squashfs-tools to be installed. The final file will have the .squashfs suffix.
 By default, mksquashfs is allowed to use all processors which may result
 in high load. Run mksquashfs separately if you need to control the number
@@ -258,9 +258,9 @@ make memory profiling dumps at least SECONDS apart
 To create an image for the stable release of Debian:
 .nf
 .IP
-sudo vmdebootstrap --image test.img --size 1g \\
-    --log test.log --log-level debug --verbose \\
-    --mirror http://mirror.lan/debian/
+sudo vmdebootstrap \-\-image test.img \-\-size 1g \\
+    \-\-log test.log \-\-log-level debug \-\-verbose \\
+    \-\-mirror http://mirror.lan/debian/
 .PP
 To run the test image, make sure it is writeable. Use the \-\-owner
 option to set mode 0644 for the specified user or use chmod manually:
