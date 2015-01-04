@@ -19,6 +19,7 @@ fi
 if [ ! -f "${device}" ]; then
     echo "Specified device does not exist: ${device}"
     exit
+fi
 
 if [ -z "${tarball}" ]; then
     echo "Tarball not specified"
