@@ -50,18 +50,20 @@ sudo tar -xzf ${tarball} -C ${dir}
 ver=$(basename `find $rootdir/lib/modules/ -maxdepth 1 -mindepth 1 -type d`)
 sudo touch ${dir}/uEnv.txt
 sudo chmod 666 ${dir}/uEnv.txt
-echo fdt_file=/boot/dtbs/imx6q-wandboard.dtb > ${dir}/uEnv.txt
-echo image=/boot/vmlinuz-${ver} >> ${dir}/uEnv.txt
-echo mmcroot=/dev/mmcblk0p1 rootwait rw >> ${dir}/uEnv.txt
-echo loadaddr='0x11000000' >> ${dir}/uEnv.txt
-echo initrd_addr_r='0x13000000' >> ${dir}/uEnv.txt
-echo fdt_addr='0x12000000' >> ${dir}/uEnv.txt
-echo initrd_high='0xffffffff' >> ${dir}/uEnv.txt
-echo fdt_high='0xffffffff' >> ${dir}/uEnv.txt
-echo console=ttymxc0,115200 >> ${dir}/uEnv.txt
-echo loadinitrd=load mmc ${mmcdev}:${mmcpart} ${initrd_addr_r} /boot/initrd.img-${ver}.uboot; setenv initrd_size ${filesize} >> ${dir}/uEnv.txt
-echo bootargs=console=${console},${baudrate} root=${mmcroot} >> ${dir}/uEnv.txt
-echo bootcmd=run loadfdt; run loadimage; run loadinitrd; bootz ${loadaddr} ${ramdisk_addr_r}:${filesize} ${fdt_addr} >> ${dir}/uEnv.txt
+echo autoload=no > ${dir}/uEnv.txt
+echo initrd_high=0xffffffff >> ${dir}/uEnv.txt
+echo fdt_high=0xffffffff >> ${dir}/uEnv.txt
+echo kernel_addr_r=0x11000000 >> ${dir}/uEnv.txt
+echo initrd_addr_r=0x13000000 >> ${dir}/uEnv.txt
+echo fdt_addr_r=0x12000000 >> ${dir}/uEnv.txt
+echo mmcdev=0 >> ${dir}/uEnv.txt
+echo mmcpart=1 >> ${dir}/uEnv.txt
+echo ver=3.16.0-4-armmp >> ${dir}/uEnv.txt
+echo loadkernel=load mmc ${mmcdev}:${mmcpart} ${kernel_addr_r} boot/vmlinuz-${ver} >> ${dir}/uEnv.txt
+echo loadinitrd=load mmc ${mmcdev}:${mmcpart} ${initrd_addr_r} boot/initrd.img-${ver}.uboot; setenv initrd_size ${filesize} >> ${dir}/uEnv.txt
+echo loadfdt=load mmc ${mmcdev}:${mmcpart} ${fdt_addr_r} boot/dtbs/imx6q-wandboard.dtb >> ${dir}/uEnv.txt
+echo bootargs=console=ttymxc0,115200 root=/dev/mmcblk0p1 rootwait rw ip=dhcp >> ${dir}/uEnv.txt
+echo uenvcmd=run loadkernel; run loadinitrd; run loadfdt; bootz ${kernel_addr_r} ${initrd_addr_r} ${fdt_addr_r} >> ${dir}/uEnv.txt
 sudo chmod 644 ${dir}/uEnv.txt
 sudo umount ${dir}
 sudo rm -rf ${dir}
