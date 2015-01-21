@@ -151,7 +151,9 @@ tar up the disk's contents in FILE
 .IP \-\-mirror=URL
 use MIRROR as package source (http://http.debian.net/debian/)
 .IP \-\-arch=ARCH
-architecture to use (amd64)
+architecture to use (amd64) - if using an architecture which the
+host system cannot execute, ensure the \-\-foreign option is also
+used.
 .IP \-\-distribution=NAME
 release to use (stable)
 .IP \-\-package=PACKAGE
