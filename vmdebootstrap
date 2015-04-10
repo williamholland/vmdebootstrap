@@ -418,7 +418,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             include.append('acpid')
 
         if self.settings['grub']:
-            include.append('grub2')
+            include.append('grub-pc')
 
         if not self.settings['no-kernel']:
             if self.settings['arch'] == 'i386':
