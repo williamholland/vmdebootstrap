@@ -13,9 +13,7 @@ sudo vmdebootstrap \
  --enable-dhcp \
  --configure-apt \
  --no-extlinux \
- --no-kernel \
  --package u-boot \
- --package linux-image-armmp \
  --package dosfstools \
  --distribution sid \
  --serial-console-command "'/sbin/getty -L ttyO0 115200 vt100'" \

@@ -13,8 +13,6 @@ sudo vmdebootstrap \
  --foreign /usr/bin/qemu-arm-static \
  --enable-dhcp \
  --configure-apt \
- --no-kernel \
- --package linux-image-armmp \
  --distribution sid \
  --serial-console-command "/sbin/getty -L ttyS0 115200 vt100" \
  --customize "cubietruck-customise.sh" \

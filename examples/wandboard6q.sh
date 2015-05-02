@@ -19,8 +19,6 @@ sudo ./vmdebootstrap \
  --configure-apt \
  --no-extlinux \
  --grub \
- --no-kernel \
- --package linux-image-armmp \
  --distribution sid \
  --serial-console-command "/sbin/getty -L ttymxc0 115200 vt100" \
  --customize "./examples/wandboard-customise.sh" \
