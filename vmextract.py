@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/python
 # -*- coding: utf-8 -*-
 #
 #  Copyright 2015 Neil Williams <codehelp@debian.org>
