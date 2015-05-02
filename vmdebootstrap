@@ -27,7 +27,7 @@ import tempfile
 import time
 
 
-__version__ = '0.6'
+__version__ = '0.7'
 
 # pylint: disable=invalid-name
 
@@ -423,6 +423,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         if not self.settings['no-kernel']:
             if self.settings['arch'] == 'i386':
                 kernel_arch = '486'
+            elif self.settings['arch'] == 'armhf':
+                kernel_arch = 'armmp'
             else:
                 kernel_arch = self.settings['arch']
             kernel_image = 'linux-image-%s' % kernel_arch
