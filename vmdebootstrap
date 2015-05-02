@@ -333,6 +333,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 partoffset = self.settings['bootoffset'] / (1024 * 1024)
                 self.message("Using bootoffset: %smib %s bytes" % (partoffset, self.settings['bootoffset']))
         if self.settings['bootsize'] and self.settings['bootsize'] is not '0%':
+            if self.settings['grub'] and not partoffset:
+                partoffset = 1
             bootsize = self.settings['bootsize'] / (1024 * 1024)
             bootsize += partoffset
             self.message("Using bootsize %smib: %s bytes" % (bootsize, self.settings['bootsize']))
