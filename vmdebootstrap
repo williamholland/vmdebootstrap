@@ -396,7 +396,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                    if line.startswith('add map ')]
         if len(devices) != parts:
             msg = 'Surprising number of partitions - check output of losetup -a'
-            logging.debug("%s" % self.runcmd(['losetup', '-a']))
+            logging.debug("%s", self.runcmd(['losetup', '-a']))
             logging.debug("%s: devices=%s parts=%s", msg, devices, parts)
             raise cliapp.AppException(msg)
         root = '/dev/mapper/%s' % devices[rootindex]
@@ -601,6 +601,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             with open(inittab, 'a') as f:
                 f.write('\nS0:23:respawn:%s\n' % serial_command)
 
+    # pylint: disable=no-self-use
     def _grub_serial_console(self, rootdir):
         cmdline = 'GRUB_CMDLINE_LINUX_DEFAULT="console=tty0 console=tty1 console=ttyS0,38400n8"'
         terminal = 'GRUB_TERMINAL="serial gfxterm"'
@@ -754,7 +755,7 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         with open('/dev/tty', 'w') as tty:
             try:
                 cliapp.runcmd([script, rootdir, self.settings['image']], stdout=tty, stderr=tty)
-            except IOError as e:
+            except IOError:
                 subprocess.call([script, rootdir, self.settings['image']])
 
     def create_tarball(self, rootdir):
