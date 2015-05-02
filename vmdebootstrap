@@ -599,17 +599,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             with open(inittab, 'a') as f:
                 f.write('\nS0:23:respawn:%s\n' % serial_command)
 
-    def install_grub2(self, rootdev, rootdir):
-        self.message("Configuring grub2")
-        # rely on kpartx using consistent naming to map loop0p1 to loop0
-        install_dev = os.path.join('/dev', os.path.basename(rootdev)[:-2])
-        self.runcmd(['mount', '/dev', '-t', 'devfs', '-obind',
-                     '%s' % os.path.join(rootdir, 'dev')])
-        self.runcmd(['mount', '/proc', '-t', 'proc', '-obind',
-                     '%s' % os.path.join(rootdir, 'proc')])
-        self.runcmd(['mount', '/sys', '-t', 'sysfs', '-obind',
-                     '%s' % os.path.join(rootdir, 'sys')])
-
+    def _grub_serial_console(self, rootdir):
         cmdline = 'GRUB_CMDLINE_LINUX_DEFAULT="console=tty0 console=tty1 console=ttyS0,38400n8"'
         terminal = 'GRUB_TERMINAL="serial gfxterm"'
         command = 'GRUB_SERIAL_COMMAND="serial --speed=38400 --unit=0 --parity=no --stop=1"'
@@ -620,6 +610,20 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             cfg.write("%s\n" % cmdline)
             cfg.write("%s\n" % terminal)
             cfg.write("%s\n" % command)
+
+    def install_grub2(self, rootdev, rootdir):
+        self.message("Configuring grub2")
+        # rely on kpartx using consistent naming to map loop0p1 to loop0
+        install_dev = os.path.join('/dev', os.path.basename(rootdev)[:-2])
+        self.runcmd(['mount', '/dev', '-t', 'devfs', '-obind',
+                     '%s' % os.path.join(rootdir, 'dev')])
+        self.runcmd(['mount', '/proc', '-t', 'proc', '-obind',
+                     '%s' % os.path.join(rootdir, 'proc')])
+        self.runcmd(['mount', '/sys', '-t', 'sysfs', '-obind',
+                     '%s' % os.path.join(rootdir, 'sys')])
+        if self.settings['serial-console']:
+            self._grub_serial_console(rootdir)
+
         try:
             self.runcmd(['chroot', rootdir, 'update-grub'])
             self.runcmd(['chroot', rootdir, 'grub-install', install_dev])
