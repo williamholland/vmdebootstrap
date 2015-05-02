@@ -59,6 +59,25 @@ In order to use vmdebootstrap, you'll need a few things:
 * kpartx
 * python-cliapp (see http://liw.fi/cliapp/)
 
+The vmextract helper
+--------------------
+
+Once the image is built, various files can be generated or modified
+during the install operations and some of these files can be useful
+when testing the image. One example is the initrd built by the process
+of installing a Debian kernel. Rather than having to mount the image
+and copy the files manually, the vmextract helper can do it for you,
+without needing root privileges.
+
+$ /usr/share/vmdebootstrap/vmextract.py --verbose \
+  --image bbb/bbb-debian-armmp.img --boot \
+  --path /boot/initrd.img-3.14-2-armmp \
+  --path /lib/arm-linux-gnueabihf/libresolv.so.2
+
+This uses python-guestfs (a Recommended package for vmdebootstrap) to
+prepare a read-only version of the image - in this case with the /boot
+partition also mounted - and copies files out into the current working
+directory.
 
 Legalese
 --------
