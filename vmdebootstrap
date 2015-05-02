@@ -629,10 +629,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             self.runcmd(['chroot', rootdir, 'grub-install', install_dev])
         except cliapp.AppException:
             self.message("Failed. Is grub2-common installed? Using extlinux.")
+            self.install_extlinux(rootdev, rootdir)
         self.runcmd(['umount', os.path.join(rootdir, 'sys')])
         self.runcmd(['umount', os.path.join(rootdir, 'proc')])
         self.runcmd(['umount', os.path.join(rootdir, 'dev')])
-        self.install_extlinux(rootdev, rootdir)
 
     def install_extlinux(self, rootdev, rootdir):
         if not os.path.exists("/usr/bin/extlinux"):
