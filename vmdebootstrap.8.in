@@ -65,6 +65,24 @@ and log into it via its console to configure it.
 The image has an empty root password and will not have networking
 configured by default. Set the root password before you configure
 networking.
+.SH NETWORKING
+The \-\-enable\-networking option uses the /etc/network/interfaces.d/
+source directory, with the default settings for
+.B lo
+and
+.B eth0
+being added to /etc/network/interfaces.d/setup. Other networking
+configuration can be specified using a customisation script.
+Localhost settings would be:
+ auto lo
+ iface lo inet loopback
+
+If \-\-enable\-dhcp is specified, these settings are also included
+into /etc/network/interfaces.d/setup:
+
+ auto eth0
+ iface eth0 inet dhcp
+
 .SH BOOTLOADERS
 Unless the \-\-no\-extlinux or \-\-grub options are specified, the
 image will use

@@ -624,16 +624,20 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
     def setup_networking(self, rootdir):
         self.message('Setting up networking')
 
-        f = open(os.path.join(rootdir, 'etc', 'network', 'interfaces'), 'w')
-        f.write('auto lo\n')
-        f.write('iface lo inet loopback\n')
+        if not os.path.exists(os.path.join(rootdir, 'etc', 'network', 'interfaces')):
+            with open(os.path.join(
+                rootdir, 'etc', 'network', 'interfaces'), 'w') as netfile:
+                netfile.write('source-directory /etc/network/interfaces.d\n')
 
-        if self.settings['enable-dhcp']:
-            f.write('\n')
-            f.write('auto eth0\n')
-            f.write('iface eth0 inet dhcp\n')
+        with open(os.path.join(
+            rootdir, 'etc', 'network', 'interfaces.d', 'setup'), 'w') as eth:
+            eth.write('auto lo\n')
+            eth.write('iface lo inet loopback\n')
 
-        f.close()
+            if self.settings['enable-dhcp']:
+                eth.write('\n')
+                eth.write('auto eth0\n')
+                eth.write('iface eth0 inet dhcp\n')
 
     def append_serial_console(self, rootdir):
         if self.settings['serial-console']:
