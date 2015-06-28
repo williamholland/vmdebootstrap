@@ -183,7 +183,11 @@ install package in DEB file onto system (not from mirror)
 do not install a linux package
 .IP \-\-kernel-package
 If \-\-no-kernel is not used and the auto-selection of the
-.B linux-image\$arch
+.B linux-image-586
+or
+.B linux-image-armmp
+or
+.B linux-image-$ARCH
 package is not suitable, the kernel package can be specified
 explicitly.
 .IP \-\-enable-dhcp
