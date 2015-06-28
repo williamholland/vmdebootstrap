@@ -298,7 +298,7 @@ sudo chmod a+w ./test.img
 .PP
 Execute using qemu, e.g. on amd64 using qemu-system-x86_64:
 .IP
-qemu-system-x86_64 ./test.img
+qemu-system-x86_64 -drive format=raw,file=./test.img
 .PP
 (This loads the image in a new window.)
 .PP
