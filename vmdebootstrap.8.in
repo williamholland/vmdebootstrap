@@ -23,7 +23,7 @@ vmdebootstrap \- install basic Debian system into virtual disk image
 .B vmdebootstrap
 [\-\-output=FILE] [\-\-verbose |\-\-no-verbose] \-\-image=FILE \-\-size=SIZE
 [\-\-tarball=FILE] [\-\-mirror=URL] [\-\-arch=ARCH] [\-\-distribution=NAME]
-[\-\-package=PACKAGE] [\-\-custom-package=DEB] [\-\-no-kernel]
+[\-\-package=PACKAGE] [\-\-custom-package=DEB] [\-\-no-kernel] [\-\-kernel-package]
 [\-\-enable-dhcp | \-\-no-enable-dhcp] [\-\-root-password=PASSWORD]
 [\-\-customize=SCRIPT] [\-\-hostname=HOSTNAME] [\-\-user=USER/PASSWORD]
 [\-\-serial-console | \-\-no-serial-console] [\-\-sudo |\-\-no-sudo] [\-\-owner=OWNER]
@@ -155,13 +155,19 @@ architecture to use (amd64) - if using an architecture which the
 host system cannot execute, ensure the \-\-foreign option is also
 used.
 .IP \-\-distribution=NAME
-release to use (stable)
+release to use (defaults to stable). The release needs to be a valid
+Debian or Ubuntu release name or codename.
 .IP \-\-package=PACKAGE
 install PACKAGE onto system
 .IP \-\-custom-package=DEB
 install package in DEB file onto system (not from mirror)
 .IP \-\-no-kernel
 do not install a linux package
+.IP \-\-kernel-package
+If \-\-no-kernel is not used and the auto-selection of the
+.B linux-image\$arch
+package is not suitable, the kernel package can be specified
+explicitly.
 .IP \-\-enable-dhcp
 enable DHCP on eth0
 .IP \-\-root-password=PASSWORD

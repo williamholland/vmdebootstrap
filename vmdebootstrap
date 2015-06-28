@@ -22,14 +22,16 @@ import logging
 import os
 import re
 import shutil
+import datetime
 import subprocess
 import tempfile
 import time
+from distro_info import DebianDistroInfo, UbuntuDistroInfo
 
 
-__version__ = '0.7'
+__version__ = '0.8'
 
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,line-too-long,missing-docstring,too-many-branches
 
 
 class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-methods
@@ -38,6 +40,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         super(VmDebootstrap, self).__init__(progname, version, description, epilog)
         self.remove_dirs = []
         self.mount_points = []
+        self.debian_info = DebianDistroInfo()
+        self.ubuntu_info = UbuntuDistroInfo()
 
     def add_settings(self):
         default_arch = subprocess.check_output(
@@ -120,6 +124,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.settings.boolean(
             ['no-kernel'],
             'do not install a linux package')
+        self.settings.string(
+            ['kernel-package'],
+            'install PACKAGE instead of the default kernel package',
+            metavar='PACKAGE')
         self.settings.boolean(
             ['enable-dhcp'],
             'enable DHCP on eth0')
@@ -184,7 +192,11 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         if self.settings['image'] and not self.settings['size']:
             raise cliapp.AppException(
                 'If disk image is specified, you must give image size.')
-
+        if not self.debian_info.valid(self.settings['distribution']):
+            if not self.ubuntu_info.valid(self.settings['distribution']):
+                raise cliapp.AppException(
+                    '%s is not a valid Debian or Ubuntu suite or codename.'
+                    % self.settings['distribution'])
         rootdir = None
         try:
             rootdev = None
@@ -410,6 +422,26 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.message('Creating filesystem %s' % fstype)
         self.runcmd(['mkfs', '-t', fstype, device])
 
+    def suite_to_codename(self, distro):
+        suite = self.debian_info.codename(distro, datetime.date.today())
+        if not suite:
+            return distro
+        return suite
+
+    def was_oldstable(self, limit):
+        suite = self.suite_to_codename(self.settings['distribution'])
+        # this check is only for debian
+        if not self.debian_info.valid(suite):
+            return False
+        return suite == self.debian_info.old(limit)
+
+    def was_stable(self, limit):
+        suite = self.suite_to_codename(self.settings['distribution'])
+        # this check is only for debian
+        if not self.debian_info.valid(suite):
+            return False
+        return suite == self.debian_info.stable(limit)
+
     def debootstrap(self, rootdir):
         msg = "(%s)" % self.settings['variant'] if self.settings['variant'] else ''
         self.message('Debootstrapping %s %s' % (self.settings['distribution'], msg))
@@ -423,13 +455,20 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             include.append('grub-pc')
 
         if not self.settings['no-kernel']:
-            if self.settings['arch'] == 'i386':
-                kernel_arch = '486'
-            elif self.settings['arch'] == 'armhf':
-                kernel_arch = 'armmp'
+            if self.settings['kernel-package']:
+                kernel_image = self.settings['kernel-package']
             else:
-                kernel_arch = self.settings['arch']
-            kernel_image = 'linux-image-%s' % kernel_arch
+                if self.settings['arch'] == 'i386':
+                    # wheezy (which became oldstable on 04/25/2015) used '486'
+                    if self.was_oldstable(datetime.date(2015, 4, 26)):
+                        kernel_arch = '486'
+                    else:
+                        kernel_arch = '586'
+                elif self.settings['arch'] == 'armhf':
+                    kernel_arch = 'armmp'
+                else:
+                    kernel_arch = self.settings['arch']
+                kernel_image = 'linux-image-%s' % kernel_arch
             include.append(kernel_image)
 
         if self.settings['sudo'] and 'sudo' not in include:
