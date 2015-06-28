@@ -184,6 +184,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.settings.boolean(
             ['pkglist'],
             'Create a list of package names included in the image.')
+        self.settings.boolean(
+            ['no-acpid'],
+            'do not install the acpid package',
+            default=False)
 
     def process_args(self, args):  # pylint: disable=too-many-branches,too-many-statements
         if not self.settings['image'] and not self.settings['tarball']:
@@ -448,7 +452,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
         include = self.settings['package']
 
-        if not self.settings['foreign']:
+        if not self.settings['foreign'] and not self.settings['no-acpid']:
             include.append('acpid')
 
         if self.settings['grub']:

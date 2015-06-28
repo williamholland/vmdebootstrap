@@ -233,6 +233,9 @@ available.
 Disable extlinux installation and configure grub2 instead. grub2 will be added to
 the list of packages to install. update-grub will be called once the debootstrap is
 complete and grub-install will be called in the image.
+.IP \-\-no\-acpid
+Disable installation of acpid if not required, otherwise acpid will be
+installed if \-\-foreign is not used.
 .IP \-\-pkglist
 Output a list of package names installed inside the image. Useful if you
 need to track the relevant source packages used inside the image for
