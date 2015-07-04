@@ -624,7 +624,14 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
     def setup_networking(self, rootdir):
         self.message('Setting up networking')
 
-        if not os.path.exists(os.path.join(rootdir, 'etc', 'network', 'interfaces')):
+        # unconditionally write for wheezy (which became oldstable on 04/25/2015)
+        if self.was_oldstable(datetime.date(2015, 4, 26)):
+            with open(os.path.join(
+                rootdir, 'etc', 'network', 'interfaces'), 'w') as netfile:
+                netfile.write('source /etc/network/interfaces.d/*\n')
+            os.mkdir(os.path.join(rootdir, 'etc', 'network', 'interfaces.d'))
+
+        elif not os.path.exists(os.path.join(rootdir, 'etc', 'network', 'interfaces')):
             with open(os.path.join(
                 rootdir, 'etc', 'network', 'interfaces'), 'w') as netfile:
                 netfile.write('source-directory /etc/network/interfaces.d\n')
