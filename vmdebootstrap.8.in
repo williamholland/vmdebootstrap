@@ -29,7 +29,7 @@ vmdebootstrap \- install basic Debian system into virtual disk image
 [\-\-serial-console | \-\-no-serial-console] [\-\-sudo |\-\-no-sudo] [\-\-owner=OWNER]
 [\-\-bootsize=BOOTSIZE] [\-\-boottype=FSTYPE] [\-\-roottype=FSTYPE] [\-\-foreign=PATH]
 [\-\-variant=VARIANT] [\-\-no-extlinux] [\-\-squash] [\-\-configure-apt]
-[\-\-grub] [\-\-apt-mirror] [\-\-pkglist]
+[\-\-grub] [\-\-apt-mirror] [\-\-pkglist] [\-\-use\-efi] [\-\-efi\-size]
 .SH DESCRIPTION
 .B vmdebootstrap
 installs a basic Debian system into a virtual disk image,
@@ -101,6 +101,20 @@ devices during the grub-install operation. Details of the error will appear in t
 vmdebootstrap log file, if enabled with the \-\-log option. Note that
 .B grub-legacy
 is not supported.
+.B vmdebootstrap
+also supports
+.B EFI.
+Use \-\-use\-uefi to use grub\-efi instead of grub\-pc. If the default 5Mb
+is not enough space, use the \-\-esp\-size option to specify a different
+size for the EFI partition. Registered firmware is not supported as it
+would need to be done after boot. If the system you are creating is for
+more than just a VM or live image, you will likely need a larger ESP,
+up to 500Mb.
+.B UBoot
+needs manual configuration via the customisation hook scripts,
+typically support requires adding u\-boot using \-\-package and then
+copying or manipulating the relevant u\-boot files in the customisation
+script. Examples are included for beaglebone-black.
 .SH INSTALLATION IMAGES AND VIRTUAL MACHINES
 .B vmdebootstrap
 is aimed principally at creating virtual machines, not installers or prebuilt
@@ -243,7 +257,17 @@ Run mksquashfs against the final image using xz compression \- requires
 squashfs-tools to be installed. The final file will have the .squashfs suffix.
 By default, mksquashfs is allowed to use all processors which may result
 in high load. Run mksquashfs separately if you need to control the number
-of processors used per run.
+of processors used per run. squashfs can also have issues with large image
+files (where large is a factor of the amount of data inside the image rather
+than the size of the image itself). These errors can result in invalid
+images (e.g. image does not boot) or corrupted images (truncated file).
+This is a known bug in squashfs. Avoid using the \-\-squash option and
+consider squashing the loopback mounted directory tree of the image.
+.B
+vmdebootstrap
+will check if the squashed filesystem is less than 1MB and leave the
+unsquashed image in place with a warning about a possible squashfs
+failure.
 .IP \-\-configure\-apt
 Use the specified mirror and distribution to create a suitable apt source inside
 the VM. Can be useful if debootstrap fails to create it automatically.

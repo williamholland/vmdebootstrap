@@ -1,7 +1,7 @@
 #! /usr/bin/python
 # Copyright 2011-2013  Lars Wirzenius
 # Copyright 2012  Codethink Limited
-# Copyright 2014 Neil Williams <codehelp@debian.org>
+# Copyright 2014-2015 Neil Williams <codehelp@debian.org>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ import crypt
 import logging
 import os
 import re
+import sys
 import shutil
 import datetime
 import subprocess
@@ -29,7 +30,7 @@ import time
 from distro_info import DebianDistroInfo, UbuntuDistroInfo
 
 
-__version__ = '0.8'
+__version__ = '0.9'
 
 # pylint: disable=invalid-name,line-too-long,missing-docstring,too-many-branches
 
@@ -42,6 +43,36 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.mount_points = []
         self.debian_info = DebianDistroInfo()
         self.ubuntu_info = UbuntuDistroInfo()
+        self.bootdir = None
+        self.efi_arch_table = {
+            'amd64': {
+                'removable': '/EFI/boot/bootx64.efi',  # destination location
+                'install': '/EFI/debian/grubx64.efi',  # package location
+                'package': 'grub-efi-amd64',  # bootstrap package
+                'bin_package': 'grub-efi-amd64-bin',  # binary only
+                'extra': 'i386',  # architecture to add binary package
+                'exclusive': False,  # only EFI supported for this arch.
+                'target': 'x86_64-efi',  # grub target name
+            },
+            'i386': {
+                'removable': '/EFI/boot/bootia32.efi',
+                'install': '/EFI/debian/grubia32.efi',
+                'package': 'grub-efi-ia32',
+                'bin_package': 'grub-efi-ia32-bin',
+                'extra': None,
+                'exclusive': False,
+                'target': 'i386-efi',
+            },
+            'arm64': {
+                'removable': '/EFI/boot/bootaa64.efi',
+                'install': '/EFI/debian/grubaa64.efi',
+                'package': 'grub-efi-arm64',
+                'bin_package': 'grub-efi-arm64-bin',
+                'extra': None,
+                'exclusive': True,
+                'target': 'arm64-efi',
+            }
+        }
 
     def add_settings(self):
         default_arch = subprocess.check_output(
@@ -70,6 +101,14 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             ['bootoffset'],
             'Space to leave at start of the image for bootloader',
             default='0')
+        self.settings.boolean(
+            ['use-uefi'],
+            'Setup image for UEFI boot',
+            default=False)
+        self.settings.bytesize(
+            ['esp-size'],
+            'Size of EFI System Partition - requires use-uefi',
+            default='5mib')
         self.settings.string(
             ['part-type'],
             'Partition type to use for this image',
@@ -201,6 +240,34 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 raise cliapp.AppException(
                     '%s is not a valid Debian or Ubuntu suite or codename.'
                     % self.settings['distribution'])
+        if not self.settings['use-uefi'] and self.settings['esp-size'] != 5242880:
+            raise cliapp.AppException(
+                'You must specify use-uefi for esp-size to have effect')
+        if self.efi_arch_table[self.settings['arch']]['exclusive'] and\
+                not self.settings['use-uefi']:
+            raise cliapp.AppException(
+                'Only UEFI is supported on %s' % self.settings['arch'])
+        elif self.settings['use-uefi'] and self.settings['arch'] not in self.efi_arch_table:
+            raise cliapp.AppException(
+                '%s is not a supported UEFI architecture' % self.settings['arch'])
+        if self.settings['use-uefi'] and (
+                self.settings['bootsize'] or
+                self.settings['bootoffset']):
+            raise cliapp.AppException(
+                'A separate boot partition is not supported with UEFI')
+
+        if self.settings['use-uefi'] and not self.settings['grub']:
+            raise cliapp.AppException(
+                'UEFI without Grub is not supported.')
+
+        # wheezy (which became oldstable on 04/25/2015) only had amd64 uefi
+        if self.was_oldstable(datetime.date(2015, 4, 26)):
+            if self.settings['arch'] != 'amd64':
+                raise cliapp.AppException(
+                    'Only amd64 supports UEFI in Wheezy')
+
+        if os.geteuid() != 0:
+            sys.exit("You need to have root privileges to run this script.")
         rootdir = None
         try:
             rootdev = None
@@ -218,22 +285,27 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                     self.runcmd(['mkswap', swapdev])
                 self.mkfs(rootdev, fstype=roottype)
                 rootdir = self.mount(rootdev)
-                if bootdev:
+                if self.settings['use-uefi']:
+                    self.bootdir = '%s/%s/%s' % (rootdir, 'boot', 'efi')
+                    logging.debug("bootdir:%s", self.bootdir)
+                    self.mkfs(bootdev, fstype='vfat')
+                    os.makedirs(self.bootdir)
+                    self.mount(bootdev, self.bootdir)
+                elif bootdev:
                     if self.settings['boottype']:
                         boottype = self.settings['boottype']
                     else:
                         boottype = 'ext2'
                     self.mkfs(bootdev, fstype=boottype)
-                    bootdir = '%s/%s' % (rootdir, 'boot/')
-                    os.mkdir(bootdir)
-                    self.mount(bootdev, bootdir)
+                    self.bootdir = '%s/%s' % (rootdir, 'boot/')
+                    os.mkdir(self.bootdir)
+                    self.mount(bootdev, self.bootdir)
             else:
                 rootdir = self.mkdtemp()
             self.debootstrap(rootdir)
             self.set_hostname(rootdir)
             self.create_fstab(rootdir, rootdev, roottype, bootdev, boottype)
             self.install_debs(rootdir)
-            self.cleanup_apt_cache(rootdir)
             self.set_root_password(rootdir)
             self.create_users(rootdir)
             self.remove_udev_persistent_rules(rootdir)
@@ -241,10 +313,13 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             if self.settings['configure-apt'] or self.settings['apt-mirror']:
                 self.configure_apt(rootdir)
             self.customize(rootdir)
+            self.cleanup_apt_cache(rootdir)
             self.update_initramfs(rootdir)
 
             if self.settings['image']:
-                if self.settings['grub']:
+                if self.settings['use-uefi']:
+                    self.install_grub_uefi(rootdir)
+                elif self.settings['grub']:
                     self.install_grub2(rootdev, rootdir)
                 elif self.settings['extlinux']:
                     self.install_extlinux(rootdev, rootdir)
@@ -328,7 +403,6 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.runcmd(['parted', '-s', self.settings['image'],
                      'mklabel', self.settings['part-type']])
         partoffset = 0
-        bootsize = 0
         extent = '100%'
         swap = 256 * 1024 * 1024
         if self.settings['swap'] > 0:
@@ -338,6 +412,18 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 # minimum 256Mb as default qemu ram is 128Mb
                 logging.debug("Setting minimum 256Mb swap space")
             extent = "%s%%" % int(100 * (self.settings['size'] - swap) / self.settings['size'])
+
+        if self.settings['use-uefi']:
+            espsize = self.settings['esp-size'] / (1024 * 1024)
+            self.message("Using ESP size: %smib %s bytes" % (espsize, self.settings['esp-size']))
+            self.runcmd(['parted', '-s', self.settings['image'],
+                         'mkpart', 'primary', 'fat32',
+                         '1', str(espsize)])
+            self.runcmd(['parted', '-s', self.settings['image'],
+                         'set', '1', 'boot', 'on'])
+            self.runcmd(['parted', '-s', self.settings['image'],
+                         'set', '1', 'esp', 'on'])
+
         if self.settings['bootoffset'] and self.settings['bootoffset'] is not '0':
             # turn v.small offsets into something at least possible to create.
             if self.settings['bootoffset'] < 1048576:
@@ -358,6 +444,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             self.runcmd(['parted', '-s', self.settings['image'],
                          'mkpart', 'primary', 'fat16', str(partoffset), str(bootsize)])
             logging.debug("Starting root partition at %sMb", partoffset)
+            self.runcmd(['parted', '-s', self.settings['image'],
+                         'mkpart', 'primary', str(bootsize), extent])
+        elif self.settings['use-uefi']:
+            bootsize = self.settings['esp-size'] / (1024 * 1024) + 1
             self.runcmd(['parted', '-s', self.settings['image'],
                          'mkpart', 'primary', str(bootsize), extent])
         else:
@@ -394,6 +484,15 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             rootindex = 1
             swapindex = 2
             parts = 3
+        elif self.settings['use-uefi']:
+            bootindex = 0
+            rootindex = 1
+            parts = 2
+        elif self.settings['use-uefi'] and self.settings['swap'] > 0:
+            bootindex = 0
+            rootindex = 1
+            swapindex = 2
+            parts = 3
         elif self.settings['bootsize']:
             bootindex = 0
             rootindex = 1
@@ -416,11 +515,62 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             logging.debug("%s: devices=%s parts=%s", msg, devices, parts)
             raise cliapp.AppException(msg)
         root = '/dev/mapper/%s' % devices[rootindex]
-        if self.settings['bootsize']:
+        if self.settings['bootsize'] or self.settings['use-uefi']:
             boot = '/dev/mapper/%s' % devices[bootindex]
         if self.settings['swap'] > 0:
             swap = '/dev/mapper/%s' % devices[swapindex]
         return root, boot, swap
+
+    def _efi_packages(self):
+        packages = []
+        pkg = self.efi_arch_table[self.settings['arch']]['package']
+        self.message("Adding %s" % pkg)
+        packages.append(pkg)
+        extra = self.efi_arch_table[self.settings['arch']]['extra']
+        if extra and isinstance(extra, str):
+            bin_pkg = self.efi_arch_table[str(extra)]['bin_package']
+            self.message("Adding support for %s using %s" % (extra, bin_pkg))
+            packages.append(bin_pkg)
+        return packages
+
+    def _copy_efi_binary(self, efi_removable, efi_install):
+        logging.debug("using bootdir=%s", self.bootdir)
+        logging.debug("moving %s to %s", efi_removable, efi_install)
+        if efi_removable.startswith('/'):
+            efi_removable = efi_removable[1:]
+        if efi_install.startswith('/'):
+            efi_install = efi_install[1:]
+        efi_output = os.path.join(self.bootdir, efi_removable)
+        efi_input = os.path.join(self.bootdir, efi_install)
+        if not os.path.exists(efi_input):
+            logging.warning("%s does not exist (%s)", efi_input, efi_install)
+            raise cliapp.AppException("Missing %s" % efi_install)
+        if not os.path.exists(os.path.dirname(efi_output)):
+            os.makedirs(os.path.dirname(efi_output))
+        logging.debug(
+            'Moving UEFI support: %s -> %s', efi_input, efi_output)
+        if os.path.exists(efi_output):
+            os.unlink(efi_output)
+        os.rename(efi_input, efi_output)
+
+    def configure_efi(self):
+        """
+        Copy the bootloader file from the package into the location
+        so needs to be after grub and kernel already installed.
+        """
+        self.message('Configuring EFI')
+        efi_removable = str(self.efi_arch_table[self.settings['arch']]['removable'])
+        efi_install = str(self.efi_arch_table[self.settings['arch']]['install'])
+        self.message('Installing UEFI support binary')
+        self._copy_efi_binary(efi_removable, efi_install)
+
+    def configure_extra_efi(self):
+        extra = str(self.efi_arch_table[self.settings['arch']]['extra'])
+        if extra:
+            efi_removable = str(self.efi_arch_table[extra]['removable'])
+            efi_install = str(self.efi_arch_table[extra]['install'])
+            self.message('Copying UEFI support binary for %s' % extra)
+            self._copy_efi_binary(efi_removable, efi_install)
 
     def mkfs(self, device, fstype):
         self.message('Creating filesystem %s' % fstype)
@@ -446,9 +596,11 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             return False
         return suite == self.debian_info.stable(limit)
 
-    def debootstrap(self, rootdir):
+    def debootstrap(self, rootdir):  # pylint: disable=too-many-statements
         msg = "(%s)" % self.settings['variant'] if self.settings['variant'] else ''
-        self.message('Debootstrapping %s %s' % (self.settings['distribution'], msg))
+        self.message(
+            'Debootstrapping %s [%s] %s' % (
+                self.settings['distribution'], self.settings['arch'], msg))
 
         include = self.settings['package']
 
@@ -456,7 +608,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             include.append('acpid')
 
         if self.settings['grub']:
-            include.append('grub-pc')
+            if self.settings['use-uefi']:
+                include.extend(self._efi_packages())
+            else:
+                include.append('grub-pc')
 
         if not self.settings['no-kernel']:
             if self.settings['kernel-package']:
@@ -538,7 +693,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         else:
             rootdevstr = '/dev/sda1'
 
-        if bootdev:
+        if bootdev and not self.settings['use-uefi']:
             bootdevstr = 'UUID=%s' % fsuuid(bootdev)
         else:
             bootdevstr = None
@@ -589,11 +744,11 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             self.delete_password(rootdir, 'root')
 
     def create_users(self, rootdir):
-        def create_user(user):
-            self.runcmd(['chroot', rootdir, 'adduser', '--gecos', user,
-                         '--disabled-password', user])
+        def create_user(vmuser):
+            self.runcmd(['chroot', rootdir, 'adduser', '--gecos', vmuser,
+                         '--disabled-password', vmuser])
             if self.settings['sudo']:
-                self.runcmd(['chroot', rootdir, 'adduser', user, 'sudo'])
+                self.runcmd(['chroot', rootdir, 'adduser', vmuser, 'sudo'])
 
         for userpass in self.settings['user']:
             if '/' in userpass:
@@ -626,18 +781,16 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
         # unconditionally write for wheezy (which became oldstable on 04/25/2015)
         if self.was_oldstable(datetime.date(2015, 4, 26)):
-            with open(os.path.join(
-                rootdir, 'etc', 'network', 'interfaces'), 'w') as netfile:
+            with open(os.path.join(rootdir, 'etc', 'network', 'interfaces'), 'w') as netfile:
                 netfile.write('source /etc/network/interfaces.d/*\n')
             os.mkdir(os.path.join(rootdir, 'etc', 'network', 'interfaces.d'))
 
         elif not os.path.exists(os.path.join(rootdir, 'etc', 'network', 'interfaces')):
-            with open(os.path.join(
-                rootdir, 'etc', 'network', 'interfaces'), 'w') as netfile:
+            iface_path = os.path.join(rootdir, 'etc', 'network', 'interfaces')
+            with open(iface_path, 'w') as netfile:
                 netfile.write('source-directory /etc/network/interfaces.d\n')
-
-        with open(os.path.join(
-            rootdir, 'etc', 'network', 'interfaces.d', 'setup'), 'w') as eth:
+        ethpath = os.path.join(rootdir, 'etc', 'network', 'interfaces.d', 'setup')
+        with open(ethpath, 'w') as eth:
             eth.write('auto lo\n')
             eth.write('iface lo inet loopback\n')
 
@@ -668,28 +821,65 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             cfg.write("%s\n" % terminal)
             cfg.write("%s\n" % command)
 
-    def install_grub2(self, rootdev, rootdir):
-        self.message("Configuring grub2")
-        # rely on kpartx using consistent naming to map loop0p1 to loop0
-        install_dev = os.path.join('/dev', os.path.basename(rootdev)[:-2])
+    def _mount_wrapper(self, rootdir):
         self.runcmd(['mount', '/dev', '-t', 'devfs', '-obind',
                      '%s' % os.path.join(rootdir, 'dev')])
         self.runcmd(['mount', '/proc', '-t', 'proc', '-obind',
                      '%s' % os.path.join(rootdir, 'proc')])
         self.runcmd(['mount', '/sys', '-t', 'sysfs', '-obind',
                      '%s' % os.path.join(rootdir, 'sys')])
-        if self.settings['serial-console']:
-            self._grub_serial_console(rootdir)
 
-        try:
-            self.runcmd(['chroot', rootdir, 'update-grub'])
-            self.runcmd(['chroot', rootdir, 'grub-install', install_dev])
-        except cliapp.AppException:
-            self.message("Failed. Is grub2-common installed? Using extlinux.")
-            self.install_extlinux(rootdev, rootdir)
+    def _umount_wrapper(self, rootdir):
         self.runcmd(['umount', os.path.join(rootdir, 'sys')])
         self.runcmd(['umount', os.path.join(rootdir, 'proc')])
         self.runcmd(['umount', os.path.join(rootdir, 'dev')])
+
+    def install_grub_uefi(self, rootdir):
+        self.message("Configuring grub-uefi")
+        target = self.efi_arch_table[self.settings['arch']]['target']
+        grub_opts = "--target=%s" % target
+        logging.debug("Running grub-install with options: %s", grub_opts)
+        self._mount_wrapper(rootdir)
+        try:
+            self.runcmd(['chroot', rootdir, 'update-grub'])
+            self.runcmd(['chroot', rootdir, 'grub-install', grub_opts])
+        except cliapp.AppException as exc:
+            logging.warning(exc)
+            self.message(
+                "Failed to configure grub-uefi for %s" %
+                self.settings['arch'])
+            self._umount_wrapper(rootdir)
+        self.configure_efi()
+        extra = str(self.efi_arch_table[self.settings['arch']]['extra'])
+        if extra:
+            target = self.efi_arch_table[extra]['target']
+            grub_opts = "--target=%s" % target
+            try:
+                self.runcmd(['chroot', rootdir, 'update-grub'])
+                self.runcmd(['chroot', rootdir, 'grub-install', grub_opts])
+            except cliapp.AppException as exc:
+                logging.warning(exc)
+                self.message(
+                    "Failed to configure grub-uefi for %s" % extra)
+            self.configure_extra_efi()
+        self._umount_wrapper(rootdir)
+
+    def install_grub2(self, rootdev, rootdir):
+        self.message("Configuring grub2")
+        # rely on kpartx using consistent naming to map loop0p1 to loop0
+        grub_opts = os.path.join('/dev', os.path.basename(rootdev)[:-2])
+        if self.settings['serial-console']:
+            self._grub_serial_console(rootdir)
+        logging.debug("Running grub-install with options: %s", grub_opts)
+        self._mount_wrapper(rootdir)
+        try:
+            self.runcmd(['chroot', rootdir, 'update-grub'])
+            self.runcmd(['chroot', rootdir, 'grub-install', grub_opts])
+        except cliapp.AppException as exc:
+            logging.warning(exc)
+            self.message("Failed. Is grub2-common installed? Using extlinux.")
+            self.install_extlinux(rootdev, rootdir)
+        self._umount_wrapper(rootdir)
 
     def install_extlinux(self, rootdev, rootdir):
         if not os.path.exists("/usr/bin/extlinux"):
@@ -765,13 +955,30 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         if not os.path.exists('/usr/bin/mksquashfs'):
             logging.warning("Squash selected but mksquashfs not found!")
             return
+        logging.debug(
+            "%s usage: %s", self.settings['image'],
+            self.runcmd(['du', self.settings['image']]))
         self.message("Running mksquashfs")
         suffixed = "%s.squashfs" % self.settings['image']
-        self.runcmd(['mksquashfs', self.settings['image'],
-                     suffixed,
-                     '-no-progress', '-comp', 'xz'], ignore_fail=False)
-        os.unlink(self.settings['image'])
-        self.settings['image'] = suffixed
+        if os.path.exists(suffixed):
+            os.unlink(suffixed)
+        msg = self.runcmd(
+            ['mksquashfs', self.settings['image'],
+             suffixed,
+             '-no-progress', '-comp', 'xz'], ignore_fail=False)
+        logging.debug(msg)
+        check_size = os.path.getsize(suffixed)
+        if check_size < (1024 * 1024):
+            logging.warning(
+                "%s appears to be too small! %s bytes",
+                suffixed, check_size)
+        else:
+            logging.debug("squashed size: %s", check_size)
+            os.unlink(self.settings['image'])
+            self.settings['image'] = suffixed
+            logging.debug(
+                "%s usage: %s", self.settings['image'],
+                self.runcmd(['du', self.settings['image']]))
 
     def cleanup_system(self):
         # Clean up after any errors.
@@ -806,11 +1013,17 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
             script = example
         self.message('Running customize script %s' % script)
         logging.info("rootdir=%s image=%s", rootdir, self.settings['image'])
+        logging.debug(
+            "%s usage: %s", self.settings['image'],
+            self.runcmd(['du', self.settings['image']]))
         with open('/dev/tty', 'w') as tty:
             try:
                 cliapp.runcmd([script, rootdir, self.settings['image']], stdout=tty, stderr=tty)
             except IOError:
                 subprocess.call([script, rootdir, self.settings['image']])
+        logging.debug(
+            "%s usage: %s", self.settings['image'],
+            self.runcmd(['du', self.settings['image']]))
 
     def create_tarball(self, rootdir):
         # Create a tarball of the disk's contents
