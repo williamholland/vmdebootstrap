@@ -234,28 +234,28 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             sys.exit("You need to have root privileges to run this script.")
         self.start_ops()
 
-    def _image_preparations(self, rootdir):
+    def _image_preparations(self):
         uefi = self.handlers[Uefi.name]
         base = self.handlers[Base.name]
-        roottype = self.settings['roottype']
+        filesystem = self.handlers[Filesystem.name]
         base.create_empty_image()
         self.partition_image()
-        if self.settings['mbr'] or self.settings['extlinux']:
-            self.install_mbr()
-        (rootdev, bootdev, swapdev) = self.setup_kpartx()
+        filesystem.install_mbr()
+        filesystem.setup_kpartx()
+        rootdev = filesystem.devices['rootdev']
+        roottype = filesystem.devices['roottype']
+        bootdev = filesystem.devices['bootdev']
         if self.settings['swap'] > 0:
             self.message("Creating swap space")
-            runcmd(['mkswap', swapdev])
-        self.mkfs(rootdev, fstype=roottype)
+            runcmd(['mkswap', filesystem.devices['swapdev']])
+        filesystem.mkfs(rootdev, fstype=roottype)
         rootdir = self.mount(rootdev)
+        filesystem.devices['rootdir'] = rootdir
         if self.settings['use-uefi']:
             self.mount(bootdev, uefi.prepare_esp(rootdir, bootdev))
         elif bootdev:
-            if self.settings['boottype']:
-                boottype = self.settings['boottype']
-            else:
-                boottype = 'ext2'
-            self.mkfs(bootdev, fstype=boottype)
+            boottype = self.settings['boottype']
+            filesystem.mkfs(bootdev, fstype=boottype)
             self.bootdir = '%s/%s' % (rootdir, 'boot/')
             os.mkdir(self.bootdir)
             self.mount(bootdev, self.bootdir)
@@ -265,44 +265,46 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             return
         grub = self.handlers[GrubHandler.name]
         extlinux = self.handlers[ExtLinux.name]
+        base = self.handlers[Base.name]
+        filesystem = self.handlers[Filesystem.name]
         if self.settings['use-uefi']:
             grub.install_grub_uefi(rootdir)
+            uefi.configure_efi()
+            grub.install_extra_grub_uefi(rootdir)
+            uefi.configure_extra_efi()
         elif self.settings['grub']:
-            grub.install_grub2(rootdev, rootdir)
+            if not grub.install_grub2(rootdev, rootdir):
+                extlinux.install_extlinux(rootdev, rootdir)
         elif self.settings['extlinux']:
             extlinux.install_extlinux(rootdev, rootdir)
-        self.append_serial_console(rootdir)
-        self.optimize_image(rootdir)
-        if self.settings['squash']:
-            self.squash()
+        base.append_serial_console(rootdir)
+        base.optimize_image(rootdir)
+        filesystem.squash()
 
     def start_ops(self):
         base = self.handlers[Base.name]
-        rootdir = None
-        rootdev = None
-        roottype = self.settings['roottype']
-        bootdev = None
-        boottype = None
+        filesystem = self.handlers[Filesystem.name]
+        rootdir = filesystem.devices['rootdir']
+        rootdev = filesystem.devices['rootdev']
         try:
             if self.settings['image']:
-                self._image_preparations(rootdir)
+                self._image_preparations()
             else:
                 rootdir = self.mkdtemp()
             self.debootstrap(rootdir)
-            self.set_hostname(rootdir)
-            self.create_fstab(rootdir, rootdev, roottype, bootdev, boottype)
+            filesystem.set_hostname()
+            filesystem.create_fstab()
             self.install_debs(rootdir)
             base.set_root_password(rootdir)
             base.create_users(rootdir)
-            self.remove_udev_persistent_rules(rootdir)
+            filesystem.remove_udev_persistent_rules()
             self.setup_networking(rootdir)
-            if self.settings['configure-apt'] or self.settings['apt-mirror']:
-                self.configure_apt(rootdir)
-            self.customize(rootdir)
+            filesystem.configure_apt()
+            base.customize(rootdir)
             cleanup_apt_cache(rootdir)
-            self.update_initramfs(rootdir)
+            filesystem.update_initramfs()
             self._image_operations(rootdir, rootdev)
-            self.list_installed_pkgs(rootdir)
+            filesystem.list_installed_pkgs()
 
             if self.settings['foreign']:
                 os.unlink(
@@ -311,7 +313,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
             if self.settings['tarball']:
                 base.create_tarball(rootdir)
-            self.chown()
+            filesystem.chown()
 
         except BaseException as e:
             self.message('EEEK! Something bad happened...')
@@ -421,71 +423,6 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             runcmd(['parted', '-s', self.settings['image'],
                     'mkpart', 'primary', 'linux-swap', extent, '100%'])
 
-    def update_initramfs(self, rootdir):
-        cmd = os.path.join('usr', 'sbin', 'update-initramfs')
-        if os.path.exists(os.path.join(rootdir, cmd)):
-            self.message("Updating the initramfs")
-            runcmd(['chroot', rootdir, cmd, '-u'])
-
-    def install_mbr(self):
-        if os.path.exists("/sbin/install-mbr"):
-            self.message('Installing MBR')
-            runcmd(['install-mbr', self.settings['image']])
-        else:
-            msg = "mbr enabled but /sbin/install-mbr not found" \
-                  " - please install the mbr package."
-            raise cliapp.AppException(msg)
-
-    def setup_kpartx(self):
-        bootindex = None
-        swapindex = None
-        out = runcmd(['kpartx', '-avs', self.settings['image']])
-        if self.settings['bootsize'] and self.settings['swap'] > 0:
-            bootindex = 0
-            rootindex = 1
-            swapindex = 2
-            parts = 3
-        elif self.settings['use-uefi']:
-            bootindex = 0
-            rootindex = 1
-            parts = 2
-        elif self.settings['use-uefi'] and self.settings['swap'] > 0:
-            bootindex = 0
-            rootindex = 1
-            swapindex = 2
-            parts = 3
-        elif self.settings['bootsize']:
-            bootindex = 0
-            rootindex = 1
-            parts = 2
-        elif self.settings['swap'] > 0:
-            rootindex = 0
-            swapindex = 1
-            parts = 2
-        else:
-            rootindex = 0
-            parts = 1
-        boot = None
-        swap = None
-        devices = [line.split()[2]
-                   for line in out.splitlines()
-                   if line.startswith('add map ')]
-        if len(devices) != parts:
-            msg = 'Surprising number of partitions - check output of losetup -a'
-            logging.debug("%s", runcmd(['losetup', '-a']))
-            logging.debug("%s: devices=%s parts=%s", msg, devices, parts)
-            raise cliapp.AppException(msg)
-        root = '/dev/mapper/%s' % devices[rootindex]
-        if self.settings['bootsize'] or self.settings['use-uefi']:
-            boot = '/dev/mapper/%s' % devices[bootindex]
-        if self.settings['swap'] > 0:
-            swap = '/dev/mapper/%s' % devices[swapindex]
-        return root, boot, swap
-
-    def mkfs(self, device, fstype):
-        self.message('Creating filesystem %s' % fstype)
-        runcmd(['mkfs', '-t', fstype, device])
-
     def _bootstrap_packages(self):  # pylint: disable=too-many-branches
         uefi = self.handlers[Uefi.name]
         distro = self.handlers[Codenames.name]
@@ -564,50 +501,6 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         if self.settings['foreign']:
             self._debootstrap_second_stage(rootdir)
 
-    def set_hostname(self, rootdir):
-        hostname = self.settings['hostname']
-        with open(os.path.join(rootdir, 'etc', 'hostname'), 'w') as f:
-            f.write('%s\n' % hostname)
-
-        etc_hosts = os.path.join(rootdir, 'etc', 'hosts')
-        try:
-            with open(etc_hosts, 'r') as f:
-                data = f.read()
-            with open(etc_hosts, 'w') as f:
-                for line in data.splitlines():
-                    if line.startswith('127.0.0.1'):
-                        line += ' %s' % hostname
-                    f.write('%s\n' % line)
-        except IOError:
-            pass
-
-    def create_fstab(self, rootdir, rootdev, roottype, bootdev, boottype):  # pylint: disable=too-many-arguments
-        def fsuuid(device):
-            out = runcmd(['blkid', '-c', '/dev/null', '-o', 'value',
-                          '-s', 'UUID', device])
-            return out.splitlines()[0].strip()
-
-        if rootdev:
-            rootdevstr = 'UUID=%s' % fsuuid(rootdev)
-        else:
-            rootdevstr = '/dev/sda1'
-
-        if bootdev and not self.settings['use-uefi']:
-            bootdevstr = 'UUID=%s' % fsuuid(bootdev)
-        else:
-            bootdevstr = None
-
-        fstab = os.path.join(rootdir, 'etc', 'fstab')
-        with open(fstab, 'w') as f:
-            f.write('proc /proc proc defaults 0 0\n')
-            f.write('%s / %s errors=remount-ro 0 1\n' % (rootdevstr, roottype))
-            if bootdevstr:
-                f.write('%s /boot %s errors=remount-ro 0 2\n' % (bootdevstr, boottype))
-                if self.settings['swap'] > 0:
-                    f.write("/dev/sda3 swap swap defaults 0 0\n")
-            elif self.settings['swap'] > 0:
-                f.write("/dev/sda2 swap swap defaults 0 0\n")
-
     def install_debs(self, rootdir):
         if not self.settings['custom-package']:
             return
@@ -626,16 +519,6 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                       'apt-get', '-f', '--no-remove', 'install'])
         logging.debug('stdout:\n%s', out)
         shutil.rmtree(tmp)
-
-    def remove_udev_persistent_rules(self, rootdir):
-        self.message('Removing udev persistent cd and net rules')
-        for x in ['70-persistent-cd.rules', '70-persistent-net.rules']:
-            pathname = os.path.join(rootdir, 'etc', 'udev', 'rules.d', x)
-            if os.path.exists(pathname):
-                logging.debug('rm %s', pathname)
-                os.remove(pathname)
-            else:
-                logging.debug('not removing non-existent %s', pathname)
 
     def setup_networking(self, rootdir):
         self.message('Setting up networking')
@@ -660,56 +543,6 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 eth.write('auto eth0\n')
                 eth.write('iface eth0 inet dhcp\n')
 
-    def append_serial_console(self, rootdir):
-        if self.settings['serial-console']:
-            serial_command = self.settings['serial-console-command']
-            logging.debug('adding getty to serial console')
-            inittab = os.path.join(rootdir, 'etc/inittab')
-            # to autologin, serial_command can contain '-a root'
-            with open(inittab, 'a') as f:
-                f.write('\nS0:23:respawn:%s\n' % serial_command)
-
-    def optimize_image(self, rootdir):
-        """
-        Filing up the image with zeros will increase its compression rate
-        """
-        if not self.settings['sparse']:
-            zeros = os.path.join(rootdir, 'ZEROS')
-            self.runcmd_unchecked(['dd', 'if=/dev/zero', 'of=' + zeros, 'bs=1M'])
-            runcmd(['rm', '-f', zeros])
-
-    def squash(self):
-        """
-        Run squashfs on the image.
-        """
-        if not os.path.exists('/usr/bin/mksquashfs'):
-            logging.warning("Squash selected but mksquashfs not found!")
-            return
-        logging.debug(
-            "%s usage: %s", self.settings['image'],
-            runcmd(['du', self.settings['image']]))
-        self.message("Running mksquashfs")
-        suffixed = "%s.squashfs" % self.settings['image']
-        if os.path.exists(suffixed):
-            os.unlink(suffixed)
-        msg = runcmd(
-            ['mksquashfs', self.settings['image'],
-             suffixed,
-             '-no-progress', '-comp', 'xz'], ignore_fail=False)
-        logging.debug(msg)
-        check_size = os.path.getsize(suffixed)
-        if check_size < (1024 * 1024):
-            logging.warning(
-                "%s appears to be too small! %s bytes",
-                suffixed, check_size)
-        else:
-            logging.debug("squashed size: %s", check_size)
-            os.unlink(self.settings['image'])
-            self.settings['image'] = suffixed
-            logging.debug(
-                "%s usage: %s", self.settings['image'],
-                runcmd(['du', self.settings['image']]))
-
     def cleanup_system(self):
         # Clean up after any errors.
 
@@ -730,72 +563,6 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
         for dirname in self.remove_dirs:
             shutil.rmtree(dirname)
-
-    def customize(self, rootdir):
-        script = self.settings['customize']
-        if not script:
-            return
-        if not os.path.exists(script):
-            example = os.path.join("/usr/share/vmdebootstrap/examples/", script)
-            if not os.path.exists(example):
-                self.message("Unable to find %s" % script)
-                return
-            script = example
-        self.message('Running customize script %s' % script)
-        logging.info("rootdir=%s image=%s", rootdir, self.settings['image'])
-        logging.debug(
-            "%s usage: %s", self.settings['image'],
-            runcmd(['du', self.settings['image']]))
-        with open('/dev/tty', 'w') as tty:
-            try:
-                cliapp.runcmd([script, rootdir, self.settings['image']], stdout=tty, stderr=tty)
-            except IOError:
-                subprocess.call([script, rootdir, self.settings['image']])
-        logging.debug(
-            "%s usage: %s", self.settings['image'],
-            runcmd(['du', self.settings['image']]))
-
-    def chown(self):
-        if not self.settings['owner']:
-            return
-        # Change image owner after completed build
-        if self.settings['image']:
-            filename = self.settings['image']
-        elif self.settings['tarball']:
-            filename = self.settings['tarball']
-        else:
-            return
-        self.message("Changing owner to %s" % self.settings["owner"])
-        subprocess.call(["chown", self.settings["owner"], filename])
-
-    def list_installed_pkgs(self, rootdir):
-        if not self.settings['pkglist']:
-            return
-        # output the list of installed packages for sources identification
-        self.message("Creating a list of installed binary package names")
-        out = runcmd(['chroot', rootdir,
-                      'dpkg-query', '-W', "-f='${Package}.deb\n'"])
-        with open('dpkg.list', 'w') as dpkg:
-            dpkg.write(out)
-
-    def configure_apt(self, rootdir):
-        # use the distribution and mirror to create an apt source
-        self.message("Configuring apt to use distribution and mirror")
-        conf = os.path.join(rootdir, 'etc', 'apt', 'sources.list.d', 'base.list')
-        logging.debug('configure apt %s', conf)
-        mirror = self.settings['mirror']
-        if self.settings['apt-mirror']:
-            mirror = self.settings['apt-mirror']
-            self.message("Setting apt mirror to %s" % mirror)
-        os.unlink(os.path.join(rootdir, 'etc', 'apt', 'sources.list'))
-        f = open(conf, 'w')
-        line = 'deb %s %s main\n' % (mirror, self.settings['distribution'])
-        f.write(line)
-        line = '#deb-src %s %s main\n' % (mirror, self.settings['distribution'])
-        f.write(line)
-        f.close()
-        # ensure the apt sources have valid lists
-        runcmd(['chroot', rootdir, 'apt-get', '-qq', 'update'])
 
 if __name__ == '__main__':
     VmDebootstrap(version=__version__).run()

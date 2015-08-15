@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+"""
+  Wrapper for Extlinux support
+"""
 # -*- coding: utf-8 -*-
 #
 #  extlinux.py
@@ -24,6 +26,8 @@ import time
 import cliapp
 import logging
 from vmdebootstrap.base import Base, runcmd
+
+# pylint: disable=missing-docstring
 
 
 class ExtLinux(Base):
@@ -88,3 +92,14 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         runcmd(['extlinux', '--install', rootdir])
         runcmd(['sync'])
         time.sleep(2)
+
+    def install_mbr(self):
+        if not self.settings['mbr'] and not self.settings['extlinux']:
+            return
+        if os.path.exists("/sbin/install-mbr"):
+            self.message('Installing MBR')
+            runcmd(['install-mbr', self.settings['image']])
+        else:
+            msg = "mbr enabled but /sbin/install-mbr not found" \
+                  " - please install the mbr package."
+            raise cliapp.AppException(msg)

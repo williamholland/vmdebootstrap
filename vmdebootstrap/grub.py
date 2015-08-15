@@ -69,8 +69,10 @@ class GrubHandler(Base):
         except cliapp.AppException as exc:
             logging.warning(exc)
             self.message("Failed. Is grub2-common installed? Using extlinux.")
-            self.install_extlinux(rootdev, rootdir)  # FIXME!
+            umount_wrapper(rootdir)
+            return False
         umount_wrapper(rootdir)
+        return True
 
     def install_grub_uefi(self, rootdir):
         self.message("Configuring grub-uefi")
@@ -86,8 +88,9 @@ class GrubHandler(Base):
             self.message(
                 "Failed to configure grub-uefi for %s" %
                 self.settings['arch'])
-            umount_wrapper(rootdir)
-        self.uefi.configure_efi()  # FIXME
+        umount_wrapper(rootdir)
+
+    def install_extra_grub_uefi(self, rootdir):
         extra = str(arch_table[self.settings['arch']]['extra'])
         if extra:
             target = arch_table[extra]['target']
@@ -99,5 +102,4 @@ class GrubHandler(Base):
                 logging.warning(exc)
                 self.message(
                     "Failed to configure grub-uefi for %s" % extra)
-            self.uefi.configure_extra_efi()  # FIXME
         umount_wrapper(rootdir)

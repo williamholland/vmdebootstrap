@@ -1,0 +1,5 @@
+include NEWS
+include vmextract.py
+include vmdebootstrap.8.in
+recursive-include examples *.sh *.txt
+

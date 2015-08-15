@@ -24,7 +24,12 @@
 import os
 import cliapp
 import logging
-from vmdebootstrap.base import Base, runcmd
+from vmdebootstrap.base import (
+    Base,
+    runcmd,
+    mount_wrapper,
+    umount_wrapper,
+)
 
 # pylint: disable=missing-docstring
 
@@ -106,18 +111,22 @@ class Uefi(Base):
         so needs to be after grub and kernel already installed.
         """
         self.message('Configuring EFI')
+        mount_wrapper()
         efi_removable = str(arch_table[self.settings['arch']]['removable'])
         efi_install = str(arch_table[self.settings['arch']]['install'])
         self.message('Installing UEFI support binary')
         self.copy_efi_binary(efi_removable, efi_install)
+        umount_wrapper()
 
     def configure_extra_efi(self):
         extra = str(arch_table[self.settings['arch']]['extra'])
         if extra:
+            mount_wrapper()
             efi_removable = str(arch_table[extra]['removable'])
             efi_install = str(arch_table[extra]['install'])
             self.message('Copying UEFI support binary for %s' % extra)
             self.copy_efi_binary(efi_removable, efi_install)
+            umount_wrapper()
 
     def partition_esp(self):
         espsize = self.settings['esp-size'] / (1024 * 1024)

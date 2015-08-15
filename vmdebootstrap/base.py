@@ -44,6 +44,7 @@ def runcmd(argv, stdin='', ignore_fail=False, env=None, **kwargs):
     return out
 
 
+# FIXME: use contextmanager
 def mount_wrapper(rootdir):
     runcmd(['mount', '/dev', '-t', 'devfs', '-obind',
             '%s' % os.path.join(rootdir, 'dev')])
@@ -131,3 +132,45 @@ class Base(object):
             else:
                 create_user(userpass)
                 delete_password(rootdir, userpass)
+
+    def customize(self, rootdir):
+        script = self.settings['customize']
+        if not script:
+            return
+        if not os.path.exists(script):
+            example = os.path.join("/usr/share/vmdebootstrap/examples/", script)
+            if not os.path.exists(example):
+                self.message("Unable to find %s" % script)
+                return
+            script = example
+        self.message('Running customize script %s' % script)
+        logging.info("rootdir=%s image=%s", rootdir, self.settings['image'])
+        logging.debug(
+            "%s usage: %s", self.settings['image'],
+            runcmd(['du', self.settings['image']]))
+        with open('/dev/tty', 'w') as tty:
+            try:
+                cliapp.runcmd([script, rootdir, self.settings['image']], stdout=tty, stderr=tty)
+            except IOError:
+                subprocess.call([script, rootdir, self.settings['image']])
+        logging.debug(
+            "%s usage: %s", self.settings['image'],
+            runcmd(['du', self.settings['image']]))
+
+    def optimize_image(self, rootdir):
+        """
+        Filing up the image with zeros will increase its compression rate
+        """
+        if not self.settings['sparse']:
+            zeros = os.path.join(rootdir, 'ZEROS')
+            self.runcmd_unchecked(['dd', 'if=/dev/zero', 'of=' + zeros, 'bs=1M'])
+            runcmd(['rm', '-f', zeros])
+
+    def append_serial_console(self, rootdir):
+        if self.settings['serial-console']:
+            serial_command = self.settings['serial-console-command']
+            logging.debug('adding getty to serial console')
+            inittab = os.path.join(rootdir, 'etc/inittab')
+            # to autologin, serial_command can contain '-a root'
+            with open(inittab, 'a') as ftab:
+                ftab.write('\nS0:23:respawn:%s\n' % serial_command)

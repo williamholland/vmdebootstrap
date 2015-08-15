@@ -35,6 +35,7 @@ class Codenames(Base):
         super(Codenames, self).__init__()
         self.debian_info = DebianDistroInfo()
         self.ubuntu_info = UbuntuDistroInfo()
+        self.settings = None
 
     def define_settings(self, settings):
         self.settings = settings
@@ -58,4 +59,3 @@ class Codenames(Base):
         if not self.debian_info.valid(suite):
             return False
         return suite == self.debian_info.stable(limit)
-
