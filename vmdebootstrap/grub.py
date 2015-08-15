@@ -23,13 +23,13 @@
 import os
 import cliapp
 import logging
-from base import (
+from vmdebootstrap.base import (
     Base,
     runcmd,
     mount_wrapper,
     umount_wrapper
 )
-from uefi import Uefi, arch_table
+from vmdebootstrap.uefi import Uefi, arch_table
 
 # pylint: disable=missing-docstring
 

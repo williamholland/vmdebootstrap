@@ -23,7 +23,7 @@ import os
 import time
 import cliapp
 import logging
-from base import Base
+from vmdebootstrap.base import Base, runcmd
 
 
 class ExtLinux(Base):
@@ -54,8 +54,8 @@ class ExtLinux(Base):
             logging.debug("No kernel found. %s. Skipping install of extlinux.", exc)
             return
 
-        out = self.runcmd(['blkid', '-c', '/dev/null', '-o', 'value',
-                           '-s', 'UUID', rootdev])
+        out = runcmd(['blkid', '-c', '/dev/null', '-o', 'value',
+                      '-s', 'UUID', rootdev])
         uuid = out.splitlines()[0].strip()
 
         conf = os.path.join(rootdir, 'extlinux.conf')
@@ -85,6 +85,6 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         ext_f = open(conf, 'w')
         ext_f.write(msg)
 
-        self.runcmd(['extlinux', '--install', rootdir])
-        self.runcmd(['sync'])
+        runcmd(['extlinux', '--install', rootdir])
+        runcmd(['sync'])
         time.sleep(2)

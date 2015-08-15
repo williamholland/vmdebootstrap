@@ -25,16 +25,16 @@ import logging
 import datetime
 import tempfile
 import subprocess
-from base import (
+from vmdebootstrap.base import (
     Base,
     runcmd,
     cleanup_apt_cache,
 )
-from grub import GrubHandler
-from extlinux import ExtLinux
-from codenames import Codenames
-from filesystem import Filesystem
-from uefi import Uefi, arch_table
+from vmdebootstrap.grub import GrubHandler
+from vmdebootstrap.extlinux import ExtLinux
+from vmdebootstrap.codenames import Codenames
+from vmdebootstrap.filesystem import Filesystem
+from vmdebootstrap.uefi import Uefi, arch_table
 
 
 __version__ = '1.0'

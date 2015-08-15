@@ -24,7 +24,7 @@
 import os
 import cliapp
 import logging
-from base import Base
+from vmdebootstrap.base import Base, runcmd
 
 # pylint: disable=missing-docstring
 
