@@ -157,15 +157,6 @@ class Base(object):
             "%s usage: %s", self.settings['image'],
             runcmd(['du', self.settings['image']]))
 
-    def optimize_image(self, rootdir):
-        """
-        Filing up the image with zeros will increase its compression rate
-        """
-        if not self.settings['sparse']:
-            zeros = os.path.join(rootdir, 'ZEROS')
-            self.runcmd_unchecked(['dd', 'if=/dev/zero', 'of=' + zeros, 'bs=1M'])
-            runcmd(['rm', '-f', zeros])
-
     def append_serial_console(self, rootdir):
         if self.settings['serial-console']:
             serial_command = self.settings['serial-console-command']

@@ -238,9 +238,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         uefi = self.handlers[Uefi.name]
         base = self.handlers[Base.name]
         filesystem = self.handlers[Filesystem.name]
+        extlinux = self.handlers[ExtLinux.name]
         base.create_empty_image()
         self.partition_image()
-        filesystem.install_mbr()
+        extlinux.install_mbr()
         filesystem.setup_kpartx()
         rootdev = filesystem.devices['rootdev']
         roottype = filesystem.devices['roottype']
@@ -263,6 +264,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
     def _image_operations(self, rootdir, rootdev):
         if not self.settings['image']:
             return
+        logging.debug("rootdir=%s rootdev=%s", rootdir, rootdev)
         grub = self.handlers[GrubHandler.name]
         extlinux = self.handlers[ExtLinux.name]
         base = self.handlers[Base.name]
@@ -278,19 +280,20 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         elif self.settings['extlinux']:
             extlinux.install_extlinux(rootdev, rootdir)
         base.append_serial_console(rootdir)
-        base.optimize_image(rootdir)
+        self.optimize_image(rootdir)
         filesystem.squash()
 
     def start_ops(self):
         base = self.handlers[Base.name]
         filesystem = self.handlers[Filesystem.name]
-        rootdir = filesystem.devices['rootdir']
-        rootdev = filesystem.devices['rootdev']
         try:
             if self.settings['image']:
                 self._image_preparations()
+                rootdir = filesystem.devices['rootdir']
+                rootdev = filesystem.devices['rootdev']
             else:
                 rootdir = self.mkdtemp()
+            logging.debug("rootdir=%s rootdev=%s", rootdir, rootdev)
             self.debootstrap(rootdir)
             filesystem.set_hostname()
             filesystem.create_fstab()
@@ -519,6 +522,15 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                       'apt-get', '-f', '--no-remove', 'install'])
         logging.debug('stdout:\n%s', out)
         shutil.rmtree(tmp)
+
+    def optimize_image(self, rootdir):
+        """
+        Filing up the image with zeros will increase its compression rate
+        """
+        if not self.settings['sparse']:
+            zeros = os.path.join(rootdir, 'ZEROS')
+            self.runcmd_unchecked(['dd', 'if=/dev/zero', 'of=' + zeros, 'bs=1M'])
+            runcmd(['rm', '-f', zeros])
 
     def setup_networking(self, rootdir):
         self.message('Setting up networking')

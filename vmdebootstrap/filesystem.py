@@ -129,6 +129,7 @@ class Filesystem(Base):
         rootdev = self.devices['rootdev']
         bootdev = self.devices['bootdev']
         boottype = self.devices['boottype']
+        roottype = self.devices['roottype']
 
         def fsuuid(device):
             out = runcmd(['blkid', '-c', '/dev/null', '-o', 'value',
@@ -233,8 +234,8 @@ class Filesystem(Base):
         if not rootdir:
             raise cliapp.AppException("rootdir not set")
         self.message('Removing udev persistent cd and net rules')
-        for x in ['70-persistent-cd.rules', '70-persistent-net.rules']:
-            pathname = os.path.join(str(rootdir), 'etc', 'udev', 'rules.d', x)
+        for xrule in ['70-persistent-cd.rules', '70-persistent-net.rules']:
+            pathname = os.path.join(str(rootdir), 'etc', 'udev', 'rules.d', xrule)
             if os.path.exists(pathname):
                 logging.debug('rm %s', pathname)
                 os.remove(pathname)
@@ -246,17 +247,17 @@ class Filesystem(Base):
         hostname = self.settings['hostname']
         if not rootdir:
             raise cliapp.AppException("rootdir not set")
-        with open(os.path.join(str(rootdir), 'etc', 'hostname'), 'w') as f:
-            f.write('%s\n' % hostname)
+        with open(os.path.join(str(rootdir), 'etc', 'hostname'), 'w') as fhost:
+            fhost.write('%s\n' % hostname)
 
         etc_hosts = os.path.join(str(rootdir), 'etc', 'hosts')
         try:
-            with open(etc_hosts, 'r') as f:
-                data = f.read()
-            with open(etc_hosts, 'w') as f:
+            with open(etc_hosts, 'r') as fhost:
+                data = fhost.read()
+            with open(etc_hosts, 'w') as fhosts:
                 for line in data.splitlines():
                     if line.startswith('127.0.0.1'):
                         line += ' %s' % hostname
-                    f.write('%s\n' % line)
+                    fhosts.write('%s\n' % line)
         except IOError:
             pass
