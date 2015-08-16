@@ -1,3 +1,5 @@
 *.img
 *.log
 *.tar.gz
+*.pyc
+*.egg-info

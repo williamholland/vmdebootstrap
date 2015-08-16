@@ -60,6 +60,38 @@ In order to use vmdebootstrap, you'll need a few things:
 * python-cliapp (see http://liw.fi/cliapp/)
 * python-distro-info
 
+Running vmdebootstrap from git
+------------------------------
+
+$ sudo PYTHONPATH=. ./bin/vmdebootstrap
+
+This has changed slightly with version 1.0 with the need for
+PYTHONPATH to reference the module approach for support handlers.
+
+pylint
+------
+
+vmdebootstrap uses pylint and contains comments to disable certain
+pylint checks in certain areas. pylint compatibility will make it
+easier to accept patches, just follow the existing pattern
+of pylint usage. pylint is far from perfect but can be helpful.
+
+Testing UEFI support
+--------------------
+
+There is EFI firmware available to use with QEMU when testing images
+built using the UEFI support, but this software is in Debian non-free
+due to patent concerns. If you choose to use it to test UEFI builds,
+a secondary change is also needed to symlink the provided OVMF.fd to
+the file required by QEMU: bios-256k.bin and then tell QEMU about the
+location of this file with the -L option:
+
+$ qemu-system-x86_64 -L /usr/share/ovmf/ -machine accel=kvm \
+  -m 4096 -smp 2 -drive file=amd64.img,format=raw
+
+Note the use of -drive file=<img>,format=raw which is needed for newer
+versions of QEMU.
+
 The vmextract helper
 --------------------
 
