@@ -111,8 +111,8 @@ class Uefi(Base):
                 'set', '1', 'esp', 'on'])
 
     def prepare_esp(self, rootdir, bootdev):
-        bootdir = '%s/%s/%s' % (rootdir, 'boot', 'efi')
+        self.bootdir = '%s/%s/%s' % (rootdir, 'boot', 'efi')
         logging.debug("bootdir:%s", self.bootdir)
         self.mkfs(bootdev, fstype='vfat')
-        os.makedirs(bootdir)
-        return bootdir
+        os.makedirs(self.bootdir)
+        return self.bootdir

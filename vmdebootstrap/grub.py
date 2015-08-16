@@ -93,6 +93,7 @@ class GrubHandler(Base):
     def install_extra_grub_uefi(self, rootdir):
         extra = str(arch_table[self.settings['arch']]['extra'])
         if extra:
+            mount_wrapper(rootdir)
             target = arch_table[extra]['target']
             grub_opts = "--target=%s" % target
             try:
@@ -102,4 +103,4 @@ class GrubHandler(Base):
                 logging.warning(exc)
                 self.message(
                     "Failed to configure grub-uefi for %s" % extra)
-        umount_wrapper(rootdir)
+            umount_wrapper(rootdir)
