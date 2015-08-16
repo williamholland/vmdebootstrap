@@ -314,14 +314,13 @@ none, simple, meliae, or heapy (default: simple)
 make memory profiling dumps at least SECONDS apart
 .SH EXAMPLE
 To create an image for the stable release of Debian:
-.nf
 .IP
 sudo vmdebootstrap \-\-image test.img \-\-size 1g \\
     \-\-log test.log \-\-log-level debug \-\-verbose \\
     \-\-mirror http://mirror.lan/debian/
 .PP
-To run the test image, make sure it is writeable. Use the \-\-owner
-option to set mode 0644 for the specified user or use chmod manually:
+To run the test image, make sure it is writeable. Use the \-\-owner option to set
+mode 0644 for the specified user or use chmod manually:
 .IP
 sudo chmod a+w ./test.img
 .PP
@@ -329,7 +328,20 @@ Execute using qemu, e.g. on amd64 using qemu-system-x86_64:
 .IP
 qemu-system-x86_64 -drive format=raw,file=./test.img
 .PP
-(This loads the image in a new window.)
+(This loads the image in a new window.) Note the use of -drive
+file=<img>,format=raw which is needed for newer versions of QEMU.
+.PP
+There is EFI firmware available to use with QEMU when testing images built
+using the UEFI support, but this software is in Debian non-free due to patent
+concerns. If you choose to install
+.B
+ovmf
+to test UEFI builds, a secondary change is also needed to symlink the provided
+OVMF.fd to the file required by QEMU: bios-256k.bin and then tell QEMU about
+the location of this file with the -L option:
+.IP
+$ qemu-system-x86_64 \-L /usr/share/ovmf/ -machine accel=kvm \\
+  \-m 4096 \-smp 2 \-drive format=raw,file=test.img
 .PP
 For further examples, including u-boot support for beaglebone-black,
 see /usr/share/vmdebootstrap/examples
