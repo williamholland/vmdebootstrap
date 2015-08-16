@@ -21,6 +21,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# pylint: disable=missing-docstring,duplicate-code
+
+
 import os
 import cliapp
 import logging
@@ -30,39 +33,7 @@ from vmdebootstrap.base import (
     mount_wrapper,
     umount_wrapper,
 )
-
-# pylint: disable=missing-docstring
-
-
-arch_table = {  # pylint: disable=invalid-name
-    'amd64': {
-        'removable': '/EFI/boot/bootx64.efi',  # destination location
-        'install': '/EFI/debian/grubx64.efi',  # package location
-        'package': 'grub-efi-amd64',  # bootstrap package
-        'bin_package': 'grub-efi-amd64-bin',  # binary only
-        'extra': 'i386',  # architecture to add binary package
-        'exclusive': False,  # only EFI supported for this arch.
-        'target': 'x86_64-efi',  # grub target name
-    },
-    'i386': {
-        'removable': '/EFI/boot/bootia32.efi',
-        'install': '/EFI/debian/grubia32.efi',
-        'package': 'grub-efi-ia32',
-        'bin_package': 'grub-efi-ia32-bin',
-        'extra': None,
-        'exclusive': False,
-        'target': 'i386-efi',
-    },
-    'arm64': {
-        'removable': '/EFI/boot/bootaa64.efi',
-        'install': '/EFI/debian/grubaa64.efi',
-        'package': 'grub-efi-arm64',
-        'bin_package': 'grub-efi-arm64-bin',
-        'extra': None,
-        'exclusive': True,
-        'target': 'arm64-efi',
-    }
-}
+from vmdebootstrap.constants import arch_table
 
 
 class Uefi(Base):
@@ -105,28 +76,28 @@ class Uefi(Base):
             os.unlink(efi_output)
         os.rename(efi_input, efi_output)
 
-    def configure_efi(self):
+    def configure_efi(self, rootdir):
         """
         Copy the bootloader file from the package into the location
         so needs to be after grub and kernel already installed.
         """
         self.message('Configuring EFI')
-        mount_wrapper()
+        mount_wrapper(rootdir)
         efi_removable = str(arch_table[self.settings['arch']]['removable'])
         efi_install = str(arch_table[self.settings['arch']]['install'])
         self.message('Installing UEFI support binary')
         self.copy_efi_binary(efi_removable, efi_install)
-        umount_wrapper()
+        umount_wrapper(rootdir)
 
-    def configure_extra_efi(self):
+    def configure_extra_efi(self, rootdir):
         extra = str(arch_table[self.settings['arch']]['extra'])
         if extra:
-            mount_wrapper()
+            mount_wrapper(rootdir)
             efi_removable = str(arch_table[extra]['removable'])
             efi_install = str(arch_table[extra]['install'])
             self.message('Copying UEFI support binary for %s' % extra)
             self.copy_efi_binary(efi_removable, efi_install)
-            umount_wrapper()
+            umount_wrapper(rootdir)
 
     def partition_esp(self):
         espsize = self.settings['esp-size'] / (1024 * 1024)

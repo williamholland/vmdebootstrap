@@ -20,6 +20,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# pylint: disable=missing-docstring,duplicate-code
+
+
 import os
 import cliapp
 import logging
@@ -29,9 +32,7 @@ from vmdebootstrap.base import (
     mount_wrapper,
     umount_wrapper
 )
-from vmdebootstrap.uefi import Uefi, arch_table
-
-# pylint: disable=missing-docstring
+from vmdebootstrap.uefi import arch_table
 
 
 def grub_serial_console(rootdir):
@@ -53,7 +54,6 @@ class GrubHandler(Base):
 
     def __init__(self):
         super(GrubHandler, self).__init__()
-        self.uefi = Uefi()
 
     def install_grub2(self, rootdev, rootdir):
         self.message("Configuring grub2")

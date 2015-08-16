@@ -68,12 +68,40 @@ $ sudo PYTHONPATH=. ./bin/vmdebootstrap
 This has changed slightly with version 1.0 with the need for
 PYTHONPATH to reference the module approach for support handlers.
 
+vmdebootstrap modules
+---------------------
+
+The single vmdebootstrap script has been refactored to be the top
+level settings parser and validator and the point where the other
+modules (handlers) get to be called in a collaborative sequence.
+
+The new modules are an attempt to work with a DRY process as well
+as keeping the source code itself maintainable. Handler functions
+need to check settings at the start so that calls to the handlers
+can be retained in a simple flow. Where a function needs code from
+multiple handlers, that function needs to be in the vmdebootstrap
+script but these should, ideally, be single calls into dedicated
+calls from the relevant handlers which can return True|False or
+raise cliapp.AppException to affect subsequent flow. Handlers must
+NOT hook into other handlers, except Base or constants, only the
+vmdebootstrap script has the full set, so use function arguments to
+pass variables populated by different handlers. Wherever possible,
+large sections of new functionality need to be added as new handlers.
+
 pylint
 ------
 
-vmdebootstrap uses pylint and contains comments to disable certain
-pylint checks in certain areas. pylint compatibility will make it
-easier to accept patches, just follow the existing pattern
+When using pylint, the following option is advised:
+
+ $ pylint --ignore-imports=y vmdebootstrap
+
+(Despite the name of the option, this only ignores imports when
+computing similarities and various handlers will end up needing
+similar imports, it makes no sense to complain about that.)
+
+Apart from that, vmdebootstrap uses pylint and contains comments to
+disable certain pylint checks in certain areas. pylint compatibility
+will make it easier to accept patches, just follow the existing pattern
 of pylint usage. pylint is far from perfect but can be helpful.
 
 Testing UEFI support

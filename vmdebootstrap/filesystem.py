@@ -160,7 +160,37 @@ class Filesystem(Base):
             elif self.settings['swap'] > 0:
                 fstab.write("/dev/sda2 swap swap defaults 0 0\n")
 
-    def squash(self):
+    def squash_filesystem(self):
+        """
+        Run squashfs on the temporary directory
+        """
+        if not self.settings['squash']:
+            return
+        if self.settings['image']:
+            return
+        if not os.path.exists('/usr/bin/mksquashfs'):
+            logging.warning("Squash selected but mksquashfs not found!")
+            return
+        logging.debug(
+            "%s usage: %s", self.settings['image'],
+            runcmd(['du', self.settings['image']]))
+        self.message("Running mksquashfs")
+        output = self.settings['squash-file']
+        if os.path.exists(output):
+            os.unlink(output)
+        msg = runcmd(
+            ['mksquashfs', self.devices['rootdir'],
+             output, '-no-progress', '-comp', 'xz'], ignore_fail=False)
+        logging.debug(msg)
+        check_size = os.path.getsize(output)
+        if check_size < (1024 * 1024):
+            logging.warning(
+                "%s appears to be too small! %s bytes",
+                output, check_size)
+        else:
+            logging.debug("squashed size: %s", check_size)
+
+    def squash_image(self):
         """
         Run squashfs on the image.
         """
