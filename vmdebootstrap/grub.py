@@ -75,6 +75,7 @@ class GrubHandler(Base):
         return True
 
     def install_grub_uefi(self, rootdir):
+        ret = True
         self.message("Configuring grub-uefi")
         target = arch_table[self.settings['arch']]['target']
         grub_opts = "--target=%s" % target
@@ -85,22 +86,33 @@ class GrubHandler(Base):
             runcmd(['chroot', rootdir, 'grub-install', grub_opts])
         except cliapp.AppException as exc:
             logging.warning(exc)
+            ret = False
             self.message(
                 "Failed to configure grub-uefi for %s" %
                 self.settings['arch'])
-        umount_wrapper(rootdir)
+        finally:
+            umount_wrapper(rootdir)
+        if not ret:
+            raise cliapp.AppException("Failed to install grub uefi")
 
     def install_extra_grub_uefi(self, rootdir):
-        extra = str(arch_table[self.settings['arch']]['extra'])
+        ret = True
+        extra = arch_table[self.settings['arch']]['extra']
         if extra:
+            logging.debug("Installing extra grub support for %s", extra)
             mount_wrapper(rootdir)
             target = arch_table[extra]['target']
             grub_opts = "--target=%s" % target
+            self.message("Adding grub target %s" % grub_opts)
             try:
                 runcmd(['chroot', rootdir, 'update-grub'])
                 runcmd(['chroot', rootdir, 'grub-install', grub_opts])
             except cliapp.AppException as exc:
                 logging.warning(exc)
+                ret = False
                 self.message(
                     "Failed to configure grub-uefi for %s" % extra)
-            umount_wrapper(rootdir)
+            finally:
+                umount_wrapper(rootdir)
+            if not ret:
+                raise cliapp.AppException("Failed to install extra grub uefi")

@@ -260,11 +260,15 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         rootdir = self.mount(rootdev)
         filesystem.devices['rootdir'] = rootdir
         if self.settings['use-uefi']:
-            self.mount(bootdev, uefi.prepare_esp(rootdir, bootdev))
+            self.bootdir = uefi.prepare_esp(rootdir, bootdev)
+            logging.debug("mounting %s", self.bootdir)
+            self.mount(bootdev, self.bootdir)
+            logging.debug(runcmd(['mount']))
         elif bootdev:
             boottype = self.settings['boottype']
             filesystem.mkfs(bootdev, fstype=boottype)
             self.bootdir = '%s/%s' % (rootdir, 'boot/')
+            filesystem.devices['bootdir'] = self.bootdir
             os.mkdir(self.bootdir)
             self.mount(bootdev, self.bootdir)
 
@@ -278,6 +282,12 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         uefi = self.handlers[Uefi.name]
         filesystem = self.handlers[Filesystem.name]
         if self.settings['use-uefi']:
+            bootdir = self.bootdir
+            logging.debug("rootdir=%s rootdev=%s bootdir=%s", rootdir, rootdev, bootdir)
+            logging.debug(runcmd(['mount']))
+            if not os.path.ismount(bootdir):
+                self.logging.warning("%s had to be remounted", bootdir)
+                self.mount(bootdir)
             grub.install_grub_uefi(rootdir)
             uefi.configure_efi(rootdir)
             grub.install_extra_grub_uefi(rootdir)

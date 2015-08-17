@@ -58,16 +58,16 @@ class Uefi(Base):
 
     def copy_efi_binary(self, efi_removable, efi_install):
         logging.debug("using bootdir=%s", self.bootdir)
-        logging.debug("moving %s to %s", efi_removable, efi_install)
         if efi_removable.startswith('/'):
             efi_removable = efi_removable[1:]
         if efi_install.startswith('/'):
             efi_install = efi_install[1:]
         efi_output = os.path.join(self.bootdir, efi_removable)
         efi_input = os.path.join(self.bootdir, efi_install)
+        logging.debug("moving %s to %s", efi_output, efi_input)
         if not os.path.exists(efi_input):
             logging.warning("%s does not exist (%s)", efi_input, efi_install)
-            raise cliapp.AppException("Missing %s" % efi_install)
+            raise cliapp.AppException("Missing %s" % efi_input)
         if not os.path.exists(os.path.dirname(efi_output)):
             os.makedirs(os.path.dirname(efi_output))
         logging.debug(
@@ -86,18 +86,23 @@ class Uefi(Base):
         efi_removable = str(arch_table[self.settings['arch']]['removable'])
         efi_install = str(arch_table[self.settings['arch']]['install'])
         self.message('Installing UEFI support binary')
-        self.copy_efi_binary(efi_removable, efi_install)
-        umount_wrapper(rootdir)
+        logging.debug("moving %s to %s", efi_removable, efi_install)
+        try:
+            self.copy_efi_binary(efi_removable, efi_install)
+        finally:
+            umount_wrapper(rootdir)
 
     def configure_extra_efi(self, rootdir):
-        extra = str(arch_table[self.settings['arch']]['extra'])
+        extra = arch_table[self.settings['arch']]['extra']
         if extra:
             mount_wrapper(rootdir)
             efi_removable = str(arch_table[extra]['removable'])
             efi_install = str(arch_table[extra]['install'])
             self.message('Copying UEFI support binary for %s' % extra)
-            self.copy_efi_binary(efi_removable, efi_install)
-            umount_wrapper(rootdir)
+            try:
+                self.copy_efi_binary(efi_removable, efi_install)
+            finally:
+                umount_wrapper(rootdir)
 
     def partition_esp(self):
         espsize = self.settings['esp-size'] / (1024 * 1024)
