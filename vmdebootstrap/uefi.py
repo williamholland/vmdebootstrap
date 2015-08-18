@@ -105,6 +105,8 @@ class Uefi(Base):
                 umount_wrapper(rootdir)
 
     def partition_esp(self):
+        if not self.settings['use-uefi']:
+            return
         espsize = self.settings['esp-size'] / (1024 * 1024)
         self.message("Using ESP size: %smib %s bytes" % (espsize, self.settings['esp-size']))
         runcmd(['parted', '-s', self.settings['image'],

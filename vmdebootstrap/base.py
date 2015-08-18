@@ -165,3 +165,16 @@ class Base(object):
             # to autologin, serial_command can contain '-a root'
             with open(inittab, 'a') as ftab:
                 ftab.write('\nS0:23:respawn:%s\n' % serial_command)
+
+    def check_swap_size(self):
+        # swap - modifies extent
+        extent = '100%'
+        swap = 256 * 1024 * 1024
+        if self.settings['swap'] > 0:
+            if self.settings['swap'] > swap:
+                swap = self.settings['swap']
+            else:
+                # minimum 256Mb as default qemu ram is 128Mb
+                logging.debug("Setting minimum 256Mb swap space")
+            extent = "%s%%" % int(100 * (self.settings['size'] - swap) / self.settings['size'])
+        return extent

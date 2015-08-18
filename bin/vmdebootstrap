@@ -283,10 +283,12 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         filesystem = self.handlers[Filesystem.name]
         if self.settings['use-uefi']:
             bootdir = self.bootdir
-            logging.debug("rootdir=%s rootdev=%s bootdir=%s", rootdir, rootdev, bootdir)
+            logging.debug(
+                "rootdir=%s rootdev=%s bootdir=%s",
+                rootdir, rootdev, bootdir)
             logging.debug(runcmd(['mount']))
             if not os.path.ismount(bootdir):
-                self.logging.warning("%s had to be remounted", bootdir)
+                logging.warning("%s had to be remounted", bootdir)
                 self.mount(bootdir)
             grub.install_grub_uefi(rootdir)
             uefi.configure_efi(rootdir)
@@ -379,23 +381,17 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         """
         base = self.handlers[Base.name]
         base.message('Creating partitions')
+        uefi = self.handlers[Uefi.name]
         runcmd(['parted', '-s', self.settings['image'],
                 'mklabel', self.settings['part-type']])
         partoffset = 0
-        extent = '100%'
-        swap = 256 * 1024 * 1024
-        if self.settings['swap'] > 0:
-            if self.settings['swap'] > swap:
-                swap = self.settings['swap']
-            else:
-                # minimum 256Mb as default qemu ram is 128Mb
-                logging.debug("Setting minimum 256Mb swap space")
-            extent = "%s%%" % int(100 * (self.settings['size'] - swap) / self.settings['size'])
+        extent = base.check_swap_size()
 
-        if self.settings['use-uefi']:
-            uefi = self.handlers[Uefi.name]
-            uefi.partition_esp()
+        # uefi
+        uefi.partition_esp()
 
+        # /boot partitioning offset calculation
+        # returns partoffset
         if self.settings['bootoffset'] and self.settings['bootoffset'] is not '0':
             # turn v.small offsets into something at least possible to create.
             if self.settings['bootoffset'] < 1048576:
@@ -405,7 +401,12 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                     partoffset, self.settings['bootoffset'])
             else:
                 partoffset = self.settings['bootoffset'] / (1024 * 1024)
-                base.message("Using bootoffset: %smib %s bytes" % (partoffset, self.settings['bootoffset']))
+                base.message(
+                    "Using bootoffset: %smib %s bytes" %
+                    (partoffset, self.settings['bootoffset']))
+
+        # /boot creation - move into base but keep the check
+        # needs extent, partoffset, bootsize: no return
         if self.settings['bootsize'] and self.settings['bootsize'] is not '0%':
             if self.settings['grub'] and not partoffset:
                 partoffset = 1
@@ -418,19 +419,25 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             logging.debug("Starting root partition at %sMb", partoffset)
             runcmd(['parted', '-s', self.settings['image'],
                     'mkpart', 'primary', str(bootsize), extent])
+
+        # uefi - make rootfs partition after end of ESP
+        # needs extent
         elif self.settings['use-uefi']:
             bootsize = self.settings['esp-size'] / (1024 * 1024) + 1
             runcmd(['parted', '-s', self.settings['image'],
                     'mkpart', 'primary', str(bootsize), extent])
+
+        # no boot partition
         else:
             runcmd(['parted', '-s', self.settings['image'],
                     'mkpart', 'primary', '0%', extent])
+
+        # whatever we create, something needs the boot flag
         runcmd(['parted', '-s', self.settings['image'],
                 'set', '1', 'boot', 'on'])
-        if self.settings['swap'] > 0:
-            logging.debug("Creating swap partition")
-            runcmd(['parted', '-s', self.settings['image'],
-                    'mkpart', 'primary', 'linux-swap', extent, '100%'])
+
+        # return to doing swap setup
+        base.make_swap(extent)
 
     def _bootstrap_packages(self):  # pylint: disable=too-many-branches
         uefi = self.handlers[Uefi.name]

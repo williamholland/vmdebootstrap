@@ -291,3 +291,8 @@ class Filesystem(Base):
                     fhosts.write('%s\n' % line)
         except IOError:
             pass
+
+    def make_rootfs_part(self, extent):
+        bootsize = self.settings['esp-size'] / (1024 * 1024) + 1
+        runcmd(['parted', '-s', self.settings['image'],
+                'mkpart', 'primary', str(bootsize), extent])

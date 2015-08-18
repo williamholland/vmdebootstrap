@@ -1,0 +1,37 @@
+TODO
+====
+
+* document the problems of setting a default password
+
+* first-boot customisation support (via a package) which forces a
+    new password, possibly new hostname, generate new ssh key etc.
+
+* make all internal additions and operations optional
+
+* investigate some way to support complex partitioning
+
+* document that no-kernel can lead to images where the kernel
+    cannot be upgraded.
+
+* try to support upgrading the bootloader
+    possibly via the config output
+    problems of flash-kernel
+
+* automatically grow rootfs to media size on first boot
+    boot into ramdisk, umount media, move ext4 along media
+    expand vfat.
+
+* document of how to add new bootloader etc.
+    unless the old and new bootloader exist as packages, this
+    is going to be manual.
+
+* customisations as packages.
+
+* document how the image was built with the config called.
+    include the config output and a copy of the script with
+    dependencies.
+
+* consider limitations of only one hook script
+    likely to be a lack of time to implement multi-hook support.
+
+* support method to share shell customisation scripts
