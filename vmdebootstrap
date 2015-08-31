@@ -30,7 +30,7 @@ import time
 from distro_info import DebianDistroInfo, UbuntuDistroInfo
 
 
-__version__ = '0.9'
+__version__ = '0.10'
 
 # pylint: disable=invalid-name,line-too-long,missing-docstring,too-many-branches
 
