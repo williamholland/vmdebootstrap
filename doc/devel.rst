@@ -1,7 +1,7 @@
 Developing live scripts and customisation hooks
 ===============================================
 
-vmdebootstrap is available in git and in Debian. The live image
+:file:`vmdebootstrap` is available in git and in Debian. The live image
 processing requires several options which are only available in
 versions of vmdebootstrap newer than version 0.5-2 available in
 Debian Jessie. vmdebootstrap is able to run on Stretch, Jessie or
@@ -14,21 +14,25 @@ on which options and settings are required to make a live image using
 vmdebootstrap.
 
 The 'common' library contains functions and parameters which need to
-be used in *all* images, including:
+be used in *all* images, including::
 
-cleanup
-export_env
-mount_proc
-disable_daemons
-prepare_apt_source
-remove_daemon_block
-replace_apt_source
+ cleanup
+ export_env
+ mount_proc
+ disable_daemons
+ prepare_apt_source
+ remove_daemon_block
+ replace_apt_source
+
+.. _cleanup:
 
 cleanup
 -------
 
-Ensure that proc is unmounted even if the customisation fails or else
-the image build itself will fail to unmount ${rootdir}.
+Ensure that :file:`proc` is unmounted even if the customisation fails or else
+the image build itself will fail to unmount :file:`${rootdir}`.
+
+.. _export_env:
 
 export_env
 ----------
@@ -36,20 +40,28 @@ export_env
 Debconf needs to be set in noninteractive mode to prevent the image
 build waiting for keyboard intervention.
 
+.. _mount_proc:
+
 mount_proc
 ----------
 
-Many packages require /proc to be mounted inside the chroot during
-installation - cleanup must be specified as a trap if mount_proc is
-used: trap cleanup 0
+Many packages require ``/proc`` to be mounted inside the chroot during
+installation - cleanup must be specified as a trap if ``mount_proc`` is
+used::
+
+ trap cleanup 0
+
+.. _disable_daemons:
 
 disable_daemons
 ---------------
 
-Packages which include a daemon *must not* start those daemons inside
-the chroot as this will make the ${rootdir} appear busy and the unmount
-will fail. All scripts need to use remove_daemon_block after package
+Packages which include a daemon **must not** start those daemons inside
+the chroot as this will make the ``${rootdir}`` appear busy and the unmount
+will fail. All scripts need to use :ref:`remove_daemon_block` after package
 installation is complete.
+
+.. _prepare_apt_source:
 
 prepare_apt_source
 ------------------
@@ -57,13 +69,19 @@ prepare_apt_source
 The final Debian mirror location is not useful during the build as there
 is a faster mirror available during the build. This function moves the
 specified mirror file aside and uses the nearby mirror. Always use with
-replace_apt_source.
+:ref:`replace_apt_source`.
+
+.. _replace_apt_source:
 
 replace_apt_source
 ------------------
 
-Requires prepare_apt_source to have been run first, then undoes the
+Requires :ref:`prepare_apt_source` to have been run first, then undoes the
 change to the apt sources and cleans up.
+
+.. index: task
+
+.. _task_packages:
 
 TASK_PACKAGES
 -------------
@@ -72,6 +90,10 @@ Some task packages are useful to all images, these are specified here
 and should be included in the set of packages to be installed using
 all customisation scripts.
 
+.. index: extra
+
+.. _extra_packages:
+
 EXTRA_PACKAGES
 --------------
 
@@ -79,29 +101,36 @@ Packages which are not part of an existing task but which are useful for
 all images and should be included in the set of packages to be installed
 using all customisation scripts.
 
+.. index: testing
+
+.. _testing:
+
 Testing
 -------
 
-Testing - unsquashfs <filename> creates a squashfs-root/ directory
-containing the original image which QEMU can now use:
-$ unsquashfs jessie.img.squash
-$ qemu-system-x86_64 -machine accel=kvm:tcg -m 4096 -smp 2 -drive file=squashfs-root/jessie.img,format=raw
+Testing - ``unsquashfs <filename>`` creates a squashfs-root/ directory
+containing the original image which QEMU can now use::
+
+ $ unsquashfs jessie.img.squash
+ $ qemu-system-x86_64 -machine accel=kvm:tcg -m 4096 -smp 2 -drive file=squashfs-root/jessie.img,format=raw
 
 This needs to be done on a local system which has a usable display,
 not on pettersson itself.
 
+.. _new_architectures:
+
 New architectures
 -----------------
 
-The precursor to new architecture support is vmdebootstrap support. A
-default vmdebootstrap (with no customisation hook) will need to work
-and any changes to the settings (e.g. --no-kernel --package linux-myarch-flavour)
-There is default support for some architectures in vmdebootstrap
+The precursor to new architecture support is :file:`vmdebootstrap` support. A
+default :file:`vmdebootstrap` (with no customisation hook) will need to work
+and any changes to the settings (e.g. ``--no-kernel --package linux-myarch-flavour``)
+There is default support for some architectures in :file:`vmdebootstrap`
 (e.g. armhf architectures select the armmp kernel), such support depends
 on how many users would use the same kernel compared to the number of
 possible kernel flavours for that architecture.
 
-For a Debian LIVE image, *all* packages must exist in Debian.
+For a Debian LIVE image, **all** packages must exist in Debian.
 
 The package list also needs a review - some packages will simply not
 exist for the specified architecture. Some architecture-specific packages

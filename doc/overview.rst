@@ -1,8 +1,13 @@
 VMDebootstrap
 #############
 
+.. index:: purpose
+
+.. _purpose:
+
 Purpose
 *******
+
 vmdebootstrap is a helper to install basic Debian system into virtual
 disk image. It wraps **debootstrap**. You need to run :file:`vmdebootstrap`
 as root. If the ``--verbose`` option is not used, no output will be
@@ -16,6 +21,10 @@ created. Then start the virtual machine and log into it via its console
 to configure it. The image has an empty root password and will not have
 networking configured by default. Set the root password before you
 configure networking.
+
+.. index:: networking
+
+.. _networking
 
 Networking
 **********
@@ -35,12 +44,18 @@ into :file:`/etc/network/interfaces.d/setup`::
  auto eth0
  iface eth0 inet dhcp
 
+.. index:: bootloaders
+
+.. _bootloaders:
+
 Bootloaders
 ***********
 
 Unless the ``--no-extlinux`` or ``--grub`` options are specified, the
 image will use ``extlinux`` as a boot loader. ``bootsize`` is not
 recommended when using ``extlinux`` - use ``grub`` instead.
+
+.. _wheezy_grub:
 
 Versions of grub2 in wheezy
 ===========================
@@ -63,6 +78,10 @@ not supported as it would need to be done after boot. If the system you
 are creating is for more than just a VM or live image, you will likely
 need a larger ESP, up to 500Mb.
 
+.. index: uboot
+
+.. _uboot:
+
 UBoot
 =====
 
@@ -70,6 +89,8 @@ UBoot needs manual configuration via the customisation hook scripts,
 typically support requires adding ``u-boot`` using ``--package`` and then
 copying or manipulating the relevant ``u-boot`` files in the customisation
 script. Examples are included for beaglebone-black.
+
+.. _installation_images:
 
 Installation images and virtual machines
 ****************************************
