@@ -214,7 +214,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         if not self.settings['use-uefi'] and self.settings['esp-size'] != 5242880:
             raise cliapp.AppException(
                 'You must specify use-uefi for esp-size to have effect')
-        if arch_table[self.settings['arch']]['exclusive'] and\
+        if self.settings['arch'] in arch_table and\
+                arch_table[self.settings['arch']]['exclusive'] and\
                 not self.settings['use-uefi']:
             raise cliapp.AppException(
                 'Only UEFI is supported on %s' % self.settings['arch'])
