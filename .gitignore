@@ -3,3 +3,5 @@
 *.tar.gz
 *.pyc
 *.egg-info
+doc/_build/
+man/_build/

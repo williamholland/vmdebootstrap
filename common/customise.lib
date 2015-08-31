@@ -1,0 +1,56 @@
+# Copyright 2015 Neil Williams <codehelp@debian.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+cleanup() {
+    umount ${rootdir}/proc
+    umount ${rootdir}/sys
+}
+
+export DEBIAN_FRONTEND=noninteractive
+export LC_ALL=C
+export LANG=C
+export LANGUAGE=C
+
+mount_support() {
+    mount proc -t proc ${rootdir}/proc
+    mount sys -t sysfs ${rootdir}/sys
+}
+
+disable_daemons() {
+    # prevent packages starting daemons inside the chroot until after boot.
+    # https://wiki.debian.org/chroot
+    cat > ${rootdir}/usr/sbin/policy-rc.d <<EOF
+#!/bin/sh
+exit 101
+EOF
+    chmod a+x ${rootdir}/usr/sbin/policy-rc.d
+}
+
+prepare_apt_source() {
+    # handle the apt source
+    mv ${rootdir}/etc/apt/sources.list.d/base.list ${rootdir}/etc/apt/
+    echo "deb http://cdbuilder.debian.org/debian/ jessie main contrib non-free" > ${rootdir}/etc/apt/sources.list
+    chroot ${rootdir} apt update
+}
+
+remove_daemon_block() {
+    rm ${rootdir}/usr/sbin/policy-rc.d
+}
+
+replace_apt_source() {
+    # Undo apt source change
+    rm ${rootdir}/etc/apt/sources.list
+    mv ${rootdir}/etc/apt/base.list ${rootdir}/etc/apt/sources.list.d/
+}
