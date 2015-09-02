@@ -116,3 +116,8 @@ class GrubHandler(Base):
                 umount_wrapper(rootdir)
             if not ret:
                 raise cliapp.AppException("Failed to install extra grub uefi")
+
+    def grub_packages(self):
+        if self.settings['grub'] and not self.settings['use-uefi']:
+            return ['grub-pc']
+        return []

@@ -32,6 +32,8 @@ from vmdebootstrap.base import Base, runcmd
 
 class ExtLinux(Base):
 
+    name = 'extlinux'
+
     def __init__(self):
         super(ExtLinux, self).__init__()
 

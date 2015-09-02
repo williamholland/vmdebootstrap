@@ -59,3 +59,21 @@ class Codenames(Base):
         if not self.debian_info.valid(suite):
             return False
         return suite == self.debian_info.stable(limit)
+
+    def kernel_package(self):
+        packages = []
+        if not self.settings['no-kernel']:
+            if self.settings['kernel-package']:
+                return packages
+        if self.settings['arch'] == 'i386':
+            # wheezy (which became oldstable on 04/25/2015) used '486'
+            if self.was_oldstable(datetime.date(2015, 4, 26)):
+                kernel_arch = '486'
+            else:
+                kernel_arch = '586'
+        elif self.settings['arch'] == 'armhf':
+            kernel_arch = 'armmp'
+        else:
+            kernel_arch = self.settings['arch']
+        packages.append('linux-image-%s' % kernel_arch)
+        return packages

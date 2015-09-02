@@ -10,6 +10,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import subprocess
 import sys
 import os
 
@@ -53,7 +54,6 @@ copyright = u'2015 Neil Williams'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-import subprocess
 # The short X.Y version.
 version = subprocess.Popen(['python', 'setup.py', '-V'], cwd=r'..', stdout=subprocess.PIPE).stdout.read().rstrip()
 # The full version, including alpha/beta/rc tags.

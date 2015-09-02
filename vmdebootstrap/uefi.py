@@ -46,6 +46,8 @@ class Uefi(Base):
 
     def efi_packages(self):
         packages = []
+        if self.settings['grub'] and not self.settings['use-uefi']:
+            return packages
         pkg = arch_table[self.settings['arch']]['package']
         self.message("Adding %s" % pkg)
         packages.append(pkg)
@@ -123,3 +125,8 @@ class Uefi(Base):
         self.mkfs(bootdev, fstype='vfat')
         os.makedirs(self.bootdir)
         return self.bootdir
+
+    def make_root(self, extent):
+        bootsize = self.settings['esp-size'] / (1024 * 1024) + 1
+        runcmd(['parted', '-s', self.settings['image'],
+                'mkpart', 'primary', str(bootsize), extent])

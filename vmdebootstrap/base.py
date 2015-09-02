@@ -178,3 +178,21 @@ class Base(object):
                 logging.debug("Setting minimum 256Mb swap space")
             extent = "%s%%" % int(100 * (self.settings['size'] - swap) / self.settings['size'])
         return extent
+
+    def make_swap(self, extent):
+        if self.settings['swap'] > 0:
+            logging.debug("Creating swap partition")
+            runcmd([
+                'parted', '-s', self.settings['image'],
+                'mkpart', 'primary', 'linux-swap', extent, '100%'])
+
+    def base_packages(self):
+        packages = []
+        if not self.settings['foreign'] and not self.settings['no-acpid']:
+            packages.append('acpid')
+        if self.settings['sudo']:
+            packages.append('sudo')
+        if not self.settings['no-kernel']:
+            if self.settings['kernel-package']:
+                packages.append(self.settings['kernel-package'])
+        return packages
