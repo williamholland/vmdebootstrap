@@ -46,10 +46,11 @@ class Uefi(Base):
 
     def efi_packages(self):
         packages = []
-        if self.settings['grub'] and not self.settings['use-uefi']:
+        if not self.settings['use-uefi'] or\
+                self.settings['arch'] not in arch_table:
             return packages
         pkg = arch_table[self.settings['arch']]['package']
-        self.message("Adding %s" % pkg)
+        self.message("Adding %s to debootstrap" % pkg)
         packages.append(pkg)
         extra = arch_table[self.settings['arch']]['extra']
         if extra and isinstance(extra, str):
@@ -59,6 +60,8 @@ class Uefi(Base):
         return packages
 
     def copy_efi_binary(self, efi_removable, efi_install):
+        if self.settings['arch'] not in arch_table:
+            return
         logging.debug("using bootdir=%s", self.bootdir)
         if efi_removable.startswith('/'):
             efi_removable = efi_removable[1:]
@@ -83,6 +86,8 @@ class Uefi(Base):
         Copy the bootloader file from the package into the location
         so needs to be after grub and kernel already installed.
         """
+        if self.settings['arch'] not in arch_table:
+            return
         self.message('Configuring EFI')
         mount_wrapper(rootdir)
         efi_removable = str(arch_table[self.settings['arch']]['removable'])
@@ -95,6 +100,8 @@ class Uefi(Base):
             umount_wrapper(rootdir)
 
     def configure_extra_efi(self, rootdir):
+        if self.settings['arch'] not in arch_table:
+            return
         extra = arch_table[self.settings['arch']]['extra']
         if extra:
             mount_wrapper(rootdir)

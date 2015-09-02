@@ -473,10 +473,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
     def debootstrap(self, rootdir):
         base = self.handlers[Base.name]
         msg = "(%s)" % self.settings['variant'] if self.settings['variant'] else ''
+        include = self._bootstrap_packages()
         base.message(
             'Debootstrapping %s [%s] %s' % (
                 self.settings['distribution'], self.settings['arch'], msg))
-        include = self._bootstrap_packages()
 
         args = ['debootstrap', '--arch=%s' % self.settings['arch']]
 

@@ -13,6 +13,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+BASE_OPTS="
+ --owner ${WHO} --verbose \
+ --sudo \
+ --lock-root-password \
+ --enable-dhcp \
+ --configure-apt \
+ --log debian-cd-${SUITE}-${ARCH}.log --log-level debug \
+"
+
+TASK_PACKAGES="task-laptop task-english"
+
+# packages which are not (yet) part of a task
+EXTRA_PACKAGES="dkms locales whois telnet aptitude lsof host \
+ bash-completion firmware-linux-free dnsutils time rsync reportbug w3m \
+ ethtool ftp host lsof debian-faq debian-installer-launcher doc-debian \
+"
 cleanup() {
     umount ${rootdir}/proc
     umount ${rootdir}/sys
@@ -38,10 +54,11 @@ EOF
     chmod a+x ${rootdir}/usr/sbin/policy-rc.d
 }
 
+# FIXME: pass the replacement mirror
 prepare_apt_source() {
     # handle the apt source
     mv ${rootdir}/etc/apt/sources.list.d/base.list ${rootdir}/etc/apt/
-    echo "deb http://cdbuilder.debian.org/debian/ jessie main contrib non-free" > ${rootdir}/etc/apt/sources.list
+    echo "deb http://mirror/debian/ ${SUITE} main contrib non-free" > ${rootdir}/etc/apt/sources.list
     chroot ${rootdir} apt update
 }
 
@@ -53,4 +70,8 @@ replace_apt_source() {
     # Undo apt source change
     rm ${rootdir}/etc/apt/sources.list
     mv ${rootdir}/etc/apt/base.list ${rootdir}/etc/apt/sources.list.d/
+}
+
+blacklist_qemu_bochs() {
+    echo "blacklist bochs-drm" > ${rootdir}/etc/modprobe.d/qemu-blacklist.conf
 }

@@ -2,6 +2,6 @@ include NEWS
 include vmextract.py
 include vmdebootstrap.8.in
 recursive-include examples *.sh *.txt
-recursive-include common *.lib
+include common/*
 include doc/*
 recursive-include man *.rst
