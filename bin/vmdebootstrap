@@ -211,33 +211,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 raise cliapp.AppException(
                     '%s is not a valid Debian or Ubuntu suite or codename.'
                     % self.settings['distribution'])
-        if not self.settings['use-uefi'] and self.settings['esp-size'] != 5242880:
-            raise cliapp.AppException(
-                'You must specify use-uefi for esp-size to have effect')
-        if self.settings['arch'] in arch_table and\
-                arch_table[self.settings['arch']]['exclusive'] and\
-                not self.settings['use-uefi']:
-            raise cliapp.AppException(
-                'Only UEFI is supported on %s' % self.settings['arch'])
-        elif self.settings['use-uefi'] and self.settings['arch'] not in arch_table:
-            raise cliapp.AppException(
-                '%s is not a supported UEFI architecture' % self.settings['arch'])
-        if self.settings['use-uefi'] and (
-                self.settings['bootsize'] or
-                self.settings['bootoffset']):
-            raise cliapp.AppException(
-                'A separate boot partition is not supported with UEFI')
-
-        if self.settings['use-uefi'] and not self.settings['grub']:
-            raise cliapp.AppException(
-                'UEFI without Grub is not supported.')
-
-        # wheezy (which became oldstable on 04/25/2015) only had amd64 uefi
-        if distro.was_oldstable(datetime.date(2015, 4, 26)):
-            if self.settings['arch'] != 'amd64':
-                raise cliapp.AppException(
-                    'Only amd64 supports UEFI in Wheezy')
-
+        uefi = self.handlers[Uefi.name]
+        uefi.check_settings()
         if os.geteuid() != 0:
             sys.exit("You need to have root privileges to run this script.")
         self.start_ops()
