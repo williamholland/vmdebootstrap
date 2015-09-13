@@ -10,9 +10,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import subprocess
 import sys
 import os
+import subprocess
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -49,7 +49,7 @@ copyright = u'2015, Neil Williams'
 # built documents.
 #
 # The short X.Y version.
-version = subprocess.Popen(r'./version.py', cwd=r'..', stdout=subprocess.PIPE).stdout.read()
+version = subprocess.Popen(['python', 'setup.py', '-V'], cwd=r'..', stdout=subprocess.PIPE).stdout.read()
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -206,6 +206,6 @@ intersphinx_mapping = {'http://docs.python.org/': None}
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('vmdebootstrap', 'vmdebootstrap', u'vmdebootstrap',
+    ('vmdebootstrap', 'vmdebootstrap', u'install basic Debian system into virtual disk image',
      [u'Neil Williams'], 1),
 ]
