@@ -526,6 +526,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 eth.write('\n')
                 eth.write('auto eth0\n')
                 eth.write('iface eth0 inet dhcp\n')
+                # force predictable interface names
+                base.mask_udev_predictable_rules(rootdir)
 
     def cleanup_system(self):
         base = self.handlers[Base.name]

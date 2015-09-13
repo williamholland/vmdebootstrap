@@ -194,3 +194,14 @@ class Base(object):
             if self.settings['kernel-package']:
                 packages.append(self.settings['kernel-package'])
         return packages
+
+    def mask_udev_predictable_rules(self, rootdir):
+        """
+        This can be reset later but to get networking using immediately
+        on boot, the interface we're going to use must be kno
+        http://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
+        """
+        self.message('Disabling systemd predictable interface names')
+        udev_path = os.path.join(
+            'etc', 'udev', 'rules.d', '80-net-setup-link.rules')
+        runcmd(['chroot', rootdir, 'ln', '-s', '/dev/null', udev_path])
