@@ -88,7 +88,7 @@ into /etc/network/interfaces.d/setup:
 For systems running newer versions of systemd, the interface name needs
 to be set in advance of the first boot instead of being dependent on the
 boot itself. See the http://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
-.b vmdebootstrap
+.B vmdebootstrap
 disables this behaviour by symlinking /dev/null to /etc/udev/rules.d/80-net-setup-link.rules
 
 .SH BOOTLOADERS
