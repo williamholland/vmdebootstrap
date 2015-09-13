@@ -41,10 +41,12 @@ Options
                        needs to be a valid Debian or Ubuntu release name
                        or codename.
  --debootstrapopts="command=option,command=option"
-                       Supply options and arguments to ``debootstrap``.
+                       Supply options and arguments to ``debootstrap``,
+                       separated by spaces.
+                       e.g. --debootstrapopts="variant=buildd no-check-gpg components=main,contrib".
                        See **debootstrap (1)** for more information. This
-                       replaces the ``--variant`` support in previous versions
-                       of :file:`vmdebootstrap`.
+                       option replaces the ``--variant`` support in
+                       previous versions.
  --package=PACKAGE     install PACKAGE onto system
  --custom-package=DEB  install package in DEB file onto system (not
                        from mirror)

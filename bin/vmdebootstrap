@@ -461,7 +461,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             args.append('--foreign')
         if self.settings['debootstrapopts']:
             for opt in self.settings['debootstrapopts']:
-                args.append('--%s' % opt)
+                for part in opt.split(' '):
+                    args.append('--%s' % part)
+        self.logging.debug("debootstrap arguments: %s", args)
         args += [self.settings['distribution'],
                  rootdir, self.settings['mirror']]
         logging.debug(" ".join(args))
