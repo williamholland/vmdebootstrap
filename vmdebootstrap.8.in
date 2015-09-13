@@ -30,6 +30,7 @@ vmdebootstrap \- install basic Debian system into virtual disk image
 [\-\-bootsize=BOOTSIZE] [\-\-boottype=FSTYPE] [\-\-roottype=FSTYPE] [\-\-foreign=PATH]
 [\-\-variant=VARIANT] [\-\-no-extlinux] [\-\-squash] [\-\-configure-apt]
 [\-\-grub] [\-\-apt-mirror] [\-\-pkglist] [\-\-use\-efi] [\-\-efi\-size]
+[\-\-debootstrapopts]
 .SH DESCRIPTION
 .B vmdebootstrap
 installs a basic Debian system into a virtual disk image,
@@ -280,6 +281,10 @@ available.
 Disable extlinux installation and configure grub2 instead. grub2 will be added to
 the list of packages to install. update-grub will be called once the debootstrap is
 complete and grub-install will be called in the image.
+.IP \-\-debootstrapopts
+Pass additional options to debootstrap as a quoted list of options
+and values, separated by commas. See debootstrap \-\-help and
+debootstrap (1) for valid options.
 .IP \-\-no\-acpid
 Disable installation of acpid if not required, otherwise acpid will be
 installed if \-\-foreign is not used.

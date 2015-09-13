@@ -125,7 +125,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             'set up foreign debootstrap environment using provided program (ie binfmt handler)')
         self.settings.string(
             ['variant'],
-            'select debootstrap variant it not using the default')
+            'select debootstrap variant if not using the default [deprecated]')
+        self.settings.string_list(
+            ['debootstrapopts'],
+            'pass additional options to debootstrap'),
         self.settings.boolean(
             ['extlinux'],
             'install extlinux?',
@@ -641,7 +644,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 '--include=%s' % ','.join(include))
         if self.settings['foreign']:
             args.append('--foreign')
-        if self.settings['variant']:
+        if self.settings['debootstrapopts']:
+            for opt in self.settings['debootstrapopts']:
+                args.append('--%s' % opt)
+        elif self.settings['variant']:
             args.append('--variant')
             args.append(self.settings['variant'])
         args += [self.settings['distribution'],
