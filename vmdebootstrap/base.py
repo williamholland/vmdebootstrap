@@ -148,14 +148,12 @@ class Base(object):
         logging.debug(
             "%s usage: %s", self.settings['image'],
             runcmd(['du', self.settings['image']]))
-        with open('/dev/tty', 'w') as tty:
-            try:
+        try:
+            with open('/dev/tty', 'w') as tty:
                 cliapp.runcmd([script, rootdir, self.settings['image']], stdout=tty, stderr=tty)
-            except IOError:
-                subprocess.call([script, rootdir, self.settings['image']])
-        logging.debug(
-            "%s usage: %s", self.settings['image'],
-            runcmd(['du', self.settings['image']]))
+        except IOError:
+            logging.debug('tty unavailable, trying in headless mode.')
+            subprocess.call([script, rootdir, self.settings['image']])
 
     def append_serial_console(self, rootdir):
         if self.settings['serial-console']:
