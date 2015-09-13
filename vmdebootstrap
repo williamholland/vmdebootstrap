@@ -1017,14 +1017,12 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         logging.debug(
             "%s usage: %s", self.settings['image'],
             self.runcmd(['du', self.settings['image']]))
-        with open('/dev/tty', 'w') as tty:
-            try:
+        try:
+            with open('/dev/tty', 'w') as tty:
                 cliapp.runcmd([script, rootdir, self.settings['image']], stdout=tty, stderr=tty)
-            except IOError:
-                subprocess.call([script, rootdir, self.settings['image']])
-        logging.debug(
-            "%s usage: %s", self.settings['image'],
-            self.runcmd(['du', self.settings['image']]))
+        except IOError:
+            logging.debug('tty unavailable, trying in headless mode.')
+            subprocess.call([script, rootdir, self.settings['image']])
 
     def create_tarball(self, rootdir):
         # Create a tarball of the disk's contents
