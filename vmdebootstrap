@@ -263,7 +263,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
         # wheezy (which became oldstable on 04/25/2015) only had amd64 uefi
         if self.was_oldstable(datetime.date(2015, 4, 26)):
-            if self.settings['arch'] != 'amd64':
+            if self.settings['use-uefi'] and self.settings['arch'] != 'amd64':
                 raise cliapp.AppException(
                     'Only amd64 supports UEFI in Wheezy')
 
