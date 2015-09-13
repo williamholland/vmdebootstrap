@@ -283,8 +283,9 @@ the list of packages to install. update-grub will be called once the debootstrap
 complete and grub-install will be called in the image.
 .IP \-\-debootstrapopts
 Pass additional options to debootstrap as a quoted list of options
-and values, separated by commas. See debootstrap \-\-help and
-debootstrap (1) for valid options.
+and values, separated by spaces.
+e.g. --debootstrapopts="variant=buildd no-check-gpg components=main,contrib".
+See debootstrap \-\-help and debootstrap (1) for valid options.
 .IP \-\-no\-acpid
 Disable installation of acpid if not required, otherwise acpid will be
 installed if \-\-foreign is not used.

@@ -646,7 +646,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             args.append('--foreign')
         if self.settings['debootstrapopts']:
             for opt in self.settings['debootstrapopts']:
-                args.append('--%s' % opt)
+                for part in opt.split(' '):
+                    args.append('--%s' % part)
         elif self.settings['variant']:
             args.append('--variant')
             args.append(self.settings['variant'])
