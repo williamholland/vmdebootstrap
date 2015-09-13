@@ -512,7 +512,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             with open(ifc_file, 'w') as netfile:
                 netfile.write('source /etc/network/interfaces.d/*\n')
         elif not os.path.exists(ifc_file):
-            with open(iface_path, 'w') as netfile:
+            with open(ifc_file, 'a') as netfile:
                 netfile.write('source-directory /etc/network/interfaces.d\n')
 
         if not os.path.exists(ifc_d):
