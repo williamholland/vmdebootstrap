@@ -207,5 +207,5 @@ intersphinx_mapping = {'http://docs.python.org/': None}
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('vmdebootstrap', 'vmdebootstrap', u'install basic Debian system into virtual disk image',
-     [u'Neil Williams'], 1),
+     [u'Neil Williams'], 8),
 ]

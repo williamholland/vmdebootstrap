@@ -44,5 +44,9 @@ setup(
     package_data={
         'vmdebootstrap': ['README', 'COPYING', 'NEWS'],
     },
+    install_requires=[
+        'cliapp >= 1.20150829',
+        'distro-info',
+    ],
     scripts=['bin/vmdebootstrap']
 )

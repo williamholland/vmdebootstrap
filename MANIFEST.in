@@ -4,4 +4,4 @@ include vmdebootstrap.8.in
 recursive-include examples *.sh *.txt
 include common/*
 include doc/*
-recursive-include man *.rst
+include man/*
