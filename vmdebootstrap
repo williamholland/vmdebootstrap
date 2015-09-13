@@ -786,18 +786,20 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
     def setup_networking(self, rootdir):
         self.message('Setting up networking')
+        ifc_file = os.path.join(rootdir, 'etc', 'network', 'interfaces')
+        ifc_d = os.path.join(rootdir, 'etc', 'network', 'interfaces.d')
 
-        # unconditionally write for wheezy (which became oldstable on 04/25/2015)
+        # unconditionally write for wheezy (which became oldstable 2015.04.25)
         if self.was_oldstable(datetime.date(2015, 4, 26)):
-            with open(os.path.join(rootdir, 'etc', 'network', 'interfaces'), 'w') as netfile:
+            with open(ifc_file, 'w') as netfile:
                 netfile.write('source /etc/network/interfaces.d/*\n')
-            os.mkdir(os.path.join(rootdir, 'etc', 'network', 'interfaces.d'))
-
-        elif not os.path.exists(os.path.join(rootdir, 'etc', 'network', 'interfaces')):
-            iface_path = os.path.join(rootdir, 'etc', 'network', 'interfaces')
-            with open(iface_path, 'w') as netfile:
+        elif not os.path.exists(ifc_file):
+            with open(ifc_file, 'a') as netfile:
                 netfile.write('source-directory /etc/network/interfaces.d\n')
-        ethpath = os.path.join(rootdir, 'etc', 'network', 'interfaces.d', 'setup')
+
+        if not os.path.exists(ifc_d):
+            os.mkdir(ifc_d)
+        ethpath = os.path.join(ifc_d, 'setup')
         with open(ethpath, 'w') as eth:
             eth.write('auto lo\n')
             eth.write('iface lo inet loopback\n')
