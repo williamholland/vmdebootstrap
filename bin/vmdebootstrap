@@ -101,7 +101,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             'using provided program (ie binfmt handler)')
         self.settings.string_list(
             ['debootstrapopts'],
-            'pass additional options to debootstrap'),
+            'pass additional options to debootstrap')
         self.settings.boolean(
             ['extlinux'], 'install extlinux?',
             default=True)
@@ -212,7 +212,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                     '%s is not a valid Debian or Ubuntu suite or codename.'
                     % self.settings['distribution'])
         uefi = self.handlers[Uefi.name]
-        uefi.check_settings()
+        oldstable = distro.was_oldstable(datetime.date(2015, 4, 26))
+        uefi.check_settings(oldstable=oldstable)
+
         if os.geteuid() != 0:
             sys.exit("You need to have root privileges to run this script.")
         self.start_ops()
@@ -463,7 +465,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             for opt in self.settings['debootstrapopts']:
                 for part in opt.split(' '):
                     args.append('--%s' % part)
-        self.logging.debug("debootstrap arguments: %s", args)
+        logging.debug("debootstrap arguments: %s", args)
         args += [self.settings['distribution'],
                  rootdir, self.settings['mirror']]
         logging.debug(" ".join(args))

@@ -44,7 +44,7 @@ class Uefi(Base):
         super(Uefi, self).__init__()
         self.bootdir = None
 
-    def check_settings(self):
+    def check_settings(self, oldstable=False):
         if not self.settings['use-uefi'] and self.settings['esp-size'] != 5242880:
             raise cliapp.AppException(
                 'You must specify use-uefi for esp-size to have effect')
@@ -67,7 +67,7 @@ class Uefi(Base):
                 'UEFI without Grub is not supported.')
 
         # wheezy (which became oldstable on 04/25/2015) only had amd64 uefi
-        if distro.was_oldstable(datetime.date(2015, 4, 26)):
+        if oldstable:
             if self.settings['arch'] != 'amd64' and self.settings['use-uefi']:
                 raise cliapp.AppException(
                     'Only amd64 supports UEFI in Wheezy')
