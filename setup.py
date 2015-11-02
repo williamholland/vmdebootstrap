@@ -24,7 +24,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='vmdebootstrap',
-    version='1.0',
+    version='1.1',
     description='Bootstrap Debian into a (virtual machine) disk image',
     author='Neil Williams',
     author_email='codehelp@debian.org',
