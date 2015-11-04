@@ -22,9 +22,9 @@
 
 
 import os
+import shutil
 import cliapp
 import logging
-import subprocess
 from vmdebootstrap.base import Base, runcmd
 
 # pylint: disable=missing-docstring
@@ -58,10 +58,12 @@ class Filesystem(Base):
             filename = self.settings['image']
         elif self.settings['tarball']:
             filename = self.settings['tarball']
+        elif self.settings['squash']:
+            filename = self.settings['squash']
         else:
             return
         self.message("Changing owner to %s" % self.settings["owner"])
-        subprocess.call(["chown", self.settings["owner"], filename])
+        runcmd(["chown", "-R", self.settings["owner"], filename])
 
     def update_initramfs(self):
         rootdir = self.devices['rootdir']
@@ -160,69 +162,44 @@ class Filesystem(Base):
             elif self.settings['swap'] > 0:
                 fstab.write("/dev/sda2 swap swap defaults 0 0\n")
 
-    def squash_filesystem(self):
+    def squash_rootfs(self):
         """
-        Run squashfs on the temporary directory
-        """
-        if not self.settings['squash']:
-            return
-        if self.settings['image']:
-            return
-        if not os.path.exists('/usr/bin/mksquashfs'):
-            logging.warning("Squash selected but mksquashfs not found!")
-            return
-        logging.debug(
-            "%s usage: %s", self.settings['image'],
-            runcmd(['du', self.settings['image']]))
-        self.message("Running mksquashfs")
-        output = self.settings['squash-file']
-        if os.path.exists(output):
-            os.unlink(output)
-        msg = runcmd(
-            ['mksquashfs', self.devices['rootdir'],
-             output, '-no-progress', '-comp', 'xz'], ignore_fail=False)
-        logging.debug(msg)
-        check_size = os.path.getsize(output)
-        if check_size < (1024 * 1024):
-            logging.warning(
-                "%s appears to be too small! %s bytes",
-                output, check_size)
-        else:
-            logging.debug("squashed size: %s", check_size)
-
-    def squash_image(self):
-        """
-        Run squashfs on the image.
+        Run squashfs on the rootfs within the image.
+        Copy the initrd and the kernel out, squashfs the rest.
+        Also UEFI files, if enabled, ESP partition as a vfat image. TBD.
         """
         if not self.settings['squash']:
             return
         if not os.path.exists('/usr/bin/mksquashfs'):
             logging.warning("Squash selected but mksquashfs not found!")
             return
-        logging.debug(
-            "%s usage: %s", self.settings['image'],
-            runcmd(['du', self.settings['image']]))
-        self.message("Running mksquashfs")
-        suffixed = "%s.squashfs" % self.settings['image']
+        if not os.path.exists(self.settings['squash']):
+            os.mkdir(self.settings['squash'])
+        suffixed = os.path.join(self.settings['squash'], "filesystem.squashfs")
         if os.path.exists(suffixed):
             os.unlink(suffixed)
+        self.message("Running mksquashfs on rootfs.")
         msg = runcmd(
-            ['mksquashfs', self.settings['image'],
-             suffixed,
+            ['mksquashfs', self.devices['rootdir'], suffixed,
              '-no-progress', '-comp', 'xz'], ignore_fail=False)
         logging.debug(msg)
         check_size = os.path.getsize(suffixed)
+        logging.debug("Created squashfs: %s" % suffixed)
         if check_size < (1024 * 1024):
             logging.warning(
                 "%s appears to be too small! %s bytes",
                 suffixed, check_size)
         else:
             logging.debug("squashed size: %s", check_size)
-            os.unlink(self.settings['image'])
-            self.settings['image'] = suffixed
-            logging.debug(
-                "%s usage: %s", self.settings['image'],
-                runcmd(['du', self.settings['image']]))
+        bootdir = os.path.join(self.devices['rootdir'], 'boot')
+        # copying the boot/* files
+        self.message("Copying boot files out of squashfs")
+        for filename in os.listdir(bootdir):
+            if os.path.isdir(filename) or os.path.islink(filename):
+                continue
+            shutil.copyfile(
+                os.path.join(bootdir, filename),
+                os.path.join(self.settings['squash'], filename))        
 
     def configure_apt(self):
         rootdir = self.devices['rootdir']

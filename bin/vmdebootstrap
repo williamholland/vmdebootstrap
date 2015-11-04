@@ -166,13 +166,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.settings.string(
             ['owner'], 'the user who will own the image when '
             'the build is complete.')
-        self.settings.boolean(
-            ['squash'], 'use squashfs on the final image.')
         self.settings.string(
-            ['squash-file'], 'filename for the squashfs '
-            '- cannot be used with --image',
-            metavar='FILE',
-            default='rootfs.squash')
+            ['squash'], 'use squashfs on the rootfs - '
+            'cannot be used with --image', metavar='DIRECTORY')
         self.settings.boolean(
             ['configure-apt'], 'Create an apt source based on '
             'the distribution and mirror selected.')
@@ -198,6 +194,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             handler.define_settings(self.settings)
 
         distro = self.handlers[Codenames.name]
+        if self.settings['squash'] and self.settings['image']:
+            raise cliapp.AppException(
+                '--image can no longer be used with --squash')
         if not self.settings['image'] and not (
                 self.settings['tarball'] or self.settings['squash']):
             raise cliapp.AppException(
@@ -279,7 +278,6 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             extlinux.install_extlinux(rootdev, rootdir)
         base.append_serial_console(rootdir)
         self.optimize_image(rootdir)
-        filesystem.squash_image()
 
     def start_ops(self):
         base = self.handlers[Base.name]
@@ -291,6 +289,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 rootdev = filesystem.devices['rootdev']
             else:
                 rootdir = self.mkdtemp()
+                filesystem.devices['rootdir'] = rootdir
                 rootdev = filesystem.devices['rootdev']
             logging.debug("rootdir=%s rootdev=%s", rootdir, rootdev)
             self.debootstrap(rootdir)
@@ -315,9 +314,13 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
             if self.settings['tarball']:
                 base.create_tarball(rootdir)
-            else:
-                filesystem.squash_filesystem()
+            elif self.settings['squash']:
+                filesystem.squash_rootfs()
             filesystem.chown()
+        # need to copy boot/efi/* if configured.
+        # but that is a task for the uefi module.
+        # if self.settings['use-uefi'] and self.settings['squash']:
+            # export uefi files 
 
         except BaseException as e:
             base.message('EEEK! Something bad happened...')
@@ -326,6 +329,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 db_log = os.path.join(rootdir, 'debootstrap', 'debootstrap.log')
                 if os.path.exists(db_log):
                     shutil.copy(db_log, os.getcwd())
+                    if self.settings['owner']:
+                        runcmd(["chown", self.settings["owner"], db_log])
             base.message(e)
             self.cleanup_system()
             raise

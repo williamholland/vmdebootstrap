@@ -107,23 +107,19 @@ Options
                        Useful for architectures where extlinux is not supportable.
                        Depending on how the image is to be booted, the --mbr
                        option may also be necessary with extlinux.
- --squash              Run mksquashfs against the final image using xz
+ --squash=DIRECTORY    Run mksquashfs against the rootfs using xz
                        compression - requires ``squashfs-tools`` to be installed.
-                       The final file will have the ``.squashfs`` suffix.
-                       By default, mksquashfs is allowed to use all processors
-                       which may result in high load. Run ``mksquashfs``
-                       separately if you need to control the number of
-                       processors used per run. squashfs can also have issues
-                       with large image files (where large is a factor of the
-                       amount of data inside the image rather than the size
-                       of the image itself). These errors can result in invalid
-                       images (e.g. image does not boot) or corrupted images
-                       (truncated file). This is a known bug in squashfs.
-                       Avoid using the --squash option and consider squashing
-                       the loopback mounted directory tree of the image.
-                       ``vmdebootstrap`` will check if the squashed filesystem
-                       is less than 1MB and leave the unsquashed image in
-                       place with a warning about a possible squashfs failure.
+                       The squashfs and other files needed to use the squashfs
+                       to make a bootable system will be put into the specified directory.
+                       The directory will contain a ``filesystem.squashfs``
+                       as well as the top level contents of the ``boot/``
+                       directory. (If using UEFI, the ``boot/efi`` directory
+                       as well.) By default, ``mksquashfs`` is allowed to use
+                       all processors which may result in high load. squashfs
+                       can also have issues with large root filesystems. These
+                       errors can result in truncated files. This is a known
+                       bug in squashfs. ``vmdebootstrap`` will fail if the
+                       squashed filesystem is less than 1MB. 
  --configure-apt       Use the specified mirror and distribution to create a
                        suitable apt source inside the VM. Can be useful if
                        debootstrap fails to create it automatically.

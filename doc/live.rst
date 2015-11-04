@@ -87,10 +87,6 @@ Initial schemes for vmdebootstrap creation of live images
    customisation hook, remove that source and replace the original.
 
 #. ``mksquashfs`` can fail without indication of why and when it does, the image
-   file can be 4Kb or so of junk. To prevent this, avoid running
-   vmdebootstrap with the ``--squash`` option and run mksquashfs as a second step
-   **after** copying the raw image to a new file for safety / debugging.
-   Newer versions of vmdebootstrap will emit a warning and not delete
-   the original file if the squashfs output is less than 1MB. This can
-   occur if the drive runs out of space but squashfs does not report
-   an error.
+   file can be 4Kb or so of junk. ``vmdebootstrap`` will fail if the
+   squashfs output is less than 1MB. This can occur if the drive runs
+   out of space but squashfs does not report an error.
