@@ -293,6 +293,11 @@ Execute using qemu, e.g. on amd64 using qemu-system-x86_64::
 (This loads the image in a new window.) Note the use of ``-drive
 file=<img>,format=raw`` which is needed for newer versions of QEMU.
 
+There is a ``bin/qemu-wrapper.sh <image> <arch>`` script for simple
+calls where the ``--owner`` option is used, e.g.::
+
+ $ /usr/share/vmdebootstrap/qemu-wrapper.sh jessie.img amd64
+
 There is EFI firmware available to use with QEMU when testing images built
 using the UEFI support, but this software is in Debian non-free due to patent
 concerns. If you choose to install ``ovmf`` to test UEFI builds, a
