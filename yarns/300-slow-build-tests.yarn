@@ -1,0 +1,20 @@
+# Slow image building tests
+
+In this chapter, we have test scenarios that actually build an image
+and test the output. The images are not booted, but that may be added
+later. Instead, all the tests on the images are static.
+
+These tests are slow, since building images is slow.
+
+
+## Build a very basic Debian 8 image
+
+    SCENARIO build a basic Debian 8 image
+    ASSUMING build tests are requested
+    GIVEN user wants to build an image FOO.img that is 2GiB in size
+    WHEN the user runs vmdebootstrap --sparse --extlinux
+    THEN the image has the correct size
+    AND the image has one partition
+    AND partition 1 has the boot flag set
+    AND partition 1 has an ext4 filesystem
+    AND partition 1 has file /etc/debian_version matching ^8\..*$

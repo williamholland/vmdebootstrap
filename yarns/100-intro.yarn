@@ -1,0 +1,13 @@
+# Introduction
+
+This document is the integration test suite for vmdebootstrap. It is
+both human-readable and machine-executable. It is written for the
+[yarn][] tool. This document is aimed at those developing
+vmdebootstrap.
+
+* See the vmdebootstrap documentation about what the software is for
+  and how it is used.
+* See the [yarn documentation][] for how to use yarn.
+
+[yarn]: http://liw.fi/cmdtest/
+[yarn documentation]: http://liw.fi/cmdtest/README.yarn/

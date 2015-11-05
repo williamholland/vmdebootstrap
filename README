@@ -140,6 +140,24 @@ prepare a read-only version of the image - in this case with the /boot
 partition also mounted - and copies files out into the current working
 directory.
 
+The integration test suite
+--------------------------
+
+To run the vmdebootstrap integration test suite, you need the yarn
+tool, which is part of cmdtest. See <http://liw.fi/cmdtest/> and the
+cmdtest package in Debian. The command to run the tests is:
+
+    sudo yarns/run-tests
+
+You can skip the slow tests that actually build images, by setting the
+`TESTS` variable:
+
+    sudo yarns/run-tests --env TESTS=fast
+
+To format the test suite document:
+
+    make -C yarns
+
 Legalese
 --------
 

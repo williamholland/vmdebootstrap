@@ -1,0 +1,96 @@
+# A shell library for yarn scenario step implementations.
+
+# Copyright 2015  Lars Wirzenius
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# =*= License: GPL-3+ =*=
+
+
+# Is running of scenarios of a given type requested? If nothing is
+# requested ($TESTS is empty), then everything is.
+
+test_requested()
+{
+    if [ "${TESTS:-}" = "" ]
+    then
+        return 0
+    elif echo "${TESTS}" | tr , '\n' | grep -Fx "$1"
+    then
+        return 0
+    else
+        return 1
+    fi
+}
+
+
+# Convert a size with a unit, such a kB, to plain bytes.
+
+size_in_bytes()
+{
+    local amount="$(echo "$1" | sed 's/[^0-9]*$//')"
+    local unit="$(echo "$1" | sed 's/^[0-9]*//' | tr A-Z a-z)"
+    local factor=1
+    case "$unit" in
+        k|kb) factor=1000 ;;
+        m|mb) factor=1000000 ;;
+        g|gb) factor=1000000000 ;;
+        t|tb) factor=1000000000000 ;;
+        ki|kib) factor=1024 ;;
+        mi|mib) factor=1048576 ;;
+        gi|gib) factor=1073741824 ;;
+        ti|tib) factor=1099511627776 ;;
+    esac
+    echo "$amount * $factor" | bc -lq
+}
+
+
+# Make a partition in a disk image accessible as a block device.
+# Return it's device file.
+
+kpartx_image_partition()
+{
+    kpartx -sav "$1" | awk -v "n=$2" 'NR == n { print "/dev/mapper/" $3 }'
+}
+
+
+# Undo kpartx_image_partition.
+
+unkpartx_image()
+{
+    kpartx -d "$1"
+}
+
+
+# Rembember and retrieve settings between scenario steps. This is
+# implemented by a shell script snippet that gets sourced at the end
+# of this shell library.
+
+remember_setting()
+{
+    echo "$1=$2" >> "$DATADIR/settings.sh"
+}
+
+if [ -e "$DATADIR/settings.sh" ]
+then
+    . "$DATADIR/settings.sh"
+fi
+
+
+# Make sure the current working directory is $DATADIR, not $SRCDIR.
+# This makes it a little simpler to write scenario step
+# implementations by not having to be specifying $DATADIR explicitly
+# everywhere.
+
+cd "$DATADIR"

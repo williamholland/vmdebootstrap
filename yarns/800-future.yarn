@@ -1,0 +1,9 @@
+# Thoughts for future tests
+
+* Build image, run it under Qemu or some other way. Then do some basic
+  testing of the running system. For example, boot it under
+  qemu-system-i386, with a serial consoler, and verify that it's
+  possible to log in via the serial consoler, and ping the host.
+  More detailed testing of built systems may or may not be
+  appropriate: a lot of more intricate testing may be beyond the scope
+  of testing of vmdebootstrap.

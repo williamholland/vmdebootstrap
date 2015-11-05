@@ -1,0 +1,89 @@
+# Scenario step implementations
+
+This chapter has implementations of scenario steps used elsewhere in
+this document.
+
+
+## Should a scenario be run?
+
+We provide a way to control which classes of scenarios get run. This
+is done by passing in an environment variable `TESTS` to vmdebootstrap
+(`--env` option), with a comma-separated list of classes:
+
+* `fast`---run fast tests
+* `build`---run scenarios that do builds
+
+If `TESTS` is not set, everything gets run.
+
+Scenarios can use the ASSUMING statements defined here to let the user
+to allow them to run or not to run.
+
+    IMPLEMENTS ASSUMING build tests are requested
+    test_requested build
+
+
+## Building an image
+
+To keep individual steps shorter, we provide some steps to set common
+parts, such as the name of the image being built.
+
+    IMPLEMENTS GIVEN user wants to build an image (\S+) that is (\S+) in size
+    remember_setting IMAGE "$MATCH_1"
+    remember_setting IMAGE_SIZE "$(size_in_bytes "$MATCH_2")"
+
+Actually build an image. This looks like it can invoke any command,
+but it's actually restricted to vmdebootstrap in the source tree.
+
+    IMPLEMENTS WHEN the user runs vmdebootstrap (.*)
+    PYTHONPATH="$SRCDIR" "$SRCDIR/bin/vmdebootstrap" \
+        --image "$IMAGE" \
+        --size "$IMAGE_SIZE" \
+        $MATCH_1
+
+
+## Static tests on disk images
+
+The steps in this section do static tests of disk image. These all
+operate on the image specified in the step "GIVEN user wants to
+build...".
+
+Test the size of an image. This tests the length, not disk usage, of
+the image.
+
+    IMPLEMENTS THEN the image has the correct size
+    actual="$(stat -c %s "$IMAGE")"
+    [ "$actual" = "$IMAGE_SIZE" ]
+
+Check the partition table on the image.
+
+    IMPLEMENTS THEN the image has one partition
+    parted --script "$IMAGE" print |
+        sed '1,/^Number/d' |
+        grep -c . |
+        grep -Fx 1
+
+Check partition boot flag.
+
+    IMPLEMENTS THEN partition (\d+) has the boot flag set
+    parted --script "$IMAGE" print |
+        awk -v "PART=$MATCH_1" '/^ [0-9]+ / && $1 == PART && $7 == "boot"' |
+        grep .
+
+Check filesystem on a partition. This checks the actual filesystem,
+not a type declared in the partition table.
+
+    IMPLEMENTS THEN partition (\d+) has an? (\S+) filesystem
+    device="$(kpartx_image_partition "$IMAGE" "$MATCH_1")"
+    trap "unkpartx_image \"$IMAGE\"" EXIT
+    blkid "$device" | grep "TYPE=\"$MATCH_2\""
+
+Check that the partition contains a file with some content matching a
+regular expression.
+
+    IMPLEMENTS THEN partition (\d+) has file (\S+) matching (.+)
+    device="$(kpartx_image_partition "$IMAGE" "$MATCH_1")"
+    trap "unkpartx_image \"$IMAGE\"" EXIT
+    mp="$(mktemp -d)"
+    mount -r "$device" "$mp"
+    trap "umount \"$mp\"; unkpartx_image \"$IMAGE\"" EXIT
+    grep -P -e "$MATCH_3" "$mp/$MATCH_2"

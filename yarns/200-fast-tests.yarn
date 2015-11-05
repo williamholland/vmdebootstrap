@@ -1,0 +1,8 @@
+# Fast option check tests
+
+* A scenario, or set of scenarios, that verify that certain
+  combinations of vmdebootstrap options work or fail as expected, but
+  without actually building images. The goal is to test command line
+  handling quickly. For example, options that conflict should cause
+  error messages.
+    * FIXME: Check with Neil for suggestions for options.
