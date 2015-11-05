@@ -24,6 +24,7 @@
 import os
 import cliapp
 import logging
+import tempfile
 from vmdebootstrap.base import (
     Base,
     runcmd,
@@ -181,10 +182,18 @@ class Filesystem(Base):
         suffixed = os.path.join(self.settings['squash'], "filesystem.squashfs")
         if os.path.exists(suffixed):
             os.unlink(suffixed)
+        _, exclusions = tempfile.mkstemp()
+        with open(exclusions, 'w') as exclude:
+            exclude.write("/proc\n")
+            exclude.write("/dev\n")
+            exclude.write("/sys\n")
+            exclude.write("/run\n")
         self.message("Running mksquashfs on rootfs.")
         msg = runcmd(
             ['mksquashfs', self.devices['rootdir'], suffixed,
-             '-no-progress', '-comp', 'xz'], ignore_fail=False)
+             '-no-progress', '-comp', 'xz',
+             '-e', exclusions], ignore_fail=False)
+        os.unlink(exclusions)
         logging.debug(msg)
         check_size = os.path.getsize(suffixed)
         logging.debug("Created squashfs: %s", suffixed)
