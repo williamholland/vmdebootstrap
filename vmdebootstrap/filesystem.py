@@ -22,10 +22,13 @@
 
 
 import os
-import shutil
 import cliapp
 import logging
-from vmdebootstrap.base import Base, runcmd
+from vmdebootstrap.base import (
+    Base,
+    runcmd,
+    copy_files
+)
 
 # pylint: disable=missing-docstring
 
@@ -184,7 +187,7 @@ class Filesystem(Base):
              '-no-progress', '-comp', 'xz'], ignore_fail=False)
         logging.debug(msg)
         check_size = os.path.getsize(suffixed)
-        logging.debug("Created squashfs: %s" % suffixed)
+        logging.debug("Created squashfs: %s", suffixed)
         if check_size < (1024 * 1024):
             logging.warning(
                 "%s appears to be too small! %s bytes",
@@ -194,12 +197,7 @@ class Filesystem(Base):
         bootdir = os.path.join(self.devices['rootdir'], 'boot')
         # copying the boot/* files
         self.message("Copying boot files out of squashfs")
-        for filename in os.listdir(bootdir):
-            if os.path.isdir(filename) or os.path.islink(filename):
-                continue
-            shutil.copyfile(
-                os.path.join(bootdir, filename),
-                os.path.join(self.settings['squash'], filename))        
+        copy_files(bootdir, self.settings['squash'])
 
     def configure_apt(self):
         rootdir = self.devices['rootdir']

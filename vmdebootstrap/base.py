@@ -22,6 +22,7 @@
 
 import os
 import crypt
+import shutil
 import cliapp
 import logging
 import subprocess
@@ -72,6 +73,15 @@ def set_password(rootdir, user, password):
 
 def delete_password(rootdir, user):
     runcmd(['chroot', rootdir, 'passwd', '-d', user])
+
+
+def copy_files(src, dest):
+    for filename in os.listdir(src):
+        if os.path.isdir(filename) or os.path.islink(filename):
+            continue
+        shutil.copyfile(
+            os.path.join(src, filename),
+            os.path.join(dest, filename))
 
 
 class Base(object):
