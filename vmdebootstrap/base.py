@@ -198,7 +198,7 @@ class Base(object):
     def mask_udev_predictable_rules(self, rootdir):
         """
         This can be reset later but to get networking using immediately
-        on boot, the interface we're going to use must be kno
+        on boot, the interface we're going to use must be known
         http://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
         """
         self.message('Disabling systemd predictable interface names')
