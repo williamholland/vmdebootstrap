@@ -3,7 +3,7 @@
 set -e
 
 if [ -z "$1" ]; then
-    echo "Usage: <imagefile> <arch>"
+    echo "Usage: <imagefile> <arch> [uefi_directory]"
     echo "For x86_64, amd64 is also supported."
     exit 1
 fi
@@ -20,5 +20,9 @@ else
     echo "For x86_64, amd64 is also supported."
     exit 1
 fi
+UEFI=""
+if [ -n "$3" ]; then
+    UEFI="-L $3"
+fi
 
-qemu-system-${ARCH} -m 1024 -enable-kvm -drive format=raw,file=./$1
+qemu-system-${ARCH} -m 1024 ${UEFI} -enable-kvm -drive format=raw,file=./$1
