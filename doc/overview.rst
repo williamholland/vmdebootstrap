@@ -22,9 +22,160 @@ to configure it. The image has an empty root password and will not have
 networking configured by default. Set the root password before you
 configure networking.
 
+.. _synopsis:
+
+.. index:: synopsis
+
+Synopsis
+********
+
+::
+
+ $ sudo vmdebootstrap --image=FILE --size=SIZE [--mirror=URL] [--distribution=NAME]
+
+Options
+*******
+
+ --output=FILE         write output to FILE, instead of standard output
+ --verbose             report what is going on
+ --image=FILE          put created disk image in FILE
+ --size=SIZE           create a disk image of size SIZE (1000000000)
+ --tarball=FILE        tar up the disk's contents in FILE
+ --mirror=URL          use MIRROR as package source (http://http.debian.net/debian/)
+ --arch=ARCH           architecture to use (amd64) - if using an 
+                       architecture which the host system cannot execute,
+                       ensure the --foreign option is also used.
+ --distribution=NAME   release to use (defaults to stable). The release
+                       needs to be a valid Debian or Ubuntu release name
+                       or codename.
+ --debootstrapopts=OPTS
+                       Supply options and arguments to ``debootstrap``,
+                       separated by spaces.
+                       e.g. --debootstrapopts="variant=buildd no-check-gpg components=main,contrib".
+                       See **debootstrap (1)** for more information. This
+                       option replaces the ``--variant`` support in
+                       previous versions.
+ --package=PACKAGE     install PACKAGE onto system
+ --custom-package=DEB  install package in DEB file onto system (not
+                       from mirror)
+ --no-kernel           do not install a linux package
+ --kernel-package      If --no-kernel is not used and the auto-selection
+                       of the **linux-image-586** or **linux-image-armmp**
+                       or **linux-image-$ARCH** package is not suitable,
+                       the kernel package can be specified explicitly.
+ --enable-dhcp         enable DHCP on eth0
+ --root-password=PASSWORD
+                       set root password
+ --customize=SCRIPT    run SCRIPT after setting up system. If the script
+                       does not exist in the current working directory, 
+                       :file:`usr/share/vmdebootstrap/examples/` will be
+                       checked as a fallback. The script needs to be
+                       executable and is passed the root directory of the
+                       debootstrap as the only argument. Use chroot if
+                       you need to execute binaries within the
+                       debootstrap.
+ --hostname=HOSTNAME   set name to HOSTNAME (debian)
+ --user=USERSTRING     create USER with PASSWORD. The USERSTRING needs to
+                       be of the format: USER/PASSSWORD.
+ --owner=OWNER         change the owner of the final image from root to
+                       the specified user.
+ --serial-console      configure image to use a serial console
+ --serial-console-command
+                       set the command to manage the serial console which
+                       will be appended to :file:`/etc/inittab`. Default
+                       is ``/sbin/getty \-L ttyS0 115200 vt100``, resulting
+                       in a line::
+
+                        "S0:23:respawn:/sbin/getty \-L ttyS0 115200 vt100"
+
+ --sudo                install sudo, and if user is created, add them to
+                       sudo group
+ --bootsize=BOOTSIZE   If specified, create a /boot partition of the given
+                       size within the image. Debootstrapping will fail
+                       if this is too small for the selected kernel
+                       package and upgrading such a kernel package is
+                       likely to need two or three times the space of the
+                       installed kernel.
+ --boottype=FSTYPE     Filesystem to use for the /boot partition. (default ext2)
+ --roottype=FSTYPE     Filesystem to use for the / (root) partition. (default ext4)
+ --swap=SWAPSIZE       If specified, create a swap partition of the given
+                       size within the image. Debootstrapping will fail
+                       if this results in a root partition which is too
+                       small for the selected packages. The minimum swap
+                       space is 256Mb as the default memory allocation
+                       of QEMU is 128Mb. A default 1Gb image is not likely
+                       to have enough space for a swap partition as well.
+ --foreign=PATH        Path to the binfmt_handler to enable foreign support
+                       in debootstrap. e.g. :file:`/usr/bin/qemu-arm-static`
+                       Note: foreign debootstraps may take a signficant
+                       amount of time to complete and that debootstrap will
+                       retry five times if packages fail to install by default.
+ --no-extlinux         Skip installation of extlinux. needs a customize script
+                       or alternative bootloader to make the image bootable.
+                       Useful for architectures where extlinux is not supportable.
+                       Depending on how the image is to be booted, the --mbr
+                       option may also be necessary with extlinux.
+ --squash=DIRECTORY    Run mksquashfs against the rootfs using xz
+                       compression - requires ``squashfs-tools`` to be installed.
+                       The squashfs and other files needed to use the squashfs
+                       to make a bootable system will be put into the specified directory.
+                       The directory will contain a ``filesystem.squashfs``
+                       as well as the top level contents of the ``boot/``
+                       directory. (If using UEFI, the ``boot/efi`` directory
+                       as well.) By default, ``mksquashfs`` is allowed to use
+                       all processors which may result in high load. squashfs
+                       can also have issues with large root filesystems. These
+                       errors can result in truncated files. This is a known
+                       bug in squashfs. ``vmdebootstrap`` will fail if the
+                       squashed filesystem is less than 1MB. 
+ --configure-apt       Use the specified mirror and distribution to create a
+                       suitable apt source inside the VM. Can be useful if
+                       debootstrap fails to create it automatically.
+ --apt-mirror          Use the specified mirror inside the image instead of the
+                       mirror used to build the image. This is useful if you have
+                       a local mirror to make building the image quicker but
+                       the image needs to run even if that mirror is not available.
+ --grub                Disable extlinux installation and configure grub2 instead.
+                       grub2 will be added to the list of packages to install.
+                       update-grub will be called once the debootstrap is
+                       complete and grub-install will be called in the image.
+ --no-acpid            Disable installation of acpid if not required, otherwise
+                       acpid will be installed if --foreign is not used.
+ --pkglist             Output a list of package names installed inside the image.
+                       Useful if you need to track the relevant source packages
+                       used inside the image for licence compliance.
+
+Configuration files and settings
+********************************
+
+ --dump-config         write out the entire current configuration
+ --no-default-configs  clear list of configuration files to read
+ --config=FILE         add FILE to config files
+
+Logging
+*******
+
+ --log=FILE            write log entries to FILE (default is to not write
+                       log files at all); use "syslog" to log to system
+                       log, or "none" to disable logging.
+ --log-level=LEVEL     log at LEVEL, one of debug, info, warning, error,
+                       critical, fatal (default: debug).
+ --log-max=SIZE        rotate logs larger than SIZE, zero for never (default: 0)
+ --log-keep=N          keep last N logs (10)
+ --log-mode=MODE       set permissions of new log files to MODE (octal;  default 0600)
+
+Peformance
+**********
+
+ --dump-memory-profile=METHOD
+                       make memory profiling dumps using METHOD, which is one
+                       of: none, simple, meliae, or heapy (default: simple)
+ --memory-dump-interval=SECONDS
+                       make memory profiling dumps at least SECONDS apart
+
 .. index:: networking
 
-.. _networking
+.. _networking:
 
 Networking
 **********
