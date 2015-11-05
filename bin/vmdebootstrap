@@ -256,6 +256,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         extlinux = self.handlers[ExtLinux.name]
         base = self.handlers[Base.name]
         uefi = self.handlers[Uefi.name]
+        distro = self.handlers[Codenames.name]
         if self.settings['use-uefi']:
             bootdir = self.bootdir
             logging.debug(
@@ -274,7 +275,11 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 extlinux.install_extlinux(rootdev, rootdir)
         elif self.settings['extlinux']:
             extlinux.install_extlinux(rootdev, rootdir)
-        base.append_serial_console(rootdir)
+        # only append for wheezy (which became oldstable on 2015.04.25)
+        if distro.was_oldstable(datetime.date(2015, 4, 26)):
+            base.append_serial_console(rootdir)
+        else:
+            base.message("Skipping setting serial console- wheezy only.")
         self.optimize_image(rootdir)
 
     def start_ops(self):

@@ -79,12 +79,12 @@ Options
                        be of the format: USER/PASSSWORD.
  --owner=OWNER         change the owner of the final image from root to
                        the specified user.
- --serial-console      configure image to use a serial console
+ --serial-console      configure image to use a serial console (Wheezy only)
  --serial-console-command
-                       set the command to manage the serial console which
-                       will be appended to :file:`/etc/inittab`. Default
-                       is ``/sbin/getty \-L ttyS0 115200 vt100``, resulting
-                       in a line::
+                       (Wheezy only.) Set the command to manage the serial
+                       console which will be appended to :file:`/etc/inittab`.
+                       Default is ``/sbin/getty \-L ttyS0 115200 vt100``,
+                       resulting in a line::
 
                         "S0:23:respawn:/sbin/getty \-L ttyS0 115200 vt100"
 
