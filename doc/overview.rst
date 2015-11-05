@@ -69,7 +69,7 @@ in the vmdebootstrap log file, if enabled with the ``--log`` option.
 
 .. note:: **grub-legacy** is not supported.
 
-:file:`vmdebootstrap` also supports **EFI**.
+:file:`vmdebootstrap` also supports **EFI**. See :ref:`uefi`.
 
 Use ``--use-uefi`` to use ``grub-efi`` instead of ``grub-pc``. If the
 default 5Mb is not enough space, use the ``--esp-size`` option to
@@ -77,6 +77,41 @@ specify a different size for the EFI partition. Registered firmware is
 not supported as it would need to be done after boot. If the system you
 are creating is for more than just a VM or live image, you will likely
 need a larger ESP, up to 500Mb.
+
+.. index: uefi
+
+.. _uefi:
+
+UEFI
+====
+
+UEFI support requires Grub and ``vmdebootstrap`` contains a configuration
+table of the UEFI components required for supported architectures.
+
+There are issues with running UEFI with QEMU on some architectures and
+a customisation script is available for amd64::
+
+ # vmdebootstrap --verbose --image jessie-uefi.img --grub  --use-uefi \
+   --customize ./examples/qemu-efi-bochs-drm.sh 
+
+``vmdebootstrap`` supports UEFI for images and for squashfs but the necessary
+behaviour is different. With an image, an ESP vfat partition is created.
+With squashfs, the EFI files will be copied into an ``efi/`` directory
+in the squashfs output directory instead.
+
+There is EFI firmware available to use with QEMU when testing images built
+using the UEFI support, but this software is in Debian non-free due to patent
+concerns. If you choose to install ``ovmf`` to test UEFI builds, a
+secondary change is also needed to symlink the provided ``OVMF.fd`` to
+the file required by QEMU: ``bios-256k.bin`` and then tell QEMU about
+the location of this file with the -L option::
+
+ $ qemu-system-x86_64 -L /usr/share/ovmf/ -machine accel=kvm \\
+  -m 4096 -smp 2 -drive format=raw,file=test.img
+
+To test the image, also consider using the ``qemu-wrapper.sh``::
+
+ $ /usr/share/vmdebootstrap/qemu-wrapper.sh jessie-uefi.img amd64 /usr/share/ovmf/
 
 .. index: uboot
 
@@ -166,16 +201,6 @@ There is a ``bin/qemu-wrapper.sh <image> <arch>`` script for simple
 calls where the ``--owner`` option is used, e.g.::
 
  $ /usr/share/vmdebootstrap/qemu-wrapper.sh jessie.img amd64
-
-There is EFI firmware available to use with QEMU when testing images built
-using the UEFI support, but this software is in Debian non-free due to patent
-concerns. If you choose to install ``ovmf`` to test UEFI builds, a
-secondary change is also needed to symlink the provided ``OVMF.fd`` to
-the file required by QEMU: ``bios-256k.bin`` and then tell QEMU about
-the location of this file with the -L option::
-
- $ qemu-system-x86_64 -L /usr/share/ovmf/ -machine accel=kvm \\
-  -m 4096 -smp 2 -drive format=raw,file=test.img
 
 For further examples, including u-boot support for beaglebone-black,
 see ``/usr/share/vmdebootstrap/examples``

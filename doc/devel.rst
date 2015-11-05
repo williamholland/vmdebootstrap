@@ -71,6 +71,16 @@ is a faster mirror available during the build. This function moves the
 specified mirror file aside and uses the nearby mirror. Always use with
 :ref:`replace_apt_source`.
 
+.. _remove_daemon_block:
+
+remove_daemon_block
+-------------------
+
+After using :ref:`disable_daemons`, a policy script remains which needs
+to be removed to allow daemons to start normally when the image itself
+is booted. Use ``remove_daemon_block`` as the next step once package
+installation is complete.
+
 .. _replace_apt_source:
 
 replace_apt_source
