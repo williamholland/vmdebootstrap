@@ -111,22 +111,6 @@ Packages which are not part of an existing task but which are useful for
 all images and should be included in the set of packages to be installed
 using all customisation scripts.
 
-.. index: testing
-
-.. _testing:
-
-Testing
--------
-
-Testing - ``unsquashfs <filename>`` creates a squashfs-root/ directory
-containing the original image which QEMU can now use::
-
- $ unsquashfs jessie.img.squash
- $ qemu-system-x86_64 -machine accel=kvm:tcg -m 4096 -smp 2 -drive file=squashfs-root/jessie.img,format=raw
-
-This needs to be done on a local system which has a usable display,
-not on pettersson itself.
-
 .. _new_architectures:
 
 New architectures

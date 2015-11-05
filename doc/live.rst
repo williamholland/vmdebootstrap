@@ -1,18 +1,34 @@
-Initial schemes for vmdebootstrap creation of live images
-=========================================================
+vmdebootstrap for creation of live images
+=========================================
+
+Role of vmdebootstrap
+---------------------
+
+``vmdebootstrap`` is limited to the role of generating the rootfs for
+the live image - the architecture-specific part. ``vmdebootstrap`` then
+copies the kernel files out of the rootfs and runs ``mksquashfs``.
+
+The files in the directory specified by the ``--squash`` option are not
+themselves sufficient to create a live image. Remaining steps include
+configuration of grub and EFI, addition of other components (like a menu
+or Debian Installer) and packaging up into a isohybrid image.
+
+vmdebootstrap features
+======================
 
 #. vmdebootstrap has explicit support for foreign architecture
    bootstraps using qemu static binformat handling as well as
    support for Debian releases from wheezy onwards.
 
+   * This is **not** intended to provide support for all packages
+     in the Debian archive. Some packages do not install correctly
+     with binfmt handling and ``vmdebootstrap`` should be run natively
+     when the package list is to include these packages.
+
 #. vmdebootstrap can support adding specific packages but a
    simpler approach is to use the existing task-* packages and
    only add packages manually where explicitly needed for a live
-   image, e.g. ``wpa-supplicant``
-
-#. Once a standard set of packages exist, create a metapackage
-   expressing this support - possibly as a part of the vmdebootstrap
-   packaging or as part of debian-cd.
+   image, using the ``live-support`` package.
 
 #. debian-cd runs vmdebootstrap inside a VM in a similar manner to
    how debian-live currently operates, as both debian-live and
@@ -26,8 +42,8 @@ Initial schemes for vmdebootstrap creation of live images
 #. vmdebootstrap uses a single config file per image type and each
    config file can have a single customisation script. The config
    file specifies the architecture of the image and the binformat
-   handler for that architecture, so the customisation hook script
-   can be architecture-specific.
+   handler for that architecture (if used), so the customisation hook
+   script can be architecture-specific.
 
 #. Customisation hook scripts are shell scripts which will be passed
    a single parameter - the directory which represents the root
@@ -35,17 +51,16 @@ Initial schemes for vmdebootstrap creation of live images
    support to include other common functions or call out to utilities
    known to be installed in the outer VM running vmdebootstrap.
 
-#. Customisation hooks clearly need to live in a VCS - possibly within
-   the debian-cd git repo.
+#. Customisation hooks clearly need to live in a VCS - examples will
+   be carried in the ``examples`` directory of ``vmdebootstrap`` and
+   in the ``/usr/share/vmdebootstrap/examples`` directory. Working
+   scripts based on these examples will likely be within the debian-cd
+   git repo.
 
 #. Although vmdebootstrap does have architecture support, the deciding
    factor is the availability of a working default kernel for the images
    built for that architecture and how to configure the bootloader(s) to
    provide the relevant dtb where needed.
-
-#. Testing vmdebootstrap images uses qemu along the lines of::
-
-    $ qemu-system-x86_64 -machine accel=kvm:tcg -m 4096 -smp 2 -drive file=test.img,format=raw
 
 #. Unlike standard vmdebootstrap example scripts, the scripts calling
    vmdebootstrap itself do not need to use sudo as the call is made inside
@@ -55,7 +70,7 @@ Initial schemes for vmdebootstrap creation of live images
 #. The building of live images doesn't appear to need changes in the
    vmdebootstrap package itself. The changes to isolinux to add the menu config,
    splash screen and to provide access to the install menus can all be done
-   in the customisation hook.
+   after the generation of the squashfs.
 
 #. Remember to use ``http://cdbuilder.debian.org/debian/`` for the bootstrap
    operations (--mirror option) and ``http://httpredir.debian.org/debian`` for
@@ -65,6 +80,9 @@ Initial schemes for vmdebootstrap creation of live images
    added to the set of packages to install and the --sudo option is passed
    to vmdebootstrap to ensure that the user is added to the sudo group. The
    root user password should also be locked (--lock-root-password).
+
+   * Consider using a blank password and enforcing a password to be set
+     upon login for those images which can support this.
 
 #. Installing task packages using debootstrap **omits** ``Recommended`` packages,
    resulting in a much smaller image which is not expected for a live image.
@@ -77,7 +95,9 @@ Initial schemes for vmdebootstrap creation of live images
    debconf non-interactive settings are exported to prevent the install
    waiting for keyboard interaction. ``DEBIAN_FRONTEND=noninteractive``
 
-#. The customisation script needs to mount proc before starting the apt install.
+#. The customisation script needs to mount proc (and possibly other
+   locations like ``/sys/``, ``/dev/`` and ``/dev/pts/``) before
+   starting the apt install.
 
 #. Calls to apt should also not output the progress bar but the actual package
    installation steps should be logged.
