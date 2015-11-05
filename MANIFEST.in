@@ -1,0 +1,8 @@
+include NEWS
+include vmextract.py
+include vmdebootstrap.8.in
+recursive-include examples *.sh *.txt *.py
+include common/*
+include doc/*
+include man/*
+include bin/qemu-wrapper.sh
