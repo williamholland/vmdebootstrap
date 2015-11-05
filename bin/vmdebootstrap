@@ -35,7 +35,6 @@ from vmdebootstrap.extlinux import ExtLinux
 from vmdebootstrap.codenames import Codenames
 from vmdebootstrap.filesystem import Filesystem
 from vmdebootstrap.uefi import Uefi
-from vmdebootstrap.constants import arch_table
 
 __version__ = '1.1'
 
@@ -257,7 +256,6 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         extlinux = self.handlers[ExtLinux.name]
         base = self.handlers[Base.name]
         uefi = self.handlers[Uefi.name]
-        filesystem = self.handlers[Filesystem.name]
         if self.settings['use-uefi']:
             bootdir = self.bootdir
             logging.debug(
@@ -317,10 +315,6 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             elif self.settings['squash']:
                 filesystem.squash_rootfs()
             filesystem.chown()
-        # need to copy boot/efi/* if configured.
-        # but that is a task for the uefi module.
-        # if self.settings['use-uefi'] and self.settings['squash']:
-            # export uefi files 
 
         except BaseException as e:
             base.message('EEEK! Something bad happened...')
