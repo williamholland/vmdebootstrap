@@ -1,3 +1,5 @@
+.. _customisation_hooks:
+
 Developing live scripts and customisation hooks
 ===============================================
 
@@ -16,13 +18,14 @@ vmdebootstrap.
 The 'common' library contains functions and parameters which need to
 be used in *all* images, including::
 
- cleanup
  export_env
  mount_proc
  disable_daemons
  prepare_apt_source
- remove_daemon_block
+
  replace_apt_source
+ remove_daemon_block
+ cleanup
 
 .. _cleanup:
 
