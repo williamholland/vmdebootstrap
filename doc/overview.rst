@@ -290,7 +290,7 @@ allows the device to boot directly into a fully installed system - in
 a similar way to how a virtual machine would behave.)
 
 :file:`vmdebootstrap` assumes that all operations take place on a local
-image file, not a physical block device / removable media.
+image file or directory, not a physical block device / removable media.
 
 :file:`vmdebootstrap` is intended to be used with tools like ``qemu`` on
 the command line to launch a new virtual machine. Not all devices have
@@ -353,6 +353,16 @@ calls where the ``--owner`` option is used, e.g.::
 
  $ /usr/share/vmdebootstrap/qemu-wrapper.sh jessie.img amd64
 
+There is EFI firmware available to use with QEMU when testing images built
+using the UEFI support, but this software is in Debian non-free due to patent
+concerns. If you choose to install ``ovmf`` to test UEFI builds, a
+secondary change is also needed to symlink the provided ``OVMF.fd`` to
+the file required by QEMU: ``bios-256k.bin`` and then tell QEMU about
+the location of this file with the -L option::
+
+ $ qemu-system-x86_64 -L /usr/share/ovmf/ -machine accel=kvm \\
+  -m 4096 -smp 2 -drive format=raw,file=test.img
+
 For further examples, including u-boot support for beaglebone-black,
 see ``/usr/share/vmdebootstrap/examples``
 
@@ -373,7 +383,7 @@ has finished but this doesn't help if the package unpack or configuration
 steps use up all of the space in the meantime. Avoid this problem by
 specifying a larger size for the image.
 
-.. note:: if you are also using a separate /boot partition in your options to 
+.. caution:: if you are also using a separate /boot partition in your options to 
    :file:`vmdebootstrap` it may well be the boot partition which needs
    to be enlarged rather than the entire image.
 
