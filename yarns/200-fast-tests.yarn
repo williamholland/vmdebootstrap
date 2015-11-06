@@ -24,6 +24,14 @@ verify that vmdebootstrap parses the command line correctly.
     ... --image=FOO --grub --use-uefi --arch=arm64 --dry-run
     THEN vmdebootstrap exited with a zero exit code
 
+    SCENARIO --arch arm64 used with --image but without --use-uefi
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --foreign=PATH --arch=arm64 --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching UEFI
+    AND vmdebootstrap wrote an error message matching arm64
+
     SCENARIO --use-uefi and --arch arm64 used without grub
     ASSUMING fast tests are requested
     WHEN user attempts to run vmdebootstrap
@@ -39,3 +47,56 @@ verify that vmdebootstrap parses the command line correctly.
     THEN vmdebootstrap exited with a non-zero exit code
     AND vmdebootstrap wrote an error message matching disk image filename
     AND vmdebootstrap wrote an error message matching squash
+
+    SCENARIO --image used with a zero size
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --size=0 --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching disk image
+    AND vmdebootstrap wrote an error message matching must
+
+    SCENARIO Debian distribution stable name check
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --distribution=stable --dry-run
+    THEN vmdebootstrap exited with a zero exit code
+
+    SCENARIO Debian distribution jessie name check
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --distribution=jessie --dry-run
+    THEN vmdebootstrap exited with a zero exit code
+
+    SCENARIO allow use of arch and foreign options
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --arch=armhf --foreign=PATH --dry-run
+    THEN vmdebootstrap exited with a zero exit code
+
+    SCENARIO disallow use of uefi on unsupported architectures
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --grub --use-uefi --arch=armel --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching armel
+    AND vmdebootstrap wrote an error message matching not a supported
+    AND vmdebootstrap wrote an error message matching UEFI
+
+    SCENARIO disallow use of bootpartition if ESP already set
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --bootoffset=1024 --grub --use-uefi --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching separate boot
+    AND vmdebootstrap wrote an error message matching not supported
+    AND vmdebootstrap wrote an error message matching UEFI
+
+    SCENARIO disallow UEFI support on wheezy except on amd64
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --grub --use-uefi --distribution=wheezy --arch=arm64 --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching Only amd64
+    AND vmdebootstrap wrote an error message matching supports UEFI
+    AND vmdebootstrap wrote an error message matching Wheezy
