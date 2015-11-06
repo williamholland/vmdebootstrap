@@ -165,6 +165,16 @@ Logging
  --log-keep=N          keep last N logs (10)
  --log-mode=MODE       set permissions of new log files to MODE (octal;  default 0600)
 
+Developing
+**********
+
+Testing vmdebootstrap from git
+------------------------------
+
+::
+
+ ln -s ../../pre-commit.sh .git/hooks/pre-commit
+
 Peformance
 **********
 

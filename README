@@ -60,6 +60,15 @@ In order to use vmdebootstrap, you'll need a few things:
 * python-cliapp (see http://liw.fi/cliapp/)
 * python-distro-info
 
+Testing vmdebootstrap from git
+------------------------------
+
+There is a strongly recommended git pre-commit hook available
+for vmdebootstrap development - it requires the ``cmdtest``
+package::
+
+ ln -s ../../pre-commit.sh .git/hooks/pre-commit
+
 Running vmdebootstrap from git
 ------------------------------
 
