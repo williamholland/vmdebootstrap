@@ -18,11 +18,11 @@ If `TESTS` is not set, everything gets run.
 Scenarios can use the ASSUMING statements defined here to let the user
 to allow them to run or not to run.
 
-    IMPLEMENTS ASSUMING build tests are requested
-    test_requested build
+    IMPLEMENTS ASSUMING (fast|build) tests are requested
+    test_requested "$MATCH_1"
 
 
-## Building an image
+## Building an image, or attempting to
 
 To keep individual steps shorter, we provide some steps to set common
 parts, such as the name of the image being built.
@@ -39,6 +39,29 @@ but it's actually restricted to vmdebootstrap in the source tree.
         --image "$IMAGE" \
         --size "$IMAGE_SIZE" \
         $MATCH_1
+
+Attempt to run vmdebootstrap, but allow it it to fail. Capture exit
+code and stderr.
+
+    IMPLEMENTS WHEN user attempts to run vmdebootstrap (.*)
+    if PYTHONPATH="$SRCDIR" "$SRCDIR/bin/vmdebootstrap" \
+        $MATCH_1 2> vmdebootstrap.stderr
+    then
+        echo 0 > vmdebootstrap.exit
+    else
+        echo $? > vmdebootstrap.exit
+    fi
+
+Check for whether the attempted vmdebootstrap run had the desired exit
+code.
+
+    IMPLEMENTS THEN vmdebootstrap exited with a non-zero exit code
+    grep -vFx 0 vmdebootstrap.exit
+
+Check the stderr of the attempted vmdebootstrap run.
+
+    IMPLEMENTS THEN vmdebootstrap wrote an error message matching (.+)
+    grep -P -e "$MATCH_1" vmdebootstrap.stderr
 
 
 ## Static tests on disk images

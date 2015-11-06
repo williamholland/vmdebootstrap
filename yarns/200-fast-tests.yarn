@@ -1,8 +1,13 @@
 # Fast option check tests
 
-* A scenario, or set of scenarios, that verify that certain
-  combinations of vmdebootstrap options work or fail as expected, but
-  without actually building images. The goal is to test command line
-  handling quickly. For example, options that conflict should cause
-  error messages.
-    * FIXME: Check with Neil for suggestions for options.
+This chapter contains fast scenarios that test vmdebootstrap option
+handling. These scenarios do not actually build images, they only
+verify that vmdebootstrap parses the command line correctly.
+
+    SCENARIO --squash and --image used together
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --squash=FOO --image=BAR --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching --squash
+    AND vmdebootstrap wrote an error message matching --image
