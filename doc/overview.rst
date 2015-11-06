@@ -144,6 +144,7 @@ Options
  --pkglist             Output a list of package names installed inside the image.
                        Useful if you need to track the relevant source packages
                        used inside the image for licence compliance.
+ --dry-run             Do not build, just test that the options are valid.
 
 Configuration files and settings
 ********************************

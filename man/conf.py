@@ -206,6 +206,6 @@ intersphinx_mapping = {'http://docs.python.org/': None}
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('vmdebootstrap', 'vmdebootstrap', u'install basic Debian system into virtual disk image',
+    ('overview', 'vmdebootstrap', u'install basic Debian system into virtual disk image',
      [u'Neil Williams'], 8),
 ]
