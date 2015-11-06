@@ -49,6 +49,8 @@ def runcmd(argv, stdin='', ignore_fail=False, env=None, **kwargs):
 def mount_wrapper(rootdir):
     runcmd(['mount', '/dev', '-t', 'devfs', '-obind',
             '%s' % os.path.join(rootdir, 'dev')])
+    runcmd(['mount', '/dev/pts', '-t', 'devpts', '-obind',
+            '%s' % os.path.join(rootdir, 'dev', 'pts')])
     runcmd(['mount', '/proc', '-t', 'proc', '-obind',
             '%s' % os.path.join(rootdir, 'proc')])
     runcmd(['mount', '/sys', '-t', 'sysfs', '-obind',
@@ -58,6 +60,7 @@ def mount_wrapper(rootdir):
 def umount_wrapper(rootdir):
     runcmd(['umount', os.path.join(rootdir, 'sys')])
     runcmd(['umount', os.path.join(rootdir, 'proc')])
+    runcmd(['umount', os.path.join(rootdir, 'dev', 'pts')])
     runcmd(['umount', os.path.join(rootdir, 'dev')])
 
 
