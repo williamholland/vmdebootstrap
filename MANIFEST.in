@@ -5,4 +5,5 @@ recursive-include examples *.sh *.txt *.py
 include common/*
 include doc/*
 include man/*
+recursive-include yarns *.yarn Makefile run-tests yarns.css shell.lib
 include bin/qemu-wrapper.sh
