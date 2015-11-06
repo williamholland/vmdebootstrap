@@ -154,10 +154,7 @@ class Base(object):
                 return
             script = example
         self.message('Running customize script %s' % script)
-        logging.info("rootdir=%s image=%s", rootdir, self.settings['image'])
-        logging.debug(
-            "%s usage: %s", self.settings['image'],
-            runcmd(['du', self.settings['image']]))
+        logging.info("rootdir=%s", rootdir)
         try:
             with open('/dev/tty', 'w') as tty:
                 cliapp.runcmd([script, rootdir, self.settings['image']], stdout=tty, stderr=tty)
