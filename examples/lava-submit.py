@@ -46,6 +46,8 @@ TOKEN = ""
 HOSTNAME = ""
 IMAGE = ""
 ARCH = ""
+PROMPT = ""
+PASSWORD = ""  # leave empty if no root password
 
 
 def job(image):
@@ -62,7 +64,7 @@ def job(image):
         }, {
             'boot': {
                 'media': 'tmpfs',
-                'prompts': ["root@debian:"],
+                'prompts': [PROMPT],
                 'auto_login': {
                     "login_prompt": "login:",
                     "username": "root"
@@ -75,6 +77,12 @@ def job(image):
         "context": { "arch": ARCH },
         'timeouts': {'action': {'minutes': 1}, 'job': {'minutes': 5}},
         'visibility': 'public'}
+    if PASSWORD:
+        boot = [action['boot'] for action in job_def['actions'] if 'boot' in action][0]
+        boot['auto_login'].update({
+            "password_prompt": "Password:",
+            "password": PASSWORD
+        })
     return job_def
 
 
