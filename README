@@ -155,6 +155,7 @@ You can skip the slow tests that actually build images, by setting the
     sudo yarns/run-tests --env TESTS=fast
 
 To format the test suite document:
+(needs pandoc installed)
 
     make -C yarns
 
