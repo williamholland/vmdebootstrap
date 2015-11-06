@@ -34,7 +34,7 @@ Synopsis
  $ sudo vmdebootstrap --image=FILE --size=SIZE [--mirror=URL] [--distribution=NAME]
 
 Options
-*******
+=======
 
  --output=FILE         write output to FILE, instead of standard output
  --verbose             report what is going on
@@ -165,16 +165,6 @@ Logging
  --log-keep=N          keep last N logs (10)
  --log-mode=MODE       set permissions of new log files to MODE (octal;  default 0600)
 
-Developing
-**********
-
-Testing vmdebootstrap from git
-------------------------------
-
-::
-
- ln -s ../../pre-commit.sh .git/hooks/pre-commit
-
 Peformance
 **********
 
@@ -183,6 +173,20 @@ Peformance
                        of: none, simple, meliae, or heapy (default: simple)
  --memory-dump-interval=SECONDS
                        make memory profiling dumps at least SECONDS apart
+
+Developing
+**********
+
+.. index:: pre-commit
+
+.. _pre_commit_hook:
+
+Testing vmdebootstrap from git
+==============================
+
+::
+
+ ln -s ../../pre-commit.sh .git/hooks/pre-commit
 
 .. index:: networking
 

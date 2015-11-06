@@ -69,7 +69,7 @@ to vmdebootstrap to ensure that the user is added to the sudo group. The
 root user password should also be locked (--lock-root-password).
 
 * Consider using a blank password and enforcing a password to be set
- upon login for those images which can support this.
+  upon login for those images which can support this.
 
 ``mksquashfs`` can fail without indication of why and when it does, the image
 file can be 4Kb or so of junk. ``vmdebootstrap`` will fail if the
