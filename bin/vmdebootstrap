@@ -216,10 +216,11 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         oldstable = distro.was_oldstable(datetime.date(2015, 4, 26))
         uefi.check_settings(oldstable=oldstable)
 
+        if self.settings['dry-run']:
+            sys.exit(0)
+        self.start_ops()
         if os.geteuid() != 0:
             sys.exit("You need to have root privileges to run this script.")
-        if not self.settings['dry-run']:
-            self.start_ops()
 
     def _image_preparations(self):
         uefi = self.handlers[Uefi.name]
