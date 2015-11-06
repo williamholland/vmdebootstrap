@@ -186,6 +186,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.settings.boolean(
             ['no-acpid'], 'do not install the acpid package',
             default=False)
+        self.settings.boolean(
+            ['dry-run'], 'do not build, just test the options',
+            default=False)
 
     def process_args(self, args):  # pylint: disable=too-many-branches,too-many-statements
 
@@ -215,7 +218,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
         if os.geteuid() != 0:
             sys.exit("You need to have root privileges to run this script.")
-        self.start_ops()
+        if not self.settings['dry-run']:
+            self.start_ops()
 
     def _image_preparations(self):
         uefi = self.handlers[Uefi.name]
