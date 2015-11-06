@@ -18,5 +18,12 @@
 
 set -eu
 
-cd "$(dirname "$0")"
-yarn -s shell.lib *.yarn "$@"
+die()
+{
+    echo "$@" 1>&2
+    exit 1
+}
+
+[ -e bin/vmdebootstrap ] ||
+    die "You need to run this at root of source tree"
+yarn -s yarns/shell.lib yarns/*.yarn "$@"
