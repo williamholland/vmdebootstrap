@@ -50,7 +50,7 @@ class Uefi(Base):
                 'You must specify use-uefi for esp-size to have effect')
         if self.settings['arch'] in arch_table and\
                 arch_table[self.settings['arch']]['exclusive'] and\
-                not self.settings['use-uefi']:
+                (not self.settings['use-uefi'] and not self.settings['squash']):
             raise cliapp.AppException(
                 'Only UEFI is supported on %s' % self.settings['arch'])
         elif self.settings['use-uefi'] and self.settings['arch'] not in arch_table:

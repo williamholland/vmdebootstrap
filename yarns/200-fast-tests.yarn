@@ -11,3 +11,31 @@ verify that vmdebootstrap parses the command line correctly.
     THEN vmdebootstrap exited with a non-zero exit code
     AND vmdebootstrap wrote an error message matching --squash
     AND vmdebootstrap wrote an error message matching --image
+
+    SCENARIO --squash and --arch arm64 used together
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --squash=FOO --arch=arm64 --dry-run
+    THEN vmdebootstrap exited with a zero exit code
+
+    SCENARIO --use-uefi and --arch arm64 used together
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --grub --use-uefi --arch=arm64 --dry-run
+    THEN vmdebootstrap exited with a zero exit code
+
+    SCENARIO --use-uefi and --arch arm64 used without grub
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --use-uefi --arch=arm64 --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching UEFI
+    AND vmdebootstrap wrote an error message matching Grub
+
+    SCENARIO --use-uefi and --arch arm64 used without image
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --grub --use-uefi --arch=arm64 --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching disk image filename
+    AND vmdebootstrap wrote an error message matching squash

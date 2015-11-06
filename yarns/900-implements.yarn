@@ -58,6 +58,9 @@ code.
     IMPLEMENTS THEN vmdebootstrap exited with a non-zero exit code
     grep -vFx 0 vmdebootstrap.exit
 
+    IMPLEMENTS THEN vmdebootstrap exited with a zero exit code
+    grep -Fx 0 vmdebootstrap.exit
+
 Check the stderr of the attempted vmdebootstrap run.
 
     IMPLEMENTS THEN vmdebootstrap wrote an error message matching (.+)
