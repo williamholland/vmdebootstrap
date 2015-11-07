@@ -70,14 +70,13 @@ class Filesystem(Base):
         runcmd(["chown", "-R", self.settings["owner"], filename])
 
     def update_initramfs(self):
-        if not self.devices['rootdir']:
+        rootdir = self.devices['rootdir']
+        if not rootdir:
             raise cliapp.AppException("rootdir not set")
-        runcmd([
-            'chroot', self.devices['rootdir'], 'dpkg-trigger',
-            '--by-package', 'vmdebootstrap', 'update-initramfs'])
-        runcmd([
-            'chroot', self.devices['rootdir'],
-            'dpkg', '--triggers-only', '-a'])
+        cmd = os.path.join('usr', 'sbin', 'update-initramfs')
+        if os.path.exists(os.path.join(str(rootdir), cmd)):
+            self.message("Updating the initramfs")
+            runcmd(['chroot', rootdir, cmd, '-u'])
 
     def setup_kpartx(self):
         bootindex = None
