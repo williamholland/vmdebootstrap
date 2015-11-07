@@ -272,7 +272,7 @@ secondary change is also needed to symlink the provided ``OVMF.fd`` to
 the file required by QEMU: ``bios-256k.bin`` and then tell QEMU about
 the location of this file with the -L option::
 
- $ qemu-system-x86_64 -L /usr/share/ovmf/ -machine accel=kvm \\
+ $ qemu-system-x86_64 -L /usr/share/ovmf/ -machine accel=kvm \
   -m 4096 -smp 2 -drive format=raw,file=test.img
 
 To test the image, also consider using the ``qemu-wrapper.sh``::
@@ -296,7 +296,7 @@ script. Examples are included for beaglebone-black.
 Installation images and virtual machines
 ****************************************
 
-:file:`vmdebootstrap`` is aimed principally at creating virtual machines,
+:file:``vmdebootstrap`` is aimed principally at creating virtual machines,
 not installers or prebuilt installation images. It is possible to create
 prebuilt installation images for some devices but this depends on the
 specific device. (A 'prebuilt installation image' is a single image file
@@ -347,8 +347,8 @@ Example
 
 To create an image for the stable release of Debian::
 
- sudo vmdebootstrap --image test.img --size 1g \\
-    --log test.log --log-level debug --verbose \\
+ sudo vmdebootstrap --image test.img --size 1g \
+    --log test.log --log-level debug --verbose \
     --mirror http://mirror.lan/debian/
 
 To run the test image, make sure it is writeable. Use the ``--owner``
@@ -375,7 +375,7 @@ secondary change is also needed to symlink the provided ``OVMF.fd`` to
 the file required by QEMU: ``bios-256k.bin`` and then tell QEMU about
 the location of this file with the -L option::
 
- $ qemu-system-x86_64 -L /usr/share/ovmf/ -machine accel=kvm \\
+ $ qemu-system-x86_64 -L /usr/share/ovmf/ -machine accel=kvm \
   -m 4096 -smp 2 -drive format=raw,file=test.img
 
 For further examples, including u-boot support for beaglebone-black,
