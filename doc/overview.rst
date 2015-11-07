@@ -173,21 +173,6 @@ Peformance
                        of: none, simple, meliae, or heapy (default: simple)
  --memory-dump-interval=SECONDS
                        make memory profiling dumps at least SECONDS apart
-
-Developing
-**********
-
-.. index:: pre-commit
-
-.. _pre_commit_hook:
-
-Testing vmdebootstrap from git
-==============================
-
-::
-
- ln -s ../../pre-commit.sh .git/hooks/pre-commit
-
 .. index:: networking
 
 .. _networking:
@@ -415,3 +400,89 @@ a specific offset instead of using a normal partition will
 **not** be supportable by vmdebootstrap. Similarly, devices which support
 hypervisor will only be supported using virtual machine images, unless
 the bootloader can be executed from a normal partition.
+
+.. index:: developing
+
+.. _developing:
+
+Developing
+**********
+
+.. index:: pre-commit
+
+.. _pre_commit_hook:
+
+Testing vmdebootstrap from git
+==============================
+
+``vmdebootstrap`` uses ``yarn`` for the test suite, available in the
+`cmdtest <https://tracker.debian.org/pkg/cmdtest>`_ package. YARN
+is a scenario testing tool. Scenarios are written in mostly human
+readable language, however, they are not free form text. For more
+information on YARN see `the homepage <http://liw.fi/cmdtest/README.yarn/>`_::
+
+ $ sudo apt -y install cmdtest
+
+All commits must pass at least the fast tests. All merges into master
+need to pass a full test. All additions of new functionality must add
+fast and build tests - fast tests for any new options and build tests
+which exercise the new functionality. Build tests can add checks for
+particular support on the machine running the test and skip if not
+found or add new environment settings to selectively run some build
+tests instead of all.
+
+If no arguments are given, the full test suite will be executed::
+
+ $ yarns/run-tests
+
+.. warning:: Do not run the full test suite if your connection to a
+   Debian mirror is limited or metered. Each build requires a minimum
+   of 2Gb free space in tmpfs. A full test takes at least 10 minutes.
+
+When limiting the run to specific tests, each ``--env`` option needs
+to be specified separately::
+
+ $ sudo yarns/run-tests --env TESTS=build --env MIRROR=http://mirror/debian
+
+pre-commit
+----------
+
+All vmdebootstrap developers need to run the fast tests as a pre-commit
+hook - any patches which fail this test will be rejected::
+
+ $ ln -s ../../pre-commit.sh .git/hooks/pre-commit
+
+The pre-commit hook just runs the fast tests which do not require
+``sudo``.
+
+Fast tests
+-----------
+
+The fast checks validate the handling of incompatible option arguments::
+
+ $ yarns/run-tests --env TESTS=fast
+
+Fast tests typically take a few seconds to run.
+
+Build tests
+-----------
+
+The slow / build tests build multiple images and use ``sudo`` - a local
+mirror is strongly recommended.
+
+::
+
+ $ sudo yarns/run-tests --env TESTS=build --env MIRROR=http://mirror/debian
+
+If ``MIRROR`` is not specified, a default mirror of ``http://http.debian.net/debian/``
+will be used.
+
+LAVA tests
+----------
+
+There is an example file:`lava-submit.py` script which can be edited
+to automatically submit QEMU tests to a specified LAVA instance. The
+images themselves will use local ``file://`` URLs and therefore the
+``lava-dispatcher`` needs to be installed locally. Configuring LAVA
+for these tests is a separate topic - please ask on the `vmdebootstrap
+mailing list <https://lists.alioth.debian.org/mailman/listinfo/vmdebootstrap-devel>`_.

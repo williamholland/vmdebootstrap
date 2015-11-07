@@ -7,3 +7,5 @@
   More detailed testing of built systems may or may not be
   appropriate: a lot of more intricate testing may be beyond the scope
   of testing of vmdebootstrap.
+* Use the lava-submit.py script to submit a local file to LAVA using
+  the locally installed lava-dispatcher.

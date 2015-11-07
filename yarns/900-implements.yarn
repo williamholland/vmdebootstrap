@@ -21,6 +21,10 @@ to allow them to run or not to run.
     IMPLEMENTS ASSUMING (fast|build) tests are requested
     test_requested "$MATCH_1"
 
+if `MIRROR` is set, use the default http mirror
+
+    IMPLEMENTS ASSUMING (local|http) tests are requested
+    mirror_requested "$MATCH_1"
 
 ## Building an image, or attempting to
 
@@ -37,6 +41,7 @@ but it's actually restricted to vmdebootstrap in the source tree.
     IMPLEMENTS WHEN the user runs vmdebootstrap (.*)
     PYTHONPATH="$SRCDIR" "$SRCDIR/bin/vmdebootstrap" \
         --image "$IMAGE" \
+        --mirror ${MIRROR:=http://http.debian.net/debian/} \
         --size "$IMAGE_SIZE" \
         $MATCH_1
 
@@ -82,11 +87,11 @@ the image.
 
 Check the partition table on the image.
 
-    IMPLEMENTS THEN the image has one partition
+    IMPLEMENTS THEN the partition count of the image is (\d+)
     parted --script "$IMAGE" print |
         sed '1,/^Number/d' |
         grep -c . |
-        grep -Fx 1
+        grep -Fx $MATCH_1
 
 Check partition boot flag.
 
