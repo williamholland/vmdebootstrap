@@ -283,7 +283,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         # only append for wheezy (which became oldstable on 2015.04.25)
         if distro.was_oldstable(datetime.date(2015, 4, 26)):
             base.append_serial_console(rootdir)
-        else:
+        elif self.settings['serial-console']:
             base.message("Skipping setting serial console- wheezy only.")
         self.optimize_image(rootdir)
 
