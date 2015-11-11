@@ -178,7 +178,7 @@ class Filesystem(Base):
             logging.warning("Squash selected but mksquashfs not found!")
             return
         if not os.path.exists(self.settings['squash']):
-            os.mkdir(self.settings['squash'])
+            os.makedirs(self.settings['squash'])
         suffixed = os.path.join(self.settings['squash'], "filesystem.squashfs")
         if os.path.exists(suffixed):
             os.unlink(suffixed)
