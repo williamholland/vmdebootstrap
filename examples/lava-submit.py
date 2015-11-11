@@ -58,9 +58,9 @@ def job(image):
                 'image_arg': "-drive format=raw,file={rootfs}",
                 "url": "file://%s" % image
             }},
-                       'os': 'debian',
-                       'timeout': {'minutes': 5},
-                       'to': 'tmpfs'}
+                'os': 'debian',
+                'timeout': {'minutes': 5},
+                'to': 'tmpfs'}
         }, {
             'boot': {
                 'media': 'tmpfs',
@@ -74,7 +74,7 @@ def job(image):
         'device_type': 'qemu',
         'job_name': 'vmdebootstrap-test',
         'priority': 'medium',
-        "context": { "arch": ARCH },
+        "context": {"arch": ARCH},
         'timeouts': {'action': {'minutes': 1}, 'job': {'minutes': 5}},
         'visibility': 'public'}
     if PASSWORD:

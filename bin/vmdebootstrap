@@ -36,7 +36,7 @@ from vmdebootstrap.codenames import Codenames
 from vmdebootstrap.filesystem import Filesystem
 from vmdebootstrap.uefi import Uefi
 
-__version__ = '1.1'
+__version__ = '1.2'
 
 # pylint: disable=invalid-name,line-too-long,missing-docstring
 
