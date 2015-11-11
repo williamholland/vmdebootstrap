@@ -59,10 +59,11 @@ Options
  --custom-package=DEB  install package in DEB file onto system (not
                        from mirror)
  --no-kernel           do not install a linux package
- --kernel-package      If --no-kernel is not used and the auto-selection
+ --kernel-package=PACKAGE
+                       If --no-kernel is not used and the auto-selection
                        of the **linux-image-586** or **linux-image-armmp**
                        or **linux-image-$ARCH** package is not suitable,
-                       the kernel package can be specified explicitly.
+                       the kernel PACKAGE name can be specified explicitly.
  --enable-dhcp         enable DHCP on eth0
  --root-password=PASSWORD
                        set root password
@@ -173,6 +174,7 @@ Peformance
                        of: none, simple, meliae, or heapy (default: simple)
  --memory-dump-interval=SECONDS
                        make memory profiling dumps at least SECONDS apart
+
 .. index:: networking
 
 .. _networking:
