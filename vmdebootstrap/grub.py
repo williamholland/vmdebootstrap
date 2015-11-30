@@ -48,8 +48,34 @@ def grub_serial_console(rootdir):
         cfg.write("%s\n" % command)
 
 
-class GrubHandler(Base):
+def link_uuid(rootdev):
+    """
+    This is mainly to fix a problem in update-grub where /etc/grub.d/10_linux
+    Checks if the $GRUB_DEVICE_UUID exists in /dev/disk/by-uuid and falls
+    back to $GRUB_DEVICE if it doesn't.
+    $GRUB_DEVICE is /dev/mapper/loopXpY (on docker)
+    Creating the symlink ensures that grub consistently uses
+    $GRUB_DEVICE_UUID when creating /boot/grub/grub.cfg
+    """
+    if os.path.exists('/.dockerenv'):
+        logging.info("Running in docker container")
+        runcmd(['mkdir', '-p', '/dev/disk/by-uuid'])
+        uuid = runcmd(['blkid', '-c', '/dev/null', '-o', 'value', '-s', 'UUID', rootdev])
+        uuid = uuid.splitlines()[0].strip()
+        os.symlink(rootdev, os.path.join('/dev/disk/by-uuid', uuid))
 
+
+def unlink_uuid(rootdev):
+    """
+    Reset the link created with link_uuid.
+    """
+    if os.path.exists('/.dockerenv'):
+        uuid = runcmd(['blkid', '-c', '/dev/null', '-o', 'value', '-s', 'UUID', rootdev])
+        uuid = uuid.splitlines()[0].strip()
+        os.remove(os.path.join('/dev/disk/by-uuid', uuid))
+
+
+class GrubHandler(Base):
     name = 'grub'
 
     def __init__(self):
@@ -63,6 +89,7 @@ class GrubHandler(Base):
             grub_serial_console(rootdir)
         logging.debug("Running grub-install with options: %s", grub_opts)
         mount_wrapper(rootdir)
+        link_uuid(rootdev)
         try:
             runcmd(['chroot', rootdir, 'update-grub'])
             runcmd(['chroot', rootdir, 'grub-install', grub_opts])
@@ -71,6 +98,7 @@ class GrubHandler(Base):
             self.message("Failed. Is grub2-common installed? Using extlinux.")
             umount_wrapper(rootdir)
             return False
+        unlink_uuid(rootdev)
         umount_wrapper(rootdir)
         return True
 
