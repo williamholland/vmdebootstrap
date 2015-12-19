@@ -100,3 +100,41 @@ verify that vmdebootstrap parses the command line correctly.
     AND vmdebootstrap wrote an error message matching Only amd64
     AND vmdebootstrap wrote an error message matching supports UEFI
     AND vmdebootstrap wrote an error message matching Wheezy
+
+    SCENARIO default includes the kernel package
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --arch=amd64  --dry-run
+    THEN vmdebootstrap exited with a zero exit code
+    AND vmdebootstrap wrote a message matching linux-image-amd64
+
+    SCENARIO no-linux omits the kernel package
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --no-kernel --image=FOO --arch=amd64  --dry-run
+    THEN vmdebootstrap exited with a zero exit code
+    AND vmdebootstrap wrote a message not matching linux-image-amd64
+
+    SCENARIO kernel-package includes the kernel package
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --kernel-package unlikely --image=FOO --arch=amd64  --dry-run
+    THEN vmdebootstrap exited with a zero exit code
+    AND vmdebootstrap wrote a message not matching linux-image-amd64
+    AND vmdebootstrap wrote a message matching unlikely
+
+    SCENARIO no-kernel overrides kernel-package
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --no-kernel --kernel-package unlikely --image=FOO --arch=amd64  --dry-run
+    THEN vmdebootstrap exited with a zero exit code
+    AND vmdebootstrap wrote a message not matching linux-image-amd64
+    AND vmdebootstrap wrote a message not matching unlikely
+
+    SCENARIO package includes the specified package
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --package unlikely --image=FOO --arch=amd64  --dry-run
+    THEN vmdebootstrap exited with a zero exit code
+    AND vmdebootstrap wrote a message matching linux-image-amd64
+    AND vmdebootstrap wrote a message matching unlikely

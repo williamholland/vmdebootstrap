@@ -50,7 +50,7 @@ code and stderr.
 
     IMPLEMENTS WHEN user attempts to run vmdebootstrap (.*)
     if PYTHONPATH="$SRCDIR" "$SRCDIR/bin/vmdebootstrap" \
-        $MATCH_1 2> vmdebootstrap.stderr
+        $MATCH_1 2> vmdebootstrap.stderr 1>vmdebootstrap.stdout
     then
         echo 0 > vmdebootstrap.exit
     else
@@ -71,6 +71,15 @@ Check the stderr of the attempted vmdebootstrap run.
     IMPLEMENTS THEN vmdebootstrap wrote an error message matching (.+)
     grep -P -e "$MATCH_1" vmdebootstrap.stderr
 
+Check the stdout of the dry-run vmdebootstrap run.
+
+    IMPLEMENTS THEN vmdebootstrap wrote a message matching (.+)
+    grep -P -e "$MATCH_1" vmdebootstrap.stdout
+
+Exclude a pattern from the stdout of the dry-run vmdebootstrap run.
+
+    IMPLEMENTS THEN vmdebootstrap wrote a message not matching (.+)
+    grep -P -v -e "$MATCH_1" vmdebootstrap.stdout
 
 ## Static tests on disk images
 

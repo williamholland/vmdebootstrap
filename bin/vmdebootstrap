@@ -48,6 +48,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.remove_dirs = []
         self.mount_points = []
         self.bootdir = None
+        self.include = []
         self.handlers = {
             Base.name: Base(),
             Uefi.name: Uefi(),
@@ -215,8 +216,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         uefi = self.handlers[Uefi.name]
         oldstable = distro.was_oldstable(datetime.date(2015, 4, 26))
         uefi.check_settings(oldstable=oldstable)
+        self.include = self._bootstrap_packages()
 
         if self.settings['dry-run']:
+            print "Selected packages: ", ', '.join(self.include)
             sys.exit(0)
         self.start_ops()
         if os.geteuid() != 0:
