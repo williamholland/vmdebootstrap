@@ -35,3 +35,6 @@ TODO
     likely to be a lack of time to implement multi-hook support.
 
 * support method to share shell customisation scripts
+
+* support converting raw images to qcow. See
+  http://manpages.ubuntu.com/manpages/trusty/man1/adt-virt-qemu.1.html
