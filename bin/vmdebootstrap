@@ -152,6 +152,15 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         if self.settings['apt-mirror'] and not self.settings['configure-apt']:
             raise cliapp.AppException(
                 '--apt-mirror requires --configure-apt as well.')
+        if self.settings['convert-qcow2'] and not self.settings['image']:
+            raise cliapp.AppException(
+                '--convert-qcow2 can only be used with --image.')
+        if self.settings['image'] and self.settings['tarball']:
+            raise cliapp.AppException(
+                'Use --image or --tarball, not both.')
+        if self.settings['squash'] and self.settings['tarball']:
+            raise cliapp.AppException(
+                'Use --squash or --tarball, not both.')
         uefi = self.handlers[Uefi.name]
         oldstable = distro.was_oldstable(datetime.date(2015, 4, 26))
         uefi.check_settings(oldstable=oldstable)

@@ -289,7 +289,7 @@ class Filesystem(Base):
         rename to .raw and let the conversion put the
         original name back
         """
-        if not self.settings['convert-qcow2']:
+        if not self.settings['convert-qcow2'] or not self.settings['image']:
             return
         self.message('Converting raw image to qcow2')
         tmpname = self.settings['image'] + '.raw'

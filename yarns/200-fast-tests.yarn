@@ -145,3 +145,25 @@ verify that vmdebootstrap parses the command line correctly.
     THEN vmdebootstrap exited with a zero exit code
     AND vmdebootstrap wrote a message matching linux-image-amd64
     AND vmdebootstrap wrote a message matching unlikely
+
+    SCENARIO only images can be converted to qcow2
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --convert-qcow2 --tarball --arch=amd64 --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching qcow2 can only
+    AND vmdebootstrap wrote an error message matching with --image
+
+    SCENARIO tarball is not usable with image
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --tarball=FOO --arch=amd64 --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching not both
+
+    SCENARIO tarball is not usable with squash
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --squash=FOO --tarball=FOO --arch=amd64 --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching not both
