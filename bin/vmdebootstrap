@@ -213,6 +213,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 raise cliapp.AppException(
                     '%s is not a valid Debian or Ubuntu suite or codename.'
                     % self.settings['distribution'])
+        if self.settings['apt-mirror'] and not self.settings['configure-apt']:
+            raise cliapp.AppException(
+                '--apt-mirror requires --configure-apt as well.')
         uefi = self.handlers[Uefi.name]
         oldstable = distro.was_oldstable(datetime.date(2015, 4, 26))
         uefi.check_settings(oldstable=oldstable)

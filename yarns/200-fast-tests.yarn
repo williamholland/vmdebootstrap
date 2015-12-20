@@ -101,6 +101,13 @@ verify that vmdebootstrap parses the command line correctly.
     AND vmdebootstrap wrote an error message matching supports UEFI
     AND vmdebootstrap wrote an error message matching Wheezy
 
+    SCENARIO disallow apt-mirror without configure-apt
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --apt-mirror=mirror
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching requires --configure-apt as well
+
     SCENARIO default includes the kernel package
     ASSUMING fast tests are requested
     WHEN user attempts to run vmdebootstrap
