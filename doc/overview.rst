@@ -136,6 +136,7 @@ Options
                        mirror used to build the image. This is useful if you have
                        a local mirror to make building the image quicker but
                        the image needs to run even if that mirror is not available.
+                       Requires --configure-apt.
  --grub                Disable extlinux installation and configure grub2 instead.
                        grub2 will be added to the list of packages to install.
                        update-grub will be called once the debootstrap is
@@ -146,6 +147,8 @@ Options
                        Useful if you need to track the relevant source packages
                        used inside the image for licence compliance.
  --dry-run             Do not build, just test that the options are valid.
+ --no-update-initramfs Skip the call to ``update-initramfs`` for reasons of
+                       speed or practicality.
 
 Configuration files and settings
 ********************************
