@@ -70,6 +70,8 @@ class Filesystem(Base):
         runcmd(["chown", "-R", self.settings["owner"], filename])
 
     def update_initramfs(self):
+        if not self.settings['no-update-initramfs']:
+            return
         rootdir = self.devices['rootdir']
         if not rootdir:
             raise cliapp.AppException("rootdir not set")

@@ -36,7 +36,7 @@ from vmdebootstrap.codenames import Codenames
 from vmdebootstrap.filesystem import Filesystem
 from vmdebootstrap.uefi import Uefi
 
-__version__ = '1.2'
+__version__ = '1.3'
 
 # pylint: disable=invalid-name,line-too-long,missing-docstring
 
@@ -59,137 +59,72 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         }
 
     def add_settings(self):
-        default_arch = subprocess.check_output(
-            ["dpkg", "--print-architecture"]).strip()
+        # deliberately long lines for clarity.
+        default_arch = subprocess.check_output(["dpkg", "--print-architecture"]).strip()
 
-        self.settings.boolean(
-            ['verbose'], 'report what is going on')
-        self.settings.string(
-            ['image'], 'put created disk image in FILE',
-            metavar='FILE')
-        self.settings.bytesize(
-            ['size'], 'create a disk image of size SIZE (%default)',
-            metavar='SIZE', default='1G')
-        self.settings.bytesize(
-            ['bootsize'], 'create boot partition of size '
-            'SIZE (%default)',
-            metavar='BOOTSIZE', default='0%')
-        self.settings.string(
-            ['boottype'], 'specify file system type for /boot/',
-            default='ext2')
-        self.settings.bytesize(
-            ['bootoffset'], 'Space to leave at start of the '
-            'image for bootloader',
-            default='0')
-        self.settings.boolean(
-            ['use-uefi'], 'Setup image for UEFI boot',
-            default=False)
-        self.settings.bytesize(
-            ['esp-size'], 'Size of EFI System Partition - '
-            'requires use-uefi',
-            default='5mib')
-        self.settings.string(
-            ['part-type'], 'Partition type to use for this image',
-            default='msdos')
-        self.settings.string(
-            ['roottype'], 'specify file system type for /',
-            default='ext4')
-        self.settings.bytesize(
-            ['swap'], 'create swap space of size SIZE (min 256Mb)')
-        self.settings.string(
-            ['foreign'], 'set up foreign debootstrap environment '
-            'using provided program (ie binfmt handler)')
-        self.settings.string_list(
-            ['debootstrapopts'],
-            'pass additional options to debootstrap')
-        self.settings.boolean(
-            ['extlinux'], 'install extlinux?',
-            default=True)
-        self.settings.string(
-            ['tarball'], "tar up the disk's contents in FILE",
-            metavar='FILE')
-        self.settings.string(
-            ['apt-mirror'], 'configure apt to use MIRROR',
-            metavar='URL')
-        self.settings.string(
-            ['mirror'], 'use MIRROR as package source (%default)',
-            metavar='URL',
-            default='http://http.debian.net/debian/')
-        self.settings.string(
-            ['arch'], 'architecture to use (%default)',
-            metavar='ARCH',
-            default=default_arch)
-        self.settings.string(
-            ['distribution'], 'release to use (%default)',
-            metavar='NAME',
-            default='stable')
-        self.settings.string_list(
-            ['package'], 'install PACKAGE onto system')
-        self.settings.string_list(
-            ['custom-package'], 'install package in DEB file '
-            'onto system (not from mirror)',
-            metavar='DEB')
-        self.settings.boolean(
-            ['no-kernel'], 'do not install a linux package')
-        self.settings.string(
-            ['kernel-package'], 'install PACKAGE instead of '
-            'the default kernel package',
-            metavar='PACKAGE')
-        self.settings.boolean(
-            ['enable-dhcp'], 'enable DHCP on eth0')
-        self.settings.string(
-            ['root-password'], 'set root password',
-            metavar='PASSWORD')
-        self.settings.boolean(
-            ['lock-root-password'], 'lock root account so they '
-            'cannot login?')
-        self.settings.string(
-            ['customize'], 'run SCRIPT after setting up system',
-            metavar='SCRIPT')
-        self.settings.string(
-            ['hostname'], 'set name to HOSTNAME (%default)',
-            metavar='HOSTNAME',
-            default='debian')
-        self.settings.string_list(
-            ['user'], 'create USER with PASSWORD',
-            metavar='USER/PASSWORD')
-        self.settings.boolean(
-            ['serial-console'], 'configure image to use a serial console')
-        self.settings.string(
-            ['serial-console-command'], 'command to manage the '
-            'serial console, appended to /etc/inittab (%default)',
-            metavar='COMMAND',
-            default='/sbin/getty -L ttyS0 115200 vt100')
-        self.settings.boolean(
-            ['sudo'], 'install sudo, and if user is created, '
-            'add them to sudo group')
-        self.settings.string(
-            ['owner'], 'the user who will own the image when '
-            'the build is complete.')
-        self.settings.string(
-            ['squash'], 'use squashfs on the rootfs - '
-            'cannot be used with --image', metavar='DIRECTORY')
-        self.settings.boolean(
-            ['configure-apt'], 'Create an apt source based on '
-            'the distribution and mirror selected.')
-        self.settings.boolean(
-            ['mbr'], 'Run install-mbr (default if extlinux used)')
-        self.settings.boolean(
-            ['grub'], 'Install and configure grub2 - '
-            'disables extlinux.')
-        self.settings.boolean(
-            ['sparse'], 'Do not fill the image with zeros to '
-            'keep a sparse disk image',
-            default=False)
-        self.settings.boolean(
-            ['pkglist'], 'Create a list of package names '
-            'included in the image.')
-        self.settings.boolean(
-            ['no-acpid'], 'do not install the acpid package',
-            default=False)
-        self.settings.boolean(
-            ['dry-run'], 'do not build, just test the options',
-            default=False)
+        self.settings.boolean(['verbose'], 'report what is going on')
+        self.settings.string(['image'], 'put created disk image in FILE', metavar='FILE')
+        self.settings.bytesize(['size'], 'create a disk image of size SIZE (%default)',
+                               metavar='SIZE', default='1G')
+        self.settings.bytesize(['bootsize'], 'create boot partition of size '
+                               'SIZE (%default)', metavar='BOOTSIZE', default='0%')
+        self.settings.string(['boottype'], 'specify file system type for /boot/', default='ext2')
+        self.settings.bytesize(['bootoffset'], 'Space to leave at start of the '
+                               'image for bootloader', default='0')
+        self.settings.boolean(['use-uefi'], 'Setup image for UEFI boot', default=False)
+        self.settings.bytesize(['esp-size'], 'Size of EFI System Partition - '
+                               'requires use-uefi', default='5mib')
+        self.settings.string(['part-type'], 'Partition type to use for this image', default='msdos')
+        self.settings.string(['roottype'], 'specify file system type for /', default='ext4')
+        self.settings.bytesize(['swap'], 'create swap space of size SIZE (min 256Mb)')
+        self.settings.string(['foreign'], 'set up foreign debootstrap environment '
+                             'using provided program (ie binfmt handler)')
+        self.settings.string_list(['debootstrapopts'], 'pass additional options to debootstrap')
+        self.settings.boolean(['extlinux'], 'install extlinux?', default=True)
+        self.settings.string(['tarball'], "tar up the disk's contents in FILE", metavar='FILE')
+        self.settings.string(['apt-mirror'], 'configure apt to use MIRROR', metavar='URL')
+        self.settings.string(['mirror'], 'use MIRROR as package source (%default)', metavar='URL',
+                             default='http://http.debian.net/debian/')
+        self.settings.string(['arch'], 'architecture to use (%default)', metavar='ARCH',
+                             default=default_arch)
+        self.settings.string(['distribution'], 'release to use (%default)', metavar='NAME',
+                             default='stable')
+        self.settings.string_list(['package'], 'install PACKAGE onto system')
+        self.settings.string_list(['custom-package'], 'install package in DEB file '
+                                  'onto system (not from mirror)', metavar='DEB')
+        self.settings.boolean(['no-kernel'], 'do not install a linux package')
+        self.settings.string(['kernel-package'], 'install PACKAGE instead of '
+                             'the default kernel package', metavar='PACKAGE')
+        self.settings.boolean(['enable-dhcp'], 'enable DHCP on eth0')
+        self.settings.string(['root-password'], 'set root password', metavar='PASSWORD')
+        self.settings.boolean(['lock-root-password'], 'lock root account so they '
+                              'cannot login?')
+        self.settings.string(['customize'], 'run SCRIPT after setting up system', metavar='SCRIPT')
+        self.settings.string(['hostname'], 'set name to HOSTNAME (%default)',
+                             metavar='HOSTNAME', default='debian')
+        self.settings.string_list(['user'], 'create USER with PASSWORD', metavar='USER/PASSWORD')
+        self.settings.boolean(['serial-console'], 'configure image to use a serial console')
+        self.settings.string(['serial-console-command'], 'command to manage the '
+                             'serial console, appended to /etc/inittab (%default)',
+                             metavar='COMMAND', default='/sbin/getty -L ttyS0 115200 vt100')
+        self.settings.boolean(['sudo'], 'install sudo, and if user is created, '
+                              'add them to sudo group')
+        self.settings.string(['owner'], 'the user who will own the image when '
+                             'the build is complete.')
+        self.settings.string(['squash'], 'use squashfs on the rootfs - '
+                             'cannot be used with --image', metavar='DIRECTORY')
+        self.settings.boolean(['configure-apt'], 'Create an apt source based on '
+                              'the distribution and mirror selected.')
+        self.settings.boolean(['mbr'], 'Run install-mbr (default if extlinux used)')
+        self.settings.boolean(['grub'], 'Install and configure grub2 - '
+                              'disables extlinux.')
+        self.settings.boolean(['sparse'], 'Do not fill the image with zeros to '
+                              'keep a sparse disk image', default=False)
+        self.settings.boolean(['pkglist'], 'Create a list of package names '
+                              'included in the image.')
+        self.settings.boolean(['no-acpid'], 'do not install the acpid package', default=False)
+        self.settings.boolean(['no-update-initramfs'], 'Skip running update-initramfs', default=False)
+        self.settings.boolean(['dry-run'], 'do not build, just test the options', default=False)
 
     def process_args(self, args):  # pylint: disable=too-many-branches,too-many-statements
 
