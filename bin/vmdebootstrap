@@ -159,9 +159,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         if self.settings['dry-run']:
             print "Selected packages: ", ', '.join(self.include)
             sys.exit(0)
-        self.start_ops()
         if os.geteuid() != 0:
             sys.exit("You need to have root privileges to run this script.")
+        self.start_ops()
 
     def _image_preparations(self):
         uefi = self.handlers[Uefi.name]
