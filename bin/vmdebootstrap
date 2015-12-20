@@ -410,7 +410,6 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
     def debootstrap(self, rootdir):
         base = self.handlers[Base.name]
-        include = self._bootstrap_packages()
         base.message(
             'Debootstrapping %s [%s]' % (
                 self.settings['distribution'], self.settings['arch']))
@@ -419,7 +418,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
         if self.settings['package']:
             args.append(
-                '--include=%s' % ','.join(include))
+                '--include=%s' % ','.join(self.include))
         if self.settings['foreign']:
             args.append('--foreign')
         if self.settings['debootstrapopts']:
