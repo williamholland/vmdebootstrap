@@ -149,6 +149,7 @@ Options
  --dry-run             Do not build, just test that the options are valid.
  --no-update-initramfs Skip the call to ``update-initramfs`` for reasons of
                        speed or practicality.
+ --convert-qcow2       Convert the final raw image to qcow2 format.
 
 Configuration files and settings
 ********************************

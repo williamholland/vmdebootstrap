@@ -282,3 +282,17 @@ class Filesystem(Base):
         bootsize = self.settings['esp-size'] / (1024 * 1024) + 1
         runcmd(['parted', '-s', self.settings['image'],
                 'mkpart', 'primary', str(bootsize), extent])
+
+    def convert_image_to_qcow2(self):
+        """
+        Current images are all prepared as raw
+        rename to .raw and let the conversion put the
+        original name back
+        """
+        if not self.settings['convert-qcow2']:
+            return
+        self.message('Converting raw image to qcow2')
+        tmpname = self.settings['image'] + '.raw'
+        os.rename(self.settings['image'], tmpname)
+        runcmd(['qemu-img', 'convert', '-O', 'qcow2',
+               tmpname, self.settings['image']])

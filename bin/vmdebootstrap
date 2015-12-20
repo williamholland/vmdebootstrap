@@ -124,6 +124,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                               'included in the image.')
         self.settings.boolean(['no-acpid'], 'do not install the acpid package', default=False)
         self.settings.boolean(['no-update-initramfs'], 'Skip running update-initramfs', default=False)
+        self.settings.boolean(['convert-qcow2'], 'Convert final image to qcow2', default=False)
         self.settings.boolean(['dry-run'], 'do not build, just test the options', default=False)
 
     def process_args(self, args):  # pylint: disable=too-many-branches,too-many-statements
@@ -266,6 +267,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             elif self.settings['squash']:
                 filesystem.squash_rootfs()
             filesystem.chown()
+            filesystem.convert_image_to_qcow2()
 
         except BaseException as e:
             base.message('EEEK! Something bad happened...')
