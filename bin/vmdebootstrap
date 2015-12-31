@@ -168,7 +168,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 'Use --squash or --tarball, not both.')
         if not distro.was_oldstable(datetime.date(2015, 4, 26)):
             if not self.settings['systemd-networkd'] and\
-                    self.settings['no-update-initramfs']:
+                    not self.settings['update-initramfs']:
                 raise cliapp.AppException(
                     'Disabling systemd-networkd for jessie and later '
                     'requires updating the initramfs.')
