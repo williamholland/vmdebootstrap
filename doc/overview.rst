@@ -147,9 +147,11 @@ Options
                        Useful if you need to track the relevant source packages
                        used inside the image for licence compliance.
  --dry-run             Do not build, just test that the options are valid.
- --no-update-initramfs Skip the call to ``update-initramfs`` for reasons of
+ --no-update-initramfs 
+                       Skip the call to ``update-initramfs`` for reasons of
                        speed or practicality.
  --convert-qcow2       Convert the final raw image to qcow2 format.
+ --systemd-networkd    Use Predictable Network Interface Names using systemd-networkd
 
 Configuration files and settings
 ********************************
@@ -186,6 +188,9 @@ Peformance
 Networking
 **********
 
+Wheezy support
+==============
+
 The ``--enable-networking`` option uses the :file:`/etc/network/interfaces.d/`
 source directory, with the default settings for ``lo`` and ``eth0``
 being added to :file:`/etc/network/interfaces.d/setup`. Other networking
@@ -200,6 +205,34 @@ into :file:`/etc/network/interfaces.d/setup`::
 
  auto eth0
  iface eth0 inet dhcp
+
+Jessie and later
+================
+
+In addition, ``systemd`` in jessie or later introduces
+PredictableNetworkInterfaceNames_ which are enabled using the
+``systemd-networkd`` service. If this option is disabled, traditional
+interface names (like ``eth0``) will be used and the predictable names
+masked using ``udev``. Implementing the mask requires updating the
+initramfs, so the ``--update-initramfs`` option must not be disabled.
+
+If DHCP is also enabled, the following configuration is used::
+
+ /etc/systemd/network/99-dhcp.network
+
+``systemd`` will use the first available match, so this can be
+overridden by putting another file into place using the customisation
+scripts, using a lower sorting filename.
+
+::
+
+ [Match]
+ Name=en*
+  
+ [Network]
+ DHCP=yes
+
+.. _PredictableNetworkInterfaceNames: http://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
 
 .. index:: bootloaders
 
