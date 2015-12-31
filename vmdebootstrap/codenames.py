@@ -72,6 +72,8 @@ class Codenames(Base):
                 kernel_arch = '586'
         elif self.settings['arch'] == 'armhf':
             kernel_arch = 'armmp'
+        elif self.settings['arch'] == 'ppc64el':
+            kernel_arch = 'powerpc64le'
         else:
             kernel_arch = self.settings['arch']
         packages.append('linux-image-%s' % kernel_arch)
