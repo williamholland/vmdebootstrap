@@ -35,8 +35,9 @@ from vmdebootstrap.extlinux import ExtLinux
 from vmdebootstrap.codenames import Codenames
 from vmdebootstrap.filesystem import Filesystem
 from vmdebootstrap.uefi import Uefi
+from vmdebootstrap.network import Networking
 
-__version__ = '1.3'
+__version__ = '1.4'
 
 # pylint: disable=invalid-name,line-too-long,missing-docstring
 
@@ -56,6 +57,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             GrubHandler.name: GrubHandler(),
             ExtLinux.name: ExtLinux(),
             Filesystem.name: Filesystem(),
+            Networking.name: Networking(),
         }
 
     def add_settings(self):
@@ -123,8 +125,11 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.settings.boolean(['pkglist'], 'Create a list of package names '
                               'included in the image.')
         self.settings.boolean(['no-acpid'], 'do not install the acpid package', default=False)
-        self.settings.boolean(['no-update-initramfs'], 'Skip running update-initramfs', default=False)
+        self.settings.boolean(['update-initramfs'], 
+                              'Run update-initramfs after customisation', default=True)
         self.settings.boolean(['convert-qcow2'], 'Convert final image to qcow2', default=False)
+        self.settings.boolean(['systemd-networkd'], 'Use Predictable Network '
+                              'Interface Names', default=True)
         self.settings.boolean(['dry-run'], 'do not build, just test the options', default=False)
 
     def process_args(self, args):  # pylint: disable=too-many-branches,too-many-statements
@@ -161,6 +166,13 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         if self.settings['squash'] and self.settings['tarball']:
             raise cliapp.AppException(
                 'Use --squash or --tarball, not both.')
+        if not distro.was_oldstable(datetime.date(2015, 4, 26)):
+            if not self.settings['systemd-networkd'] and\
+                    self.settings['no-update-initramfs']:
+                raise cliapp.AppException(
+                    'Disabling systemd-networkd for jessie and later '
+                    'requires updating the initramfs.')
+
         uefi = self.handlers[Uefi.name]
         oldstable = distro.was_oldstable(datetime.date(2015, 4, 26))
         uefi.check_settings(oldstable=oldstable)
@@ -234,7 +246,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         # only append for wheezy (which became oldstable on 2015.04.25)
         if distro.was_oldstable(datetime.date(2015, 4, 26)):
             base.append_serial_console(rootdir)
-        elif self.settings['serial-console']:
+        elif self.settings['serial-console'] and not self.settings['grub']:
             base.message("Skipping setting serial console- wheezy only.")
         self.optimize_image(rootdir)
 
@@ -258,7 +270,11 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             base.set_root_password(rootdir)
             base.create_users(rootdir)
             filesystem.remove_udev_persistent_rules()
-            self.setup_networking(rootdir)
+            if distro.was_oldstable(datetime.date(2015, 4, 26)):
+                network.setup_wheezy_networking(rootdir)
+            else:
+                network.setup_networking(rootdir)
+                network.systemd_support(rootdir)
             filesystem.configure_apt()
             base.customize(rootdir)
             cleanup_apt_cache(rootdir)
@@ -461,35 +477,6 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             zeros = os.path.join(rootdir, 'ZEROS')
             self.runcmd_unchecked(['dd', 'if=/dev/zero', 'of=' + zeros, 'bs=1M'])
             runcmd(['rm', '-f', zeros])
-
-    def setup_networking(self, rootdir):
-        base = self.handlers[Base.name]
-        base.message('Setting up networking')
-        distro = self.handlers[Codenames.name]
-        ifc_file = os.path.join(rootdir, 'etc', 'network', 'interfaces')
-        ifc_d = os.path.join(rootdir, 'etc', 'network', 'interfaces.d')
-
-        # unconditionally write for wheezy (which became oldstable on 2015.04.25)
-        if distro.was_oldstable(datetime.date(2015, 4, 26)):
-            with open(ifc_file, 'w') as netfile:
-                netfile.write('source /etc/network/interfaces.d/*\n')
-        elif not os.path.exists(ifc_file):
-            with open(ifc_file, 'a') as netfile:
-                netfile.write('source-directory /etc/network/interfaces.d\n')
-
-        if not os.path.exists(ifc_d):
-            os.mkdir(ifc_d)
-        ethpath = os.path.join(ifc_d, 'setup')
-        with open(ethpath, 'w') as eth:
-            eth.write('auto lo\n')
-            eth.write('iface lo inet loopback\n')
-
-            if self.settings['enable-dhcp']:
-                eth.write('\n')
-                eth.write('auto eth0\n')
-                eth.write('iface eth0 inet dhcp\n')
-                # force predictable interface names
-                base.mask_udev_predictable_rules(rootdir)
 
     def cleanup_system(self):
         base = self.handlers[Base.name]

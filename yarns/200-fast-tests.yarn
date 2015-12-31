@@ -167,3 +167,10 @@ verify that vmdebootstrap parses the command line correctly.
     ... --squash=FOO --tarball=FOO --arch=amd64 --dry-run
     THEN vmdebootstrap exited with a non-zero exit code
     AND vmdebootstrap wrote an error message matching not both
+
+    SCENARIO masking systemd-networkd without updating initramfs
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --no-systemd-networkd --no-update-initramfs --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching requires updating the

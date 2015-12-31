@@ -70,11 +70,15 @@ class Filesystem(Base):
         runcmd(["chown", "-R", self.settings["owner"], filename])
 
     def update_initramfs(self):
+        if not rootdir:
+            raise cliapp.AppException("rootdir not set")
+        if not os.path.exists(
+                os.path.join(rootdir, 'usr', 'sbin', 'update-initramfs')):
+            self.message("Error: Unable to run update-initramfs.")
+            return
         if not self.settings['no-update-initramfs']:
             return
         rootdir = self.devices['rootdir']
-        if not rootdir:
-            raise cliapp.AppException("rootdir not set")
         cmd = os.path.join('usr', 'sbin', 'update-initramfs')
         if os.path.exists(os.path.join(str(rootdir), cmd)):
             self.message("Updating the initramfs")
