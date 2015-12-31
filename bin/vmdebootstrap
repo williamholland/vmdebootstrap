@@ -98,7 +98,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.settings.boolean(['no-kernel'], 'do not install a linux package')
         self.settings.string(['kernel-package'], 'install PACKAGE instead of '
                              'the default kernel package', metavar='PACKAGE')
-        self.settings.boolean(['enable-dhcp'], 'enable DHCP on eth0')
+        self.settings.boolean(['enable-dhcp'], 'enable DHCP')
         self.settings.string(['root-password'], 'set root password', metavar='PASSWORD')
         self.settings.boolean(['lock-root-password'], 'lock root account so they '
                               'cannot login?')
