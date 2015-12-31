@@ -39,7 +39,8 @@ from vmdebootstrap.network import Networking
 
 __version__ = '1.4'
 
-# pylint: disable=invalid-name,line-too-long,missing-docstring
+# pylint: disable=invalid-name,line-too-long
+# pylint: disable=missing-docstring,too-many-statements
 
 
 class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-methods
@@ -125,7 +126,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.settings.boolean(['pkglist'], 'Create a list of package names '
                               'included in the image.')
         self.settings.boolean(['no-acpid'], 'do not install the acpid package', default=False)
-        self.settings.boolean(['update-initramfs'], 
+        self.settings.boolean(['update-initramfs'],
                               'Run update-initramfs after customisation', default=True)
         self.settings.boolean(['convert-qcow2'], 'Convert final image to qcow2', default=False)
         self.settings.boolean(['systemd-networkd'], 'Use Predictable Network '
@@ -253,6 +254,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
     def start_ops(self):
         base = self.handlers[Base.name]
         filesystem = self.handlers[Filesystem.name]
+        network = self.handlers[Networking.name]
+        distro = self.handlers[Codenames.name]
         try:
             if self.settings['image']:
                 self._image_preparations()
