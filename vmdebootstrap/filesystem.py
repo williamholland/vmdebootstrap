@@ -77,7 +77,7 @@ class Filesystem(Base):
                 os.path.join(rootdir, 'usr', 'sbin', 'update-initramfs')):
             self.message("Error: Unable to run update-initramfs.")
             return
-        if not self.settings['no-update-initramfs']:
+        if 'no-update-initramfs' in self.settings or not self.settings['update-initramfs']:
             return
         cmd = os.path.join('usr', 'sbin', 'update-initramfs')
         if os.path.exists(os.path.join(str(rootdir), cmd)):
@@ -196,7 +196,7 @@ class Filesystem(Base):
             exclude.write("/run\n")
         self.message("Running mksquashfs on rootfs.")
         msg = runcmd(
-            ['mksquashfs', self.devices['rootdir'], suffixed,
+            ['nice', 'mksquashfs', self.devices['rootdir'], suffixed,
              '-no-progress', '-comp', 'xz',
              '-e', exclusions], ignore_fail=False)
         os.unlink(exclusions)

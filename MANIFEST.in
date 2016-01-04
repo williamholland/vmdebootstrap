@@ -1,5 +1,6 @@
 include NEWS
 include vmextract.py
+include vmsquash-tar.py
 include vmdebootstrap.8.in
 recursive-include examples *.sh *.txt *.py
 include common/*
