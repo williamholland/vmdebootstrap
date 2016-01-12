@@ -42,7 +42,7 @@ Options
  --size=SIZE           create a disk image of size SIZE (1000000000)
  --tarball=FILE        tar up the disk's contents in FILE
  --mirror=URL          use MIRROR as package source (http://http.debian.net/debian/)
- --arch=ARCH           architecture to use (amd64) - if using an 
+ --arch=ARCH           architecture to use (amd64) --- if using an
                        architecture which the host system cannot execute,
                        ensure the ``--foreign`` option is also used.
  --distribution=NAME   release to use (defaults to stable). The release
@@ -109,15 +109,15 @@ Options
  --foreign=PATH        Path to the binfmt_handler to enable foreign support
                        in debootstrap. e.g. :file:`/usr/bin/qemu-arm-static`
                        Note: foreign debootstraps may take a significant
-                       amount of time to complete and that debootstrap will
+                       amount of time to complete and debootstrap will
                        retry five times if packages fail to install by default.
- --no-extlinux         Skip installation of extlinux. needs a customize script
+ --no-extlinux         Skip installation of extlinux. Needs a customize script
                        or alternative bootloader to make the image bootable.
                        Useful for architectures where extlinux is not supportable.
                        Depending on how the image is to be booted, the ``--mbr``
                        option may also be necessary with extlinux.
  --squash=DIRECTORY    Run mksquashfs against the rootfs using xz
-                       compression - requires ``squashfs-tools`` to be installed.
+                       compression --- requires ``squashfs-tools`` to be installed.
                        The squashfs and other files needed to use the squashfs
                        to make a bootable system will be put into the specified directory.
                        The directory will contain a ``filesystem.squashfs``
@@ -243,7 +243,7 @@ Bootloaders
 
 Unless the ``--no-extlinux`` or ``--grub`` options are specified, the
 image will use ``extlinux`` as a boot loader. ``bootsize`` is not
-recommended when using ``extlinux`` - use ``grub`` instead.
+recommended when using ``extlinux`` --- use ``grub`` instead.
 
 .. _wheezy_grub:
 
@@ -325,7 +325,7 @@ not installers or prebuilt installation images. It is possible to create
 prebuilt installation images for some devices but this depends on the
 specific device. (A 'prebuilt installation image' is a single image file
 which can be written to physical media in a single operation and which
-allows the device to boot directly into a fully installed system - in
+allows the device to boot directly into a fully installed system --- in
 a similar way to how a virtual machine would behave.)
 
 :file:`vmdebootstrap` assumes that all operations take place on a local
@@ -464,7 +464,7 @@ information on YARN see `the homepage <http://liw.fi/cmdtest/README.yarn/>`_::
 
 All commits must pass at least the fast tests. All merges into master
 need to pass a full test. All additions of new functionality must add
-fast and build tests - fast tests for any new options and build tests
+fast and build tests --- fast tests for any new options and build tests
 which exercise the new functionality. Build tests can add checks for
 particular support on the machine running the test and skip if not
 found or add new environment settings to selectively run some build
@@ -487,7 +487,7 @@ pre-commit
 ----------
 
 All vmdebootstrap developers need to run the fast tests as a pre-commit
-hook - any patches which fail this test will be rejected::
+hook --- any patches which fail this test will be rejected::
 
  $ ln -s ../../pre-commit.sh .git/hooks/pre-commit
 
@@ -506,7 +506,7 @@ Fast tests typically take a few seconds to run.
 Build tests
 -----------
 
-The slow / build tests build multiple images and use ``sudo`` - a local
+The slow / build tests build multiple images and use ``sudo`` --- a local
 mirror is strongly recommended.
 
 ::
@@ -523,5 +523,5 @@ There is an example :file:`lava-submit.py` script which can be edited
 to automatically submit QEMU tests to a specified LAVA instance. The
 images themselves will use local ``file://`` URLs and therefore the
 ``lava-dispatcher`` needs to be installed locally. Configuring LAVA
-for these tests is a separate topic - please ask on the `vmdebootstrap
+for these tests is a separate topic --- please ask on the `vmdebootstrap
 mailing list <https://lists.alioth.debian.org/mailman/listinfo/vmdebootstrap-devel>`_.
