@@ -6,7 +6,7 @@ user=`whoami`
 
 sudo vmdebootstrap \
  --owner ${user} --verbose \
- --mirror http://http.debian.net/debian \
+ --mirror http://httpredir.debian.org/debian \
  --log beaglebone-black.log --log-level debug \
  --arch armhf \
  --foreign /usr/bin/qemu-arm-static \

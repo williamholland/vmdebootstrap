@@ -41,7 +41,7 @@ but it's actually restricted to vmdebootstrap in the source tree.
     IMPLEMENTS WHEN the user runs vmdebootstrap (.*)
     PYTHONPATH="$SRCDIR" "$SRCDIR/bin/vmdebootstrap" \
         --image "$IMAGE" \
-        --mirror ${MIRROR:=http://http.debian.net/debian/} \
+        --mirror ${MIRROR:=http://httpredir.debian.org/debian/} \
         --size "$IMAGE_SIZE" \
         $MATCH_1
 

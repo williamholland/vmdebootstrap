@@ -41,7 +41,7 @@ Options
  --image=FILE          put created disk image in FILE
  --size=SIZE           create a disk image of size SIZE (1000000000)
  --tarball=FILE        tar up the disk's contents in FILE
- --mirror=URL          use MIRROR as package source (http://http.debian.net/debian/)
+ --mirror=URL          use MIRROR as package source (http://httpredir.debian.org/debian/)
  --arch=ARCH           architecture to use (amd64) --- if using an
                        architecture which the host system cannot execute,
                        ensure the ``--foreign`` option is also used.
@@ -513,7 +513,7 @@ mirror is strongly recommended.
 
  $ sudo yarns/run-tests --env TESTS=build --env MIRROR=http://mirror/debian
 
-If ``MIRROR`` is not specified, a default mirror of ``http://http.debian.net/debian/``
+If ``MIRROR`` is not specified, a default mirror of ``http://httpredir.debian.org/debian/``
 will be used.
 
 LAVA tests

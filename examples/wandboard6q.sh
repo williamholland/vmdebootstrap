@@ -11,7 +11,7 @@ user=`whoami`
 sudo ./vmdebootstrap \
  --owner ${user} --verbose \
  --size 3G \
- --mirror http://http.debian.net/debian \
+ --mirror http://httpredir.debian.org/debian \
  --log wandboard.log --log-level debug \
  --arch armhf \
  --foreign /usr/bin/qemu-arm-static \
