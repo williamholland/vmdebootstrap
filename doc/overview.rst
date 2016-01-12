@@ -15,8 +15,8 @@ sent to the command line. If the ``--log`` option is not used, no
 output will be sent to any log files either.
 
 To use the image, you probably want to create a virtual machine using
-your preferred virtualization technology, such as file:`kvm` or
-file:`qemu`. Configure the virtual machine to use the image you've
+your preferred virtualization technology, such as :file:`kvm` or
+:file:`qemu`. Configure the virtual machine to use the image you've
 created. Then start the virtual machine and log into it via its console
 to configure it. The image has an empty root password and will not have
 networking configured by default. Set the root password before you
@@ -335,14 +335,14 @@ image file or directory, not a physical block device / removable media.
 the command line to launch a new virtual machine. Not all devices have
 virtualisation support in hardware.
 
-This has implications for file:`u-boot` support in some cases. If the
+This has implications for :file:`u-boot` support in some cases. If the
 device can support reading the bootloader from a known partition, like
 the beaglebone-black, then :file:`vmdebootstrap` can provide space for
 the bootloader and the image will work as a prebuilt installation image.
 If the device expects that the bootloader exists at a specific offset
 and therefore requires that the bootloader is written as an image not
 as a binary which can be copied into an existing partition,
-:file:vmdebootstrap` is unable to include that bootloader image into
+:file:`vmdebootstrap` is unable to include that bootloader image into
 the virtual machine image.
 
 The beagleboneblack.sh script in the examples/ directory provides a worked
@@ -519,7 +519,7 @@ will be used.
 LAVA tests
 ----------
 
-There is an example file:`lava-submit.py` script which can be edited
+There is an example :file:`lava-submit.py` script which can be edited
 to automatically submit QEMU tests to a specified LAVA instance. The
 images themselves will use local ``file://`` URLs and therefore the
 ``lava-dispatcher`` needs to be installed locally. Configuring LAVA
