@@ -108,7 +108,7 @@ Options
                        to have enough space for a swap partition as well.
  --foreign=PATH        Path to the binfmt_handler to enable foreign support
                        in debootstrap. e.g. :file:`/usr/bin/qemu-arm-static`
-                       Note: foreign debootstraps may take a signficant
+                       Note: foreign debootstraps may take a significant
                        amount of time to complete and that debootstrap will
                        retry five times if packages fail to install by default.
  --no-extlinux         Skip installation of extlinux. needs a customize script
@@ -172,8 +172,8 @@ Logging
  --log-keep=N          keep last N logs (10)
  --log-mode=MODE       set permissions of new log files to MODE (octal;  default 0600)
 
-Peformance
-**********
+Performance
+***********
 
  --dump-memory-profile=METHOD
                        make memory profiling dumps using METHOD, which is one
