@@ -79,7 +79,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                                'requires use-uefi', default='5mib')
         self.settings.string(['part-type'], 'Partition type to use for this image', default='msdos')
         self.settings.string(['roottype'], 'specify file system type for /', default='ext4')
-        self.settings.bytesize(['swap'], 'create swap space of size SIZE (min 256Mb)')
+        self.settings.bytesize(['swap'], 'create swap space of size SIZE (min 256MB)')
         self.settings.string(['foreign'], 'set up foreign debootstrap environment '
                              'using provided program (ie binfmt handler)')
         self.settings.string_list(['debootstrapopts'], 'pass additional options to debootstrap')
@@ -371,10 +371,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             bootsize = self.settings['bootsize'] / (1024 * 1024)
             bootsize += partoffset
             base.message("Using bootsize %smib: %s bytes" % (bootsize, self.settings['bootsize']))
-            logging.debug("Starting boot partition at %sMb", bootsize)
+            logging.debug("Starting boot partition at %sMB", bootsize)
             runcmd(['parted', '-s', self.settings['image'],
                     'mkpart', 'primary', 'fat16', str(partoffset), str(bootsize)])
-            logging.debug("Starting root partition at %sMb", partoffset)
+            logging.debug("Starting root partition at %sMB", partoffset)
             runcmd(['parted', '-s', self.settings['image'],
                     'mkpart', 'primary', str(bootsize), extent])
 

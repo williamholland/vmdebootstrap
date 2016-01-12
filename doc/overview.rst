@@ -103,8 +103,8 @@ Options
                        size within the image. Debootstrapping will fail
                        if this results in a root partition which is too
                        small for the selected packages. The minimum swap
-                       space is 256Mb as the default memory allocation
-                       of QEMU is 128Mb. A default 1Gb image is not likely
+                       space is 256MB as the default memory allocation
+                       of QEMU is 128MB. A default 1GB image is not likely
                        to have enough space for a swap partition as well.
  --foreign=PATH        Path to the binfmt_handler to enable foreign support
                        in debootstrap. e.g. :file:`/usr/bin/qemu-arm-static`
@@ -262,11 +262,11 @@ in the vmdebootstrap log file, if enabled with the ``--log`` option.
 :file:`vmdebootstrap` also supports **EFI**. See :ref:`uefi`.
 
 Use ``--use-uefi`` to use ``grub-efi`` instead of ``grub-pc``. If the
-default 5Mb is not enough space, use the ``--esp-size`` option to
+default 5MB is not enough space, use the ``--esp-size`` option to
 specify a different size for the EFI partition. Registered firmware is
 not supported as it would need to be done after boot. If the system you
 are creating is for more than just a VM or live image, you will likely
-need a larger ESP, up to 500Mb.
+need a larger ESP, up to 500MB.
 
 .. index: uefi
 
@@ -371,7 +371,7 @@ Example
 
 To create an image for the stable release of Debian::
 
- sudo vmdebootstrap --image test.img --size 1g \
+ sudo vmdebootstrap --image test.img --size 1G \
     --log test.log --log-level debug --verbose \
     --mirror http://mirror.lan/debian/
 
@@ -476,7 +476,7 @@ If no arguments are given, the full test suite will be executed::
 
 .. warning:: Do not run the full test suite if your connection to a
    Debian mirror is limited or metered. Each build requires a minimum
-   of 2Gb free space in tmpfs. A full test takes at least 10 minutes.
+   of 2GB free space in tmpfs. A full test takes at least 10 minutes.
 
 When limiting the run to specific tests, each ``--env`` option needs
 to be specified separately::

@@ -182,8 +182,8 @@ class Base(object):
             if self.settings['swap'] > swap:
                 swap = self.settings['swap']
             else:
-                # minimum 256Mb as default qemu ram is 128Mb
-                logging.debug("Setting minimum 256Mb swap space")
+                # minimum 256MB as default qemu ram is 128MB
+                logging.debug("Setting minimum 256MB swap space")
             extent = "%s%%" % int(100 * (self.settings['size'] - swap) / self.settings['size'])
         return extent
 
