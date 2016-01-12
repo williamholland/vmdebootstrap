@@ -69,7 +69,7 @@ Options
                        set root password
  --customize=SCRIPT    run SCRIPT after setting up system. If the script
                        does not exist in the current working directory, 
-                       :file:`usr/share/vmdebootstrap/examples/` will be
+                       :file:`/usr/share/vmdebootstrap/examples/` will be
                        checked as a fallback. The script needs to be
                        executable and is passed the root directory of the
                        debootstrap as the only argument. Use chroot if
