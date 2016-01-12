@@ -44,14 +44,14 @@ Options
  --mirror=URL          use MIRROR as package source (http://http.debian.net/debian/)
  --arch=ARCH           architecture to use (amd64) - if using an 
                        architecture which the host system cannot execute,
-                       ensure the --foreign option is also used.
+                       ensure the ``--foreign`` option is also used.
  --distribution=NAME   release to use (defaults to stable). The release
                        needs to be a valid Debian or Ubuntu release name
                        or codename.
  --debootstrapopts=OPTS
                        Supply options and arguments to ``debootstrap``,
                        separated by spaces.
-                       e.g. --debootstrapopts="variant=buildd no-check-gpg components=main,contrib".
+                       e.g. ``--debootstrapopts="variant=buildd no-check-gpg components=main,contrib"``.
                        See **debootstrap (1)** for more information. This
                        option replaces the ``--variant`` support in
                        previous versions.
@@ -60,7 +60,7 @@ Options
                        from mirror)
  --no-kernel           do not install a linux package
  --kernel-package=PACKAGE
-                       If --no-kernel is not used and the auto-selection
+                       If ``--no-kernel`` is not used and the auto-selection
                        of the **linux-image-586** or **linux-image-armmp**
                        or **linux-image-$ARCH** package is not suitable,
                        the kernel PACKAGE name can be specified explicitly.
@@ -114,7 +114,7 @@ Options
  --no-extlinux         Skip installation of extlinux. needs a customize script
                        or alternative bootloader to make the image bootable.
                        Useful for architectures where extlinux is not supportable.
-                       Depending on how the image is to be booted, the --mbr
+                       Depending on how the image is to be booted, the ``--mbr``
                        option may also be necessary with extlinux.
  --squash=DIRECTORY    Run mksquashfs against the rootfs using xz
                        compression - requires ``squashfs-tools`` to be installed.
@@ -136,13 +136,13 @@ Options
                        mirror used to build the image. This is useful if you have
                        a local mirror to make building the image quicker but
                        the image needs to run even if that mirror is not available.
-                       Requires --configure-apt.
+                       Requires ``--configure-apt``
  --grub                Disable extlinux installation and configure grub2 instead.
                        grub2 will be added to the list of packages to install.
                        update-grub will be called once the debootstrap is
                        complete and grub-install will be called in the image.
  --no-acpid            Disable installation of acpid if not required, otherwise
-                       acpid will be installed if --foreign is not used.
+                       acpid will be installed if ``--foreign`` is not used.
  --pkglist             Output a list of package names installed inside the image.
                        Useful if you need to track the relevant source packages
                        used inside the image for licence compliance.
