@@ -135,7 +135,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
     def process_args(self, args):  # pylint: disable=too-many-branches,too-many-statements
 
-        for _, handler in self.handlers.items():
+        for _, handler in list(self.handlers.items()):
             handler.define_settings(self.settings)
 
         distro = self.handlers[Codenames.name]
@@ -180,7 +180,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.include = self._bootstrap_packages()
 
         if self.settings['dry-run']:
-            print "Selected packages: ", ', '.join(self.include)
+            print("Selected packages: ", ', '.join(self.include))
             sys.exit(0)
         if os.geteuid() != 0:
             sys.exit("You need to have root privileges to run this script.")

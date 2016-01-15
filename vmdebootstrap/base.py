@@ -101,7 +101,7 @@ class Base(object):
     def message(self, msg):
         logging.info(msg)
         if self.settings['verbose']:
-            print msg
+            print(msg)
 
     def create_empty_image(self):
         self.message('Creating disk image')

@@ -47,8 +47,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'vmdebootstrap'
-copyright = u'2015 Neil Williams'
+project = 'vmdebootstrap'
+copyright = '2015 Neil Williams'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -187,8 +187,8 @@ htmlhelp_basename = 'vmdebootstrapdocs'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'vmdebootstrap.tex', u'vmdebootstrap',
-     u'Neil Williams', 'manual'),
+    ('index', 'vmdebootstrap.tex', 'vmdebootstrap',
+     'Neil Williams', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

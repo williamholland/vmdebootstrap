@@ -91,7 +91,7 @@ class VmExtract(cliapp.Application):  # pylint: disable=too-many-public-methods
     def message(self, msg):
         logging.info(msg)
         if self.settings['verbose']:
-            print msg
+            print(msg)
 
     def prepare(self):
         """
