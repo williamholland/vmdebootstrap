@@ -115,9 +115,9 @@ class Filesystem(Base):
             parts = 1
         boot = None
         swap = None
-        devices = [line.split()[2]
+        devices = [line.decode('utf-8').split()[2]
                    for line in out.splitlines()
-                   if line.startswith('add map ')]
+                   if line.decode('utf-8').startswith('add map ')]
         if len(devices) != parts:
             msg = 'Surprising number of partitions - check output of losetup -a'
             logging.debug("%s", runcmd(['losetup', '-a']))
@@ -125,7 +125,7 @@ class Filesystem(Base):
             raise cliapp.AppException(msg)
         root = '/dev/mapper/%s' % devices[rootindex]
         if self.settings['bootsize'] or self.settings['use-uefi']:
-            boot = '/dev/mapper/%s' % devices[bootindex]
+            boot = '/dev/mapper/%s' % devices[bootindex].decode('utf-8')
         if self.settings['swap'] > 0:
             swap = '/dev/mapper/%s' % devices[swapindex]
         self.devices['rootdev'] = root

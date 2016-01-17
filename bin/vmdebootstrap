@@ -63,7 +63,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
     def add_settings(self):
         # deliberately long lines for clarity.
-        default_arch = subprocess.check_output(["dpkg", "--print-architecture"]).strip()
+        default_arch = subprocess.check_output(["dpkg", "--print-architecture"]).decode('utf-8').strip()
 
         self.settings.boolean(['verbose'], 'report what is going on')
         self.settings.string(['image'], 'put created disk image in FILE', metavar='FILE')
