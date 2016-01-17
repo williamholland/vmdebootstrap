@@ -19,11 +19,14 @@ Scenarios can use the ASSUMING statements defined here to let the user
 to allow them to run or not to run.
 
     IMPLEMENTS ASSUMING (fast|build) tests are requested
+    support_required
     test_requested "$MATCH_1"
 
 if `MIRROR` is set, use the default http mirror
 
     IMPLEMENTS ASSUMING (local|http) tests are requested
+    support_required
+    build_support_required
     mirror_requested "$MATCH_1"
 
 ## Building an image, or attempting to

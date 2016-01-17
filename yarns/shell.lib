@@ -34,6 +34,22 @@ test_requested()
     fi
 }
 
+support_required()
+{
+    if [ ! -x /usr/bin/cmdtest ]; then
+        echo "All tests need the cmdtest package."
+        return 1
+    fi
+}
+
+
+build_support_required()
+{
+    if [ ! -x /usr/bin/bc ]; then
+        echo "Build tests need the bc package."
+        return 1
+    fi
+}
 
 # Convert a size with a unit, such a kB, to plain bytes.
 
