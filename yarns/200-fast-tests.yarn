@@ -174,3 +174,17 @@ verify that vmdebootstrap parses the command line correctly.
     ... --image=FOO --no-systemd-networkd --no-update-initramfs --dry-run
     THEN vmdebootstrap exited with a non-zero exit code
     AND vmdebootstrap wrote an error message matching requires updating the
+
+    SCENARIO btrfs not yet supported with extlinux
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --roottype btrfs --extlinux --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching not yet supported
+
+    SCENARIO btrfs not yet supported without disabling extlinux
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --roottype btrfs --dry-run
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching not yet supported

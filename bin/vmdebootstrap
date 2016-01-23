@@ -175,7 +175,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                     'requires updating the initramfs.')
 
         if self.settings['roottype'] == 'btrfs' and\
-                self.settings['extlinux']:
+                self.settings['extlinux'] and not self.settings['grub']:
             raise cliapp.AppException(
                 'extlinux is not yet supported on btrfs. Use grub.')
         uefi = self.handlers[Uefi.name]
