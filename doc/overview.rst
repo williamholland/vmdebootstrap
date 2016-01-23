@@ -143,6 +143,7 @@ Options
                        complete and grub-install will be called in the image.
  --no-acpid            Disable installation of acpid if not required, otherwise
                        acpid will be installed if ``--foreign`` is not used.
+ --sparse              Skip optimizing image for compression and keep a sparse image.
  --pkglist             Output a list of package names installed inside the image.
                        Useful if you need to track the relevant source packages
                        used inside the image for licence compliance.
