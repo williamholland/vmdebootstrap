@@ -474,9 +474,12 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
     def optimize_image(self, rootdir):
         """
-        Filing up the image with zeros will increase its compression rate
+        Filling up the image with zeros will increase its compression rate
+        Can take an appreciable amount of time in very large images.
         """
         if not self.settings['sparse']:
+            base = self.handlers[Base.name]
+            base.message("Optimizing image for compression")
             zeros = os.path.join(rootdir, 'ZEROS')
             self.runcmd_unchecked(['dd', 'if=/dev/zero', 'of=' + zeros, 'bs=1M'])
             runcmd(['rm', '-f', zeros])
