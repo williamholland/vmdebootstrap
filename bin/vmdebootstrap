@@ -174,6 +174,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                     'Disabling systemd-networkd for jessie and later '
                     'requires updating the initramfs.')
 
+        if self.settings['roottype'] == 'btrfs' and\
+                self.settings['extlinux']:
+            raise cliapp.AppException(
+                'extlinux is not yet supported on btrfs. Use grub.')
         uefi = self.handlers[Uefi.name]
         oldstable = distro.was_oldstable(datetime.date(2015, 4, 26))
         uefi.check_settings(oldstable=oldstable)
