@@ -164,13 +164,24 @@ class Filesystem(Base):
         fstab = os.path.join(str(rootdir), 'etc', 'fstab')
         with open(fstab, 'w') as fstab:
             fstab.write('proc /proc proc defaults 0 0\n')
-            fstab.write('%s / %s errors=remount-ro 0 1\n' % (rootdevstr, roottype))
+            fstab.write('%s / %s %s 0 1\n' %
+                        (rootdevstr, roottype, self.get_mount_flags(roottype)))
             if bootdevstr:
-                fstab.write('%s /boot %s errors=remount-ro 0 2\n' % (bootdevstr, boottype))
+                fstab.write('%s /boot %s %s 0 2\n' %
+                            (bootdevstr, boottype, self.get_mount_flags(boottype)))
                 if self.settings['swap'] > 0:
                     fstab.write("/dev/sda3 swap swap defaults 0 0\n")
             elif self.settings['swap'] > 0:
                 fstab.write("/dev/sda2 swap swap defaults 0 0\n")
+
+    @staticmethod
+    def get_mount_flags(fstype):
+        """Return the fstab mount flags for a given file system type."""
+        flags = ['errors=remount-ro']
+        if fstype == 'btrfs':
+            flags = []
+
+        return ','.join(flags) or 'defaults'
 
     def squash_rootfs(self):
         """
