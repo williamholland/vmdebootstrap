@@ -53,6 +53,7 @@ class Filesystem(Base):
     def define_settings(self, settings):
         self.settings = settings
         self.devices['roottype'] = self.settings['roottype']
+        self.devices['boottype'] = self.settings['boottype']
 
     def chown(self):
         if not self.settings['owner']:

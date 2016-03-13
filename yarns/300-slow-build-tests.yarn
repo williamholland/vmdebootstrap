@@ -48,3 +48,15 @@ These tests are slow, since building images is slow.
     AND partition 1 has the boot flag set
     AND partition 1 has an btrfs filesystem
     AND partition 1 has file /etc/fstab matching ^\S+\s+\/\s+btrfs\s+defaults\s+\d\s+\d$
+
+    SCENARIO build a Debian 8 image with separate boot partition
+    ASSUMING build tests are requested
+    GIVEN user wants to build an image FOO.img that is 2GiB in size
+    WHEN the user runs vmdebootstrap --bootsize=128M --boottype=ext3 --grub
+    THEN the image has the correct size
+    AND the partition count of the image is 2
+    AND partition 1 has the boot flag set
+    AND partition 1 has an ext3 filesystem
+    AND partition 2 has an ext4 filesystem
+    AND partition 2 has file /etc/fstab matching ^\S+\s+\/\s+ext4\s+errors=remount-ro\s+\d\s+\d$
+    AND partition 2 has file /etc/fstab matching ^\S+\s+\/boot\s+ext3\s+errors=remount-ro\s+\d\s+\d$

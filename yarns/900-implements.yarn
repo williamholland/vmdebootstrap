@@ -109,7 +109,7 @@ Check partition boot flag.
 
     IMPLEMENTS THEN partition (\d+) has the boot flag set
     parted --script "$IMAGE" print |
-        awk -v "PART=$MATCH_1" '/^ [0-9]+ / && $1 == PART && $7 == "boot"' |
+        awk -v "PART=$MATCH_1" '/^ [0-9]+ / && $1 == PART && $7 ~ "^boot,?$"' |
         grep .
 
 Check filesystem on a partition. This checks the actual filesystem,
