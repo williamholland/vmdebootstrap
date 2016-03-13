@@ -370,6 +370,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         # /boot creation - move into base but keep the check
         # needs extent, partoffset, bootsize: no return
         if self.settings['bootsize'] and self.settings['bootsize'] is not '0%':
+            boot_fs_type = 'ext2'
+            if self.settings['boottype'] in ('vfat', 'msdos'):
+                boot_fs_type = 'fat16'
             if self.settings['grub'] and not partoffset:
                 partoffset = 1
             bootsize = self.settings['bootsize'] / (1024 * 1024)
@@ -377,7 +380,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             base.message("Using bootsize %smib: %s bytes" % (bootsize, self.settings['bootsize']))
             logging.debug("Starting boot partition at %sMB", bootsize)
             runcmd(['parted', '-s', self.settings['image'],
-                    'mkpart', 'primary', 'fat16', str(partoffset), str(bootsize)])
+                    'mkpart', 'primary', boot_fs_type, str(partoffset),
+                    str(bootsize)])
             logging.debug("Starting root partition at %sMB", partoffset)
             runcmd(['parted', '-s', self.settings['image'],
                     'mkpart', 'primary', str(bootsize), extent])
