@@ -147,6 +147,10 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             raise cliapp.AppException(
                 'You must give disk image filename or use either a '
                 'tarball filename or use squash')
+        if self.settings['size'] <= 100000000:
+            raise cliapp.AppException(
+                'A size of %s bytes is too small for a '
+                'bootstrap.' % self.settings['size'])
         if self.settings['image'] and not self.settings['size']:
             raise cliapp.AppException(
                 'If disk image is specified, you must give image size.')

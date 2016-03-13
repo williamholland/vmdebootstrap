@@ -48,13 +48,13 @@ verify that vmdebootstrap parses the command line correctly.
     AND vmdebootstrap wrote an error message matching disk image filename
     AND vmdebootstrap wrote an error message matching squash
 
-    SCENARIO --image used with a zero size
+    SCENARIO --size too small for a bootstrap
     ASSUMING fast tests are requested
     WHEN user attempts to run vmdebootstrap
-    ... --image=FOO --size=0 --dry-run
+    ... --image=FOO --size=100M --dry-run
     THEN vmdebootstrap exited with a non-zero exit code
-    AND vmdebootstrap wrote an error message matching disk image
-    AND vmdebootstrap wrote an error message matching must
+    AND vmdebootstrap wrote an error message matching too small
+    AND vmdebootstrap wrote an error message matching bootstrap
 
     SCENARIO Debian distribution stable name check
     ASSUMING fast tests are requested
