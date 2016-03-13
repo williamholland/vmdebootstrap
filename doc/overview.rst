@@ -40,6 +40,8 @@ Options
  --verbose             report what is going on
  --image=FILE          put created disk image in FILE
  --size=SIZE           create a disk image of size SIZE (1000000000)
+                       in bytes. Suffixes k,K,M,G,T are supported,
+                       see qemu-img(1) for more detail.
  --tarball=FILE        tar up the disk's contents in FILE
  --mirror=URL          use MIRROR as package source (http://httpredir.debian.org/debian/)
  --arch=ARCH           architecture to use (amd64) --- if using an
