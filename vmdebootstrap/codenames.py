@@ -21,8 +21,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
-from vmdebootstrap.base import Base
 from distro_info import DebianDistroInfo, UbuntuDistroInfo
+from vmdebootstrap.base import Base
 
 # pylint: disable=missing-docstring
 

@@ -22,9 +22,9 @@
 
 
 import os
-import cliapp
 import logging
 import tempfile
+import cliapp
 from vmdebootstrap.base import (
     Base,
     runcmd,

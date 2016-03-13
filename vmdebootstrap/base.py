@@ -23,9 +23,9 @@
 import os
 import crypt
 import shutil
-import cliapp
 import logging
 import subprocess
+import cliapp
 
 # pylint: disable=missing-docstring
 
@@ -101,7 +101,7 @@ class Base(object):
     def message(self, msg):
         logging.info(msg)
         if self.settings['verbose']:
-            print(msg)
+            print(msg)  # pylint: disable=superfluous-parens
 
     def create_empty_image(self):
         self.message('Creating disk image')

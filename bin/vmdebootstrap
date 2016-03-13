@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# pylint: disable=wrong-import-order
+
 import os
 import sys
 import time
@@ -37,7 +39,7 @@ from vmdebootstrap.filesystem import Filesystem
 from vmdebootstrap.uefi import Uefi
 from vmdebootstrap.network import Networking
 
-__version__ = '1.4'
+__version__ = '1.5'
 
 # pylint: disable=invalid-name,line-too-long
 # pylint: disable=missing-docstring,too-many-statements

@@ -23,8 +23,8 @@
 import re
 import os
 import time
-import cliapp
 import logging
+import cliapp
 from vmdebootstrap.base import Base, runcmd
 
 # pylint: disable=missing-docstring
