@@ -100,6 +100,7 @@ Options
                        likely to need two or three times the space of the
                        installed kernel.
  --boottype=FSTYPE     Filesystem to use for the /boot partition. (default ext2)
+ --bootflag=FLAG       Flag to set on the first partition. (default none)
  --roottype=FSTYPE     Filesystem to use for the / (root) partition. (default ext4)
  --swap=SWAPSIZE       If specified, create a swap partition of the given
                        size within the image. Debootstrapping will fail
@@ -317,6 +318,9 @@ UBoot needs manual configuration via the customisation hook scripts,
 typically support requires adding ``u-boot`` using ``--package`` and then
 copying or manipulating the relevant ``u-boot`` files in the customisation
 script. Examples are included for beaglebone-black.
+
+Some ``u-boot`` examples recommend the use of the ``lba`` flag on the
+boot partition, so use the --bootflag option where relevant.
 
 .. _installation_images:
 

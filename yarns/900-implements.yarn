@@ -112,6 +112,11 @@ Check partition boot flag.
         awk -v "PART=$MATCH_1" '/^ [0-9]+ / && $1 == PART && $7 ~ "^boot,?$"' |
         grep .
 
+    IMPLEMENTS THEN partition (\d+) has the lba flag set
+    parted --script "$IMAGE" print |
+        awk -v "PART=$MATCH_1" '/^ [0-9]+ / && $1 == PART && $8 ~ "^lba?$"' |
+        grep .
+
 Check filesystem on a partition. This checks the actual filesystem,
 not a type declared in the partition table.
 

@@ -188,3 +188,11 @@ verify that vmdebootstrap parses the command line correctly.
     ... --image=FOO --roottype btrfs --dry-run
     THEN vmdebootstrap exited with a non-zero exit code
     AND vmdebootstrap wrote an error message matching not yet supported
+
+    SCENARIO bootflag requires argument
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --bootflag
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching bootflag
+    AND vmdebootstrap wrote an error message matching requires an argument
