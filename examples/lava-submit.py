@@ -48,6 +48,7 @@ IMAGE = ""
 ARCH = ""
 PROMPT = ""
 PASSWORD = ""  # leave empty if no root password
+UEFI = ""  # directory containing the UEFI firmware for the VM
 
 
 def job(image):
@@ -83,6 +84,9 @@ def job(image):
             "password_prompt": "Password:",
             "password": PASSWORD
         })
+    if UEFI:
+        deploy = [action['deploy'] for action in job_def['actions'] if 'deploy' in action][0]
+        deploy['images']['rootfs']['image_arg'] += " -L %s -monitor none" % UEFI
     return job_def
 
 
