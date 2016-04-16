@@ -387,6 +387,10 @@ option to set mode 0644 for the specified user or use chmod manually::
 
  sudo chmod a+w ./test.img
 
+If ``--log`` is also used, consider using ``--log-mode`` as well so
+that the logfile is readable by the owner. By default, the log file
+permissions are 0o600. The logfile itself will be owned by ``root``.
+
 Execute using qemu, e.g. on amd64 using qemu-system-x86_64::
 
  qemu-system-x86_64 -drive format=raw,file=./test.img
@@ -408,6 +412,10 @@ the location of this file with the -L option::
 
  $ qemu-system-x86_64 -L /usr/share/ovmf/ -machine accel=kvm \
   -m 4096 -smp 2 -drive format=raw,file=test.img
+
+To use the ``-nographic`` option, ensure that the ``--serial-console``
+option is supplied to ``vmdebootstrap`` and use ``-monitor none`` when
+booting the image with QEMU.
 
 For further examples, including u-boot support for beaglebone-black,
 see ``/usr/share/vmdebootstrap/examples``
