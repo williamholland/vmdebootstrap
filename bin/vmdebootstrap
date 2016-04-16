@@ -319,6 +319,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             rootdir = filesystem.devices['rootdir']
             if rootdir:
                 db_log = os.path.join(rootdir, 'debootstrap', 'debootstrap.log')
+                os.chmod(db_log, 0o644)
                 if os.path.exists(db_log):
                     shutil.copy(db_log, os.getcwd())
                     if self.settings['owner']:
