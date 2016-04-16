@@ -22,7 +22,7 @@ else
 fi
 UEFI=""
 if [ -n "$3" ]; then
-    UEFI="-L $3"
+    UEFI="-L $3 -monitor none"
 fi
 
 qemu-system-${ARCH} -m 1024 ${UEFI} -enable-kvm -drive format=raw,file=./$1
