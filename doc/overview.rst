@@ -455,6 +455,11 @@ a specific offset instead of using a normal partition will
 hypervisor will only be supported using virtual machine images, unless
 the bootloader can be executed from a normal partition.
 
+If the host device has a limited amount of RAM or simply to use a different
+TMP directory when preparing the filesystems, set the ``TMPDIR`` or ``TEMP``
+or ``TMP`` environment variables, in line with the underlying support in
+the python tempfile module.
+
 .. index:: developing
 
 .. _developing:
