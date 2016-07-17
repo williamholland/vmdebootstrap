@@ -53,6 +53,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.mount_points = []
         self.bootdir = None
         self.include = []
+        self.user_mask = None
         self.handlers = {
             Base.name: Base(),
             Uefi.name: Uefi(),
@@ -274,6 +275,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         network = self.handlers[Networking.name]
         distro = self.handlers[Codenames.name]
         try:
+            self.user_mask = os.umask(0o022)
             if self.settings['image']:
                 self._image_preparations()
                 rootdir = filesystem.devices['rootdir']
@@ -527,6 +529,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
         for dirname in self.remove_dirs:
             shutil.rmtree(dirname)
+
+        if self.user_mask:
+            os.umask(self.user_mask)
 
 if __name__ == '__main__':
     VmDebootstrap(version=__version__).run()
