@@ -212,6 +212,10 @@ into :file:`/etc/network/interfaces.d/setup`::
  auto eth0
  iface eth0 inet dhcp
 
+In addition, wheezy images do not boot if the roottype is specified as
+the default of ``ext4``, so ``vmdebootstrap`` will fail if a ``--roottype``
+is not specified or is specified as ``ext4``.
+
 Jessie and later
 ================
 
