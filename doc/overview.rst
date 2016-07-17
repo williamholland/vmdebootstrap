@@ -155,7 +155,9 @@ Options
                        Skip the call to ``update-initramfs`` for reasons of
                        speed or practicality.
  --convert-qcow2       Convert the final raw image to qcow2 format.
- --systemd-networkd    Use Predictable Network Interface Names using systemd-networkd
+ --no-systemd-networkd
+                       Do not use Predictable Network Interface Names using
+		       systemd-networkd.
 
 Configuration files and settings
 ********************************
