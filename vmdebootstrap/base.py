@@ -80,10 +80,11 @@ def delete_password(rootdir, user):
 
 def copy_files(src, dest):
     for filename in os.listdir(src):
-        if os.path.isdir(filename) or os.path.islink(filename):
+        src_path = os.path.join(src, filename)
+        if os.path.isdir(src_path) or os.path.islink(src_path):
             continue
         shutil.copyfile(
-            os.path.join(src, filename),
+            src_path,
             os.path.join(dest, filename))
 
 
