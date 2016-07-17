@@ -135,3 +135,10 @@ regular expression.
     mount -r "$device" "$mp"
     trap "umount \"$mp\"; unkpartx_image \"$IMAGE\"" EXIT
     grep -P -e "$MATCH_3" "$mp/$MATCH_2"
+
+Check the image output format
+
+    IMPLEMENTS THEN image has file format matching (.+)
+    qemu-img info $IMAGE |
+        grep "file format" |
+        grep $MATCH_1

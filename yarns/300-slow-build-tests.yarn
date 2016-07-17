@@ -39,6 +39,13 @@ These tests are slow, since building images is slow.
     AND partition 1 has an vfat filesystem
     AND partition 2 has file /boot/grub/grub.cfg matching ^### BEGIN /etc/grub.d/00_header ###$
 
+    SCENARIO build a basic Debian 8 qcow image
+    ASSUMING build tests are requested
+    GIVEN user wants to build an image FOO.img that is 2GiB in size
+    WHEN the user runs vmdebootstrap --sparse --extlinux --convert-qcow2
+    THEN the image has the correct size
+    AND image has file format matching qcow2
+
     SCENARIO build a Debian 8 image with btrfs and grub
     ASSUMING build tests are requested
     GIVEN user wants to build an image FOO.img that is 2GiB in size

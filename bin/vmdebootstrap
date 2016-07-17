@@ -313,8 +313,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 base.create_tarball(rootdir)
             elif self.settings['squash']:
                 filesystem.squash_rootfs()
-            filesystem.chown()
+            self.umount()
             filesystem.convert_image_to_qcow2()
+            filesystem.chown()
 
         except BaseException as e:
             base.message('EEEK! Something bad happened...')
@@ -349,6 +350,21 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.mount_points.append(mount_point)
         logging.debug('mounted %s on %s', device, mount_point)
         return mount_point
+
+    def umount(self):
+        if not self.settings['image']:
+            return
+        # Umount in the reverse mount order
+        for i in range(len(self.mount_points) - 1, -1, -1):
+            mount_point = self.mount_points[i]
+            try:
+                runcmd(['umount', mount_point], ignore_fail=False)
+            except cliapp.AppException:
+                logging.debug("umount failed, sleeping and trying again")
+                time.sleep(5)
+                runcmd(['umount', mount_point], ignore_fail=False)
+            else:
+                self.mount_points.remove(i)
 
     def partition_image(self):
         """
@@ -516,15 +532,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
         # Umount in the reverse mount order
         if self.settings['image']:
-            for i in range(len(self.mount_points) - 1, -1, -1):
-                mount_point = self.mount_points[i]
-                try:
-                    runcmd(['umount', mount_point], ignore_fail=False)
-                except cliapp.AppException:
-                    logging.debug("umount failed, sleeping and trying again")
-                    time.sleep(5)
-                    runcmd(['umount', mount_point], ignore_fail=False)
-
+            self.umount()
             runcmd(['kpartx', '-d', self.settings['image']], ignore_fail=True)
 
         for dirname in self.remove_dirs:
