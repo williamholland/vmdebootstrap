@@ -95,7 +95,7 @@ verify that vmdebootstrap parses the command line correctly.
     SCENARIO disallow UEFI support on wheezy except on amd64
     ASSUMING fast tests are requested
     WHEN user attempts to run vmdebootstrap
-    ... --image=FOO --grub --use-uefi --distribution=wheezy --arch=arm64 --dry-run
+    ... --image=FOO --grub --use-uefi --roottype=ext2 --distribution=wheezy --arch=arm64 --dry-run
     THEN vmdebootstrap exited with a non-zero exit code
     AND vmdebootstrap wrote an error message matching Only amd64
     AND vmdebootstrap wrote an error message matching supports UEFI
@@ -196,3 +196,10 @@ verify that vmdebootstrap parses the command line correctly.
     THEN vmdebootstrap exited with a non-zero exit code
     AND vmdebootstrap wrote an error message matching bootflag
     AND vmdebootstrap wrote an error message matching requires an argument
+
+    SCENARIO wheezy image does not support ext4
+    ASSUMING fast tests are requested
+    WHEN user attempts to run vmdebootstrap
+    ... --image=FOO --roottype ext4 --dry-run --distribution wheezy
+    THEN vmdebootstrap exited with a non-zero exit code
+    AND vmdebootstrap wrote an error message matching Wheezy images using ext4 will not be able to boot

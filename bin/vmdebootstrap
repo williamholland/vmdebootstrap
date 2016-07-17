@@ -181,6 +181,12 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 raise cliapp.AppException(
                     'Disabling systemd-networkd for jessie and later '
                     'requires updating the initramfs.')
+        else:
+            if self.settings['roottype'] == 'ext4':
+                raise cliapp.AppException(
+                    'Wheezy images using ext4 will not be able to boot. '
+                    'Please use --roottype ext2 or --roottype ext3'
+                )
 
         if self.settings['roottype'] == 'btrfs' and\
                 self.settings['extlinux'] and not self.settings['grub']:
@@ -233,7 +239,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         if self.settings['bootflag']:
             base.message("Setting '%s' flag on first partition." % self.settings['bootflag'])
             runcmd(['parted', '-s', self.settings['image'],
-                'set', '1', self.settings['bootflag'], 'on'])
+                    'set', '1', self.settings['bootflag'], 'on'])
 
     def _image_operations(self, rootdir, rootdev):
         if not self.settings['image']:
