@@ -69,10 +69,14 @@ installation is complete.
 prepare_apt_source
 ------------------
 
-The final Debian mirror location is not useful during the build as there
+The final Debian mirror location is not useful during the build when there
 is a faster mirror available during the build. This function moves the
 specified mirror file aside and uses the nearby mirror. Always use with
 :ref:`replace_apt_source`.
+
+Ensure that the mirror and suite are passed as arguments to prepare_apt_source::
+
+ prepare_apt_source http://mirror/debian jessie
 
 .. _remove_daemon_block:
 

@@ -54,11 +54,11 @@ EOF
     chmod a+x ${rootdir}/usr/sbin/policy-rc.d
 }
 
-# FIXME: pass the replacement mirror
+# ensure you pass the replacement mirror and suite
 prepare_apt_source() {
     # handle the apt source
     mv ${rootdir}/etc/apt/sources.list.d/base.list ${rootdir}/etc/apt/
-    echo "deb http://mirror/debian/ ${SUITE} main contrib non-free" > ${rootdir}/etc/apt/sources.list
+    echo "deb $1 $2 main contrib non-free" > ${rootdir}/etc/apt/sources.list
     chroot ${rootdir} apt update
 }
 
