@@ -101,3 +101,8 @@ class Networking(Base):
             eth.write('\n[Network]\n')
             eth.write('DHCP=yes\n')
         runcmd(['chroot', rootdir, 'systemctl', 'enable', 'systemd-networkd'])
+
+        self.message('Enabling systemctl-resolved for DNS')
+        runcmd(['chroot', rootdir, 'systemctl', 'enable', 'systemd-resolved'])
+        runcmd(['chroot', rootdir, 'ln', '-sfT',
+                '/run/systemd/resolve/resolv.conf', '/etc/resolv.conf'])
