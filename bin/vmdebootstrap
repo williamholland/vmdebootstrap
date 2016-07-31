@@ -384,16 +384,19 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
     def umount(self):
         if not self.settings['image']:
             return
+        base = self.handlers[Base.name]
         # Umount in the reverse mount order
         for i in range(len(self.mount_points) - 1, -1, -1):
             mount_point = self.mount_points[i]
+            base.message("Umounting %s" % mount_point)
             try:
                 runcmd(['umount', mount_point], ignore_fail=False)
             except cliapp.AppException:
                 logging.debug("umount failed, sleeping and trying again")
                 time.sleep(5)
                 runcmd(['umount', mount_point], ignore_fail=False)
-            self.mount_points.pop(i)
+            finally:
+                self.mount_points.pop(i)
 
     def partition_image(self):
         """
@@ -556,6 +559,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
 
     def cleanup_system(self):
         base = self.handlers[Base.name]
+        filesystem = self.handlers[Filesystem.name]
         # Clean up after any errors.
 
         base.message('Cleaning up')
@@ -563,6 +567,17 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         # Umount in the reverse mount order
         if self.settings['image']:
             self.umount()
+
+            # tidy up loop mounting issues on failure.
+            out = runcmd(['losetup', '-a'])
+            rootdev = filesystem.devices['rootdev']
+            if rootdev:
+                runcmd(['dmsetup', 'remove', rootdev]], ignore_fail=True)
+            device = [line.decode('utf-8').split()[0][:-1]
+                for line in out.splitlines()
+                if self.settings['image'] in line.decode('utf-8')]
+            if device:
+                runcmd(['losetup', '-d', "%s" % device[0]], ignore_fail=True)
             runcmd(['kpartx', '-d', self.settings['image']], ignore_fail=True)
 
         for dirname in self.remove_dirs:

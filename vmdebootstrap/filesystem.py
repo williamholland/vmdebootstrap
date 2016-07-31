@@ -133,7 +133,7 @@ class Filesystem(Base):
         self.devices['bootdev'] = boot
         self.devices['swap'] = swap
 
-    def mkfs(self, device, fstype, opt):
+    def mkfs(self, device, fstype, opt=None):
         self.message('Creating filesystem %s' % fstype)
         if opt:
             runcmd(['mkfs', '-t', fstype, '-O', opt, device])
