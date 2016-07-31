@@ -133,9 +133,12 @@ class Filesystem(Base):
         self.devices['bootdev'] = boot
         self.devices['swap'] = swap
 
-    def mkfs(self, device, fstype):
+    def mkfs(self, device, fstype, opt):
         self.message('Creating filesystem %s' % fstype)
-        runcmd(['mkfs', '-t', fstype, device])
+        if opt:
+            runcmd(['mkfs', '-t', fstype, '-O', opt, device])
+        else:
+            runcmd(['mkfs', '-t', fstype, device])
 
     def create_fstab(self):
         rootdir = self.devices['rootdir']
