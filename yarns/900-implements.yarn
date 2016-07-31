@@ -136,6 +136,28 @@ regular expression.
     trap "umount \"$mp\"; unkpartx_image \"$IMAGE\"" EXIT
     grep -P -e "$MATCH_3" "$mp/$MATCH_2"
 
+Check that the partition contains a specified symlink.
+
+    IMPLEMENTS THEN partition (\d+) has symlink (\S+)
+    device="$(kpartx_image_partition "$IMAGE" "$MATCH_1")"
+    trap "unkpartx_image \"$IMAGE\"" EXIT
+    mp="$(mktemp -d)"
+    mount -r "$device" "$mp"
+    trap "umount \"$mp\"; unkpartx_image \"$IMAGE\"" EXIT
+    stat "$mp/$MATCH_2" |
+    grep "symbolic link"
+
+Check that the partition contains a specified path.
+
+    IMPLEMENTS THEN partition (\d+) has filename (\S+)
+    device="$(kpartx_image_partition "$IMAGE" "$MATCH_1")"
+    trap "unkpartx_image \"$IMAGE\"" EXIT
+    mp="$(mktemp -d)"
+    mount -r "$device" "$mp"
+    trap "umount \"$mp\"; unkpartx_image \"$IMAGE\"" EXIT
+    stat "$mp/$MATCH_2" |
+    grep "regular file"
+
 Check the image output format
 
     IMPLEMENTS THEN image has file format matching (.+)

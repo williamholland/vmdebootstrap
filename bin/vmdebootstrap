@@ -228,11 +228,12 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         if self.settings['swap'] > 0:
             base.message("Creating swap space")
             runcmd(['mkswap', filesystem.devices['swapdev']])
-        # stable or oldstable, use ^metadata_csum
+        # stable or oldstable, use ^metadata_csum only for ext*
         opt = None
         if distro.was_oldstable(datetime.date(2015, 4, 26)) or \
                 distro.was_stable(datetime.date(2015, 4, 26)):
-            opt = "^metadata_csum"
+            if self.settings['roottype'] in ['ext2', 'ext3', 'ext4']:
+                opt = "^metadata_csum"
         filesystem.mkfs(rootdev, fstype=roottype, opt=opt)
         rootdir = self.mount(rootdev)
         filesystem.devices['rootdir'] = rootdir
@@ -567,18 +568,20 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         # Umount in the reverse mount order
         if self.settings['image']:
             self.umount()
+            time.sleep(2)
 
             # tidy up loop mounting issues on failure.
             out = runcmd(['losetup', '-a'])
             rootdev = filesystem.devices['rootdev']
             if rootdev:
-                runcmd(['dmsetup', 'remove', rootdev]], ignore_fail=True)
+                runcmd(['dmsetup', 'remove', rootdev], ignore_fail=True)
             device = [line.decode('utf-8').split()[0][:-1]
                 for line in out.splitlines()
                 if self.settings['image'] in line.decode('utf-8')]
             if device:
                 runcmd(['losetup', '-d', "%s" % device[0]], ignore_fail=True)
             runcmd(['kpartx', '-d', self.settings['image']], ignore_fail=True)
+            time.sleep(2)
 
         for dirname in self.remove_dirs:
             shutil.rmtree(dirname)

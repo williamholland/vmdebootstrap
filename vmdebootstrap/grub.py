@@ -147,5 +147,6 @@ class GrubHandler(Base):
 
     def grub_packages(self):
         if self.settings['grub'] and not self.settings['use-uefi']:
-            return ['grub-pc']
+            if self.settings['arch'] in ['i386', 'amd64']:
+                return ['grub-pc']
         return []

@@ -120,7 +120,7 @@ class Filesystem(Base):
                    for line in out.splitlines()
                    if line.decode('utf-8').startswith('add map ')]
         if len(devices) != parts:
-            msg = 'Surprising number of partitions - check output of losetup -a'
+            msg = 'Surprising number of partitions %d:%d- check output of losetup -a' % (len(devices), parts)
             logging.debug("%s", runcmd(['losetup', '-a']))
             logging.debug("%s: devices=%s parts=%s", msg, devices, parts)
             raise cliapp.AppException(msg)

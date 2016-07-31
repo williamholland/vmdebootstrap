@@ -12,12 +12,27 @@ These tests are slow, since building images is slow.
     SCENARIO build a basic Debian 8 image
     ASSUMING build tests are requested
     GIVEN user wants to build an image FOO.img that is 2GiB in size
+    WHEN the user runs vmdebootstrap --sparse --extlinux --roottype ext3
+    THEN the image has the correct size
+    AND the partition count of the image is 1
+    AND partition 1 has an ext3 filesystem
+    AND partition 1 has file /etc/debian_version matching ^8\..*$
+    AND partition 1 has filename ldlinux.sys
+    AND partition 1 has filename extlinux.conf
+
+    SCENARIO build a basic Debian 8 image with networking
+    ASSUMING build tests are requested
+    GIVEN user wants to build an image FOO.img that is 2GiB in size
     WHEN the user runs vmdebootstrap --sparse --extlinux
+    ... --roottype ext3 --enable-dhcp --configure-apt
     THEN the image has the correct size
     AND the partition count of the image is 1
     AND partition 1 has the boot flag set
-    AND partition 1 has an ext4 filesystem
+    AND partition 1 has an ext3 filesystem
     AND partition 1 has file /etc/debian_version matching ^8\..*$
+    AND partition 1 has filename ldlinux.sys
+    AND partition 1 has filename extlinux.conf
+    AND partition 1 has file /etc/apt/sources.list.d/base.list matching jessie
 
     SCENARIO build a Debian 8 image with grub
     ASSUMING build tests are requested
@@ -29,6 +44,30 @@ These tests are slow, since building images is slow.
     AND partition 1 has an ext4 filesystem
     AND partition 1 has file /boot/grub/grub.cfg matching ^### BEGIN /etc/grub.d/00_header ###$
     AND partition 1 has file /etc/fstab matching ^\S+\s+\/\s+ext4\s+errors=remount-ro\s+\d\s+\d$
+
+    SCENARIO build a Debian stretch image with grub
+    ASSUMING build tests are requested
+    GIVEN user wants to build an image FOO.img that is 2GiB in size
+    WHEN the user runs vmdebootstrap --grub --distribution stretch
+    THEN the image has the correct size
+    AND the partition count of the image is 1
+    AND partition 1 has the boot flag set
+    AND partition 1 has an ext4 filesystem
+    AND partition 1 has file /boot/grub/grub.cfg matching ^### BEGIN /etc/grub.d/00_header ###$
+    AND partition 1 has file /etc/fstab matching ^\S+\s+\/\s+ext4\s+errors=remount-ro\s+\d\s+\d$
+
+    SCENARIO build a Debian stretch image with systemd
+    ASSUMING build tests are requested
+    GIVEN user wants to build an image FOO.img that is 2GiB in size
+    WHEN the user runs vmdebootstrap --grub --distribution stretch
+    ... --systemd-networkd
+    THEN the image has the correct size
+    AND the partition count of the image is 1
+    AND partition 1 has symlink /etc/resolv.conf
+    AND partition 1 has the boot flag set
+    AND partition 1 has an ext4 filesystem
+    AND partition 1 has symlink /sbin/init
+    AND partition 1 has file /etc/apt/sources.list.d/setup matching jessie
 
     SCENARIO build a Debian 8 image with uefi
     ASSUMING build tests are requested
@@ -42,9 +81,8 @@ These tests are slow, since building images is slow.
     SCENARIO build a basic Debian 8 qcow image
     ASSUMING build tests are requested
     GIVEN user wants to build an image FOO.img that is 2GiB in size
-    WHEN the user runs vmdebootstrap --sparse --extlinux --convert-qcow2
-    THEN the image has the correct size
-    AND image has file format matching qcow2
+    WHEN the user runs vmdebootstrap --sparse --roottype ext2 --extlinux --convert-qcow2
+    THEN image has file format matching qcow2
 
     SCENARIO build a Debian 8 image with btrfs and grub
     ASSUMING build tests are requested
@@ -71,7 +109,7 @@ These tests are slow, since building images is slow.
     SCENARIO build a Debian 8 armhf image with boot flag lba
     ASSUMING build tests are requested
     GIVEN user wants to build an image FOO.img that is 2GiB in size
-    WHEN the user runs vmdebootstrap --bootflag=lba --arch armhf
+    WHEN the user runs vmdebootstrap --bootflag=lba --arch armhf --grub
     ... --foreign /usr/bin/qemu-arm-static --bootsize 100mib --boottype vfat
     THEN the image has the correct size
     AND the partition count of the image is 2
