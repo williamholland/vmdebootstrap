@@ -234,6 +234,15 @@ If DHCP is also enabled, the following configuration is used::
 overridden by putting another file into place using the customisation
 scripts, using a lower sorting filename.
 
+Stretch and later
+-----------------
+
+There is no need to use the ``--enable-dhcp`` option when using
+``systemd`` for networking with stretch or sid. ``systemd-resolved`` is
+enabled instead if ``systemd-networkd`` is specified. (``--enable-dhcp``
+would simply add an unused entry to ``/etc/network/interfaces`` for
+``eth0``.)
+
 ::
 
  [Match]

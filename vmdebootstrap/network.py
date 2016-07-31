@@ -91,8 +91,6 @@ class Networking(Base):
         https://coreos.com/os/docs/latest/network-config-with-networkd.html
         http://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
         """
-        if not self.settings['enable-dhcp']:
-            return
         self.message('Enabling systemd-networkd for DHCP')
         ethpath = os.path.join(rootdir, 'etc', 'systemd', 'network', '99-dhcp.network')
         with open(ethpath, 'w') as eth:
@@ -102,6 +100,10 @@ class Networking(Base):
             eth.write('DHCP=yes\n')
         runcmd(['chroot', rootdir, 'systemctl', 'enable', 'systemd-networkd'])
 
+    def enable_systemd_resolved(self, rootdir):
+        """
+        only for unstable or testing, not present in jessie
+        """
         self.message('Enabling systemctl-resolved for DNS')
         runcmd(['chroot', rootdir, 'systemctl', 'enable', 'systemd-resolved'])
         runcmd(['chroot', rootdir, 'ln', '-sfT',
