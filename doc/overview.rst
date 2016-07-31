@@ -74,9 +74,9 @@ Options
                        :file:`/usr/share/vmdebootstrap/examples/` will be
                        checked as a fallback. The script needs to be
                        executable and is passed the root directory of the
-                       debootstrap as the only argument. Use chroot if
-                       you need to execute binaries within the
-                       debootstrap.
+                       debootstrap and the image name as the only arguments.
+                       Use chroot if you need to execute binaries within
+                       the chroot created by debootstrap.
  --hostname=HOSTNAME   set name to HOSTNAME (debian)
  --user=USERSTRING     create USER with PASSWORD. The USERSTRING needs to
                        be of the format: USER/PASSSWORD.
@@ -157,7 +157,7 @@ Options
  --convert-qcow2       Convert the final raw image to qcow2 format.
  --no-systemd-networkd
                        Do not use Predictable Network Interface Names using
-		       systemd-networkd.
+                       systemd-networkd.
 
 Configuration files and settings
 ********************************
@@ -254,6 +254,28 @@ Bootloaders
 Unless the ``--no-extlinux`` or ``--grub`` options are specified, the
 image will use ``extlinux`` as a boot loader. ``bootsize`` is not
 recommended when using ``extlinux`` --- use ``grub`` instead.
+
+.. _extlinux_ext4:
+
+extlinux support issues with ext4
+=================================
+
+VMs using ext4 may not boot when using extlinux - unless the build is
+performed on Jessie. Builds using ext2 and ext3 work normally.
+
+.. important:: This problem depends on the **external** distribution,
+   **not** the distribution you are trying to build. When building on
+   Jessie, ``extlinux`` succeeds but when building on Stretch or Sid,
+   ``extlinux`` fails to make a bootable system if the filesystem of
+   that system is **ext4**. ext2 and ext3 work.
+
+Version 1.6 of vmdebootstrap adds a warning but allows the build to
+proceed (to allow for the bug to be fixed). Sadly, downgrading the
+version of extlinux to the version in Jessie does not fix the problem
+when building on stretch or sid. Hence, vmdebootstrap can only output
+a warning.
+
+.. seealso:: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=833057
 
 .. _wheezy_grub:
 
