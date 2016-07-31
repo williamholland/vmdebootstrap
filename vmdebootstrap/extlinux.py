@@ -91,12 +91,19 @@ append initrd=%(initrd)s root=UUID=%(uuid)s ro %(kserial)s
         ext_f = open(conf, 'w')
         ext_f.write(msg)
 
-        runcmd(['extlinux', '--install', rootdir])
-        runcmd(['sync'])
-        time.sleep(2)
+    def run_extlinux_install(self, rootdir):
+        if os.path.exists("/usr/bin/extlinux"):
+            self.message('Running extlinux --install')
+            runcmd(['extlinux', '--install', rootdir])
+            runcmd(['sync'])
+            time.sleep(2)
+        else:
+            msg = "extlinux enabled but /usr/bin/extlinux not found" \
+                  " - please install the extlinux package."
+            raise cliapp.AppException(msg)
 
     def install_mbr(self):
-        if not self.settings['mbr'] and not self.settings['extlinux']:
+        if not self.settings['mbr'] or not self.settings['extlinux']:
             return
         if os.path.exists("/sbin/install-mbr"):
             self.message('Installing MBR')

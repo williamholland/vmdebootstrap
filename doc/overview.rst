@@ -114,11 +114,10 @@ Options
                        Note: foreign debootstraps may take a significant
                        amount of time to complete and debootstrap will
                        retry five times if packages fail to install by default.
- --no-extlinux         Skip installation of extlinux. Needs a customize script
+ --no-extlinux         Skip installation of extlinux. Needs grub, a customize script
                        or alternative bootloader to make the image bootable.
-                       Useful for architectures where extlinux is not supportable.
-                       Depending on how the image is to be booted, the ``--mbr``
-                       option may also be necessary with extlinux.
+                       extlinux is deprecated and this will become the default
+                       in a future release.
  --squash=DIRECTORY    Run mksquashfs against the rootfs using xz
                        compression --- requires ``squashfs-tools`` to be installed.
                        The squashfs and other files needed to use the squashfs
@@ -263,6 +262,16 @@ Bootloaders
 Unless the ``--no-extlinux`` or ``--grub`` options are specified, the
 image will use ``extlinux`` as a boot loader. ``bootsize`` is not
 recommended when using ``extlinux`` --- use ``grub`` instead.
+
+.. note:: Unlike grub, extlinux support requires the installation of
+   packages outside the image which are used to install the extlinux
+   bootloader inside the image. extlinux support also involves the
+   use of ``sync`` which can cause issues on systems with multiple
+   filesystems mounted, particularly over a network or when building
+   multiple images simultaneously. Therefore, ``extlinux`` is
+   **deprecated** in vmdebootstrap. The default will change in a future
+   release and ``extlinux`` support may be dropped once Stretch is
+   released.
 
 .. _extlinux_ext4:
 

@@ -39,7 +39,7 @@ from vmdebootstrap.filesystem import Filesystem
 from vmdebootstrap.uefi import Uefi
 from vmdebootstrap.network import Networking
 
-__version__ = '1.5'
+__version__ = '1.6'
 
 # pylint: disable=invalid-name,line-too-long
 # pylint: disable=missing-docstring,too-many-statements
@@ -87,7 +87,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.settings.string(['foreign'], 'set up foreign debootstrap environment '
                              'using provided program (ie binfmt handler)')
         self.settings.string_list(['debootstrapopts'], 'pass additional options to debootstrap')
-        self.settings.boolean(['extlinux'], 'install extlinux?', default=True)
+        self.settings.boolean(['extlinux'], 'install extlinux (deprecated: default will '
+                               'change in a future release to use grub)', default=True)
         self.settings.string(['tarball'], "tar up the disk's contents in FILE", metavar='FILE')
         self.settings.string(['apt-mirror'], 'configure apt to use MIRROR', metavar='URL')
         self.settings.string(['mirror'], 'use MIRROR as package source (%default)', metavar='URL',
@@ -192,6 +193,13 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 self.settings['extlinux'] and not self.settings['grub']:
             raise cliapp.AppException(
                 'extlinux is not yet supported on btrfs. Use grub.')
+        if self.settings['roottype'] == 'ext4' and\
+                self.settings['extlinux'] and not self.settings['grub']:
+            msg = 'The image may fail to boot with ext4 and extlinux unless ' +\
+                'vmdebootstrap is running on Jessie. Use grub or ext3 and ' +\
+                'see the docs.'
+            print("\nWarning: %s\n" % msg)
+            logging.warn(msg)
         uefi = self.handlers[Uefi.name]
         oldstable = distro.was_oldstable(datetime.date(2015, 4, 26))
         uefi.check_settings(oldstable=oldstable)
@@ -209,6 +217,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         base = self.handlers[Base.name]
         filesystem = self.handlers[Filesystem.name]
         extlinux = self.handlers[ExtLinux.name]
+        distro = self.handlers[Codenames.name]
         base.create_empty_image()
         self.partition_image()
         extlinux.install_mbr()
@@ -219,7 +228,12 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         if self.settings['swap'] > 0:
             base.message("Creating swap space")
             runcmd(['mkswap', filesystem.devices['swapdev']])
-        filesystem.mkfs(rootdev, fstype=roottype)
+        # stable or oldstable, use ^metadata_csum
+        opt = None
+        if distro.was_oldstable(datetime.date(2015, 4, 26)) or \
+                distro.was_stable(datetime.date(2015, 4, 26)):
+            opt = "^metadata_csum"
+        filesystem.mkfs(rootdev, fstype=roottype, opt=opt)
         rootdir = self.mount(rootdev)
         filesystem.devices['rootdir'] = rootdir
         if self.settings['use-uefi']:
@@ -265,9 +279,11 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             uefi.configure_extra_efi(rootdir)
         elif self.settings['grub']:
             if not grub.install_grub2(rootdev, rootdir):
+                # FIXME: don't fall back.
                 extlinux.install_extlinux(rootdev, rootdir)
         elif self.settings['extlinux']:
             extlinux.install_extlinux(rootdev, rootdir)
+            extlinux.run_extlinux_install(rootdir)
         # only append for wheezy (which became oldstable on 2015.04.25)
         if distro.was_oldstable(datetime.date(2015, 4, 26)):
             base.append_serial_console(rootdir)
@@ -301,8 +317,13 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             if distro.was_oldstable(datetime.date(2015, 4, 26)):
                 network.setup_wheezy_networking(rootdir)
             else:
-                network.setup_networking(rootdir)
-                network.systemd_support(rootdir)
+                if self.settings['systemd-networkd']:
+                    network.systemd_support(rootdir)
+                    if not distro.was_stable(datetime.date(2015, 4, 26)):
+                        network.enable_systemd_resolved(rootdir)
+                else:
+                    # /etc/network/interfaces.d/
+                    network.setup_networking(rootdir)
             filesystem.configure_apt()
             base.customize(rootdir)
             cleanup_apt_cache(rootdir)
@@ -328,8 +349,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
             rootdir = filesystem.devices['rootdir']
             if rootdir:
                 db_log = os.path.join(rootdir, 'debootstrap', 'debootstrap.log')
-                os.chmod(db_log, 0o644)
                 if os.path.exists(db_log):
+                    os.chmod(db_log, 0o644)
                     shutil.copy(db_log, os.getcwd())
                     if self.settings['owner']:
                         runcmd(["chown", self.settings["owner"], db_log])
@@ -369,8 +390,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                 logging.debug("umount failed, sleeping and trying again")
                 time.sleep(5)
                 runcmd(['umount', mount_point], ignore_fail=False)
-            else:
-                self.mount_points.remove(i)
+            self.mount_points.pop(i)
 
     def partition_image(self):
         """
@@ -446,6 +466,7 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         uefi = self.handlers[Uefi.name]
         grub = self.handlers[GrubHandler.name]
         distro = self.handlers[Codenames.name]
+        extlinux = self.handlers[ExtLinux.name]
 
         include = self.settings['package']
         include.extend(base.base_packages())
