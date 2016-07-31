@@ -321,6 +321,9 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
                     network.systemd_support(rootdir)
                     if not distro.was_stable(datetime.date(2015, 4, 26)):
                         network.enable_systemd_resolved(rootdir)
+                    else:
+                        # /etc/network/interfaces.d/
+                        network.setup_networking(rootdir)
                 else:
                     # /etc/network/interfaces.d/
                     network.setup_networking(rootdir)
