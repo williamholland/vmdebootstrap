@@ -137,6 +137,8 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         self.settings.boolean(['systemd-networkd'], 'Use Predictable Network '
                               'Interface Names', default=True)
         self.settings.boolean(['dry-run'], 'do not build, just test the options', default=False)
+        self.settings.string(['debootstrap-scripts'], 'Directory containing debootstrap scripts',
+                             default='/usr/share/debootstrap/scripts')
 
     def process_args(self, args):  # pylint: disable=too-many-branches,too-many-statements
 
@@ -159,11 +161,12 @@ class VmDebootstrap(cliapp.Application):  # pylint: disable=too-many-public-meth
         if self.settings['image'] and not self.settings['size']:
             raise cliapp.AppException(
                 'If disk image is specified, you must give image size.')
-        if not distro.debian_info.valid(self.settings['distribution']):
-            if not distro.ubuntu_info.valid(self.settings['distribution']):
-                raise cliapp.AppException(
-                    '%s is not a valid Debian or Ubuntu suite or codename.'
-                    % self.settings['distribution'])
+        if not os.path.isfile(os.path.join(
+                self.settings['debootstrap-scripts'],
+                self.settings['distribution'])):
+            raise cliapp.AppException(
+                '%s is not a valid debootstrap codename.'
+                % self.settings['distribution'])
         if self.settings['apt-mirror'] and not self.settings['configure-apt']:
             raise cliapp.AppException(
                 '--apt-mirror requires --configure-apt as well.')

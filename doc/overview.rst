@@ -57,6 +57,8 @@ Options
                        See **debootstrap (1)** for more information. This
                        option replaces the ``--variant`` support in
                        previous versions.
+ --debootstrap-scripts=DIR
+                       set the directory containing debootstrap scripts.
  --package=PACKAGE     install PACKAGE onto system
  --custom-package=DEB  install package in DEB file onto system (not
                        from mirror)
